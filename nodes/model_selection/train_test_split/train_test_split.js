@@ -1,5 +1,6 @@
 module.exports = function(RED) {
-    function StandardScalerNode(config) {
+    function TrainTestSplitNode(config) {
+
         const utils = require('../../../utils/utils');
 
         var node = this;
@@ -8,10 +9,11 @@ module.exports = function(RED) {
 
         node.config = {
             // Corresponding python function
-            pyfunc: 'standard_scaler'
+            pyfunc: 'split',
+            testPercentage: config.testPercentage
         };
 
         utils.run(RED, node, config);
     }
-    RED.nodes.registerType('standard scaler', StandardScalerNode);
+    RED.nodes.registerType('train test split', TrainTestSplitNode);
 }

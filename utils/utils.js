@@ -121,7 +121,7 @@ const initProc = () => {
         });
 
         //catches ctrl+c event
-        ['SIGINT', 'SIGUSR1', 'SIGUSR2', 'SIGTERM'].forEach((eventType) => {
+        ['SIGINT', 'SIGUSR1', 'SIGUSR2', 'SIGTERM', 'close', 'error'].forEach((eventType) => {
             console.log("Main process listening on " + eventType);
             proc.on(eventType, () => {
                 console.log("Main process recieved " + eventType);
@@ -203,9 +203,11 @@ module.exports = {
             if (proc != null) {
                 console.log("   Trying to exit from main process");
                 console.log((proc == null) ? "proc is null." : "proc is not null.");
+                proc.kill();
                 proc.exit();
-                console.log((proc == null) ? "proc is null." : "proc is not null.");
-                proc = null;
+                // proc.emit('exit');
+                // console.log((proc == null) ? "proc is null." : "proc is not null.");
+                // proc = null;
             }
             done();
         });

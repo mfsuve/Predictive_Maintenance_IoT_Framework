@@ -20,12 +20,12 @@
     "license": "ISC",
     "node-red": {
         "nodes": {
-            "load dataset": "dataset/load_dataset.js",
-            "minmax scaler": "preprocess/scaler/minmax/minmax.js",
-            "standard scaler": "preprocess/scaler/standard/standard.js",
-            "train test split": "model_selection/train_test_split/train_test_split.js",
-            "svm": "models/classification/svm/svm.js",
-            "test model": "result/test_model.js"
+            "load dataset": "nodes/dataset/load_dataset.js",
+            "minmax scaler": "nodes/preprocess/scaler/minmax/minmax.js",
+            "standard scaler": "nodes/preprocess/scaler/standard/standard.js",
+            "train test split": "nodes/model_selection/train_test_split/train_test_split.js",
+            "svm": "nodes/models/classification/svm/svm.js",
+            "test model": "nodes/result/test_model.js"
         }
     }
 }

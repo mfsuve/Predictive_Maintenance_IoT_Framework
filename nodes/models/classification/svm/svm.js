@@ -2,7 +2,7 @@ module.exports = function(RED) {
     function SVMNode(config) {
 
         const path = require('path');
-        const utils = require('../../../utils/utils');
+        const utils = require('../../../../utils/utils');
 
         var node = this;
 

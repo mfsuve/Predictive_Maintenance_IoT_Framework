@@ -4,7 +4,7 @@ from multiprocessing import Lock, Queue
 
 from utils.utils import nodered_function
 from utils.utils import myprint as print
-from timed_dict import TimedDict
+from utils.timed_dict import TimedDict
 
 log = logging.getLogger('nodered')
 

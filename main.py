@@ -8,14 +8,14 @@ from threading import Thread, Timer
 
 from utils.utils import nodered_function
 from utils.utils import myprint as print
-from logger import init_logger
-from node import Node
+from utils.logger import init_logger
+from utils.node import Node
 
-from dataset.load_dataset import load_dataset
-from preprocess.scaler.scaler import minmax_scaler, standard_scaler
-from model_selection.train_test_split.train_test_split import split
-from models.classification.svm.svm import svm
-from result.test_model import test
+from nodes.dataset.load_dataset import load_dataset
+from nodes.preprocess.scaler.scaler import minmax_scaler, standard_scaler
+from nodes.model_selection.train_test_split.train_test_split import split
+from nodes.models.classification.svm.svm import svm
+from nodes.result.test_model import test
 
 # * Logging:
 # * * warning -> only pythonlog.log

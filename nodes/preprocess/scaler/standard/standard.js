@@ -1,7 +1,6 @@
 module.exports = function(RED) {
-    function MinMaxScalerNode(config) {
-
-        const utils = require('../../../utils/utils');
+    function StandardScalerNode(config) {
+        const utils = require('../../../../utils/utils');
 
         var node = this;
 
@@ -9,10 +8,10 @@ module.exports = function(RED) {
 
         node.config = {
             // Corresponding python function
-            pyfunc: 'minmax_scaler'
+            pyfunc: 'standard_scaler'
         };
 
         utils.run(RED, node, config);
     }
-    RED.nodes.registerType('minmax scaler', MinMaxScalerNode);
+    RED.nodes.registerType('standard scaler', StandardScalerNode);
 }
