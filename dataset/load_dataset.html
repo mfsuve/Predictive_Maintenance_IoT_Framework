@@ -1,0 +1,141 @@
+<script type="text/javascript">
+RED.nodes.registerType('load dataset', {
+    category: 'ML Dataset',
+    color: '#E2D96E',
+    defaults: {
+        name: {value:""},
+        foldername: {value:""},
+        filename: {value:"data.csv", required:true},
+        col: {value:0, required:true, validate:RED.validators.number()},
+        hasheader: {value:true},
+        encode: {value:"N"},
+        fillConstant: {value:"0"},
+        fillSelect: {value:"none"}
+    },
+    inputs:1,
+    outputs:1,
+    icon: "file.png",
+    label: function() {
+        return this.name || this.filename;
+    },
+    labelStyle: function() {
+        return this.name ? "node_label_italic" : "";
+    },
+    oneditprepare: function() {
+        if (this.fillSelect === "constant") {
+            $("#node-input-fillConstant").show();
+        } else {
+            $("#node-input-fillConstant").hide();
+        }
+        $("#node-input-fillSelect").on("change", function() {
+            var v = $("#node-input-fillSelect").val();
+            if (v === "constant") {
+                $("#node-input-fillConstant").show().focus();
+            } else {
+                $("#node-input-fillConstant").hide();
+            }
+        });
+    }
+});
+</script>
+
+
+<script type="text/x-red" data-template-name="load dataset">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-foldername"><i class="fa fa-folder"></i> Folder Name</label>
+        <input type="text" id="node-input-foldername" placeholder="Folder Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-filename"><i class="fa fa-file"></i> File Name</label>
+        <input type="text" id="node-input-filename" placeholder="File Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-hasheader">&nbsp;</label>
+        <input type="checkbox" id="node-input-hasheader" style="width:20px; vertical-align:baseline; margin-right:5px;"> Has header
+    </div>
+    <hr align="middle"/>
+    <div class="form-row">
+        <label style="width:100%;"><i class="fa fa-dot-circle-o"></i> Target Column Number</label>
+        <label for="node-input-col"></i>&nbsp;</label>
+        <input type="number" id="node-input-col" value="0" style="width:100px">
+    </div>
+    <div class="form-row">
+        <label for="node-input-encode">Preprocessing</label>
+    </div>
+    <div class="form-row" style="padding-left:20px;">
+        <label for="node-input-encode"><i class="fa fa-hashtag"></i> Encode</span></label>
+        <select id="node-input-encode">
+            <option value="N" selected>None</option>
+            <option value="S">Simple</option>
+            <option value="O">One Hot</option>
+        </select>
+    </div>
+    <div class="form-row" style="padding-left:20px;">
+        <label for="node-input-fillType"><i class="fa fa-pencil-square-o"></i> Fill N/A</span></label>
+        <select id="node-input-fillSelect">
+            <option value="none" selected>None</option>
+            <option value="nearest">Nearest</option>
+            <option value="mean">Mean</option>
+            <option value="median">Median</option>
+            <option value="most">Most occurring</option>
+            <option value="constant">Constant</option>
+            <option value="linear">Linear interpolation</option>
+            <option value="quadratic">Quadratic interpolation</option>
+            <option value="cubic">Cubic interpolation</option>
+        </select>
+        <input type="number" id="node-input-fillConstant" value="0" style="width:70px;">
+    </div>
+</script>
+
+
+<script type="text/x-red" data-help-name="load dataset">
+    <p>Loads the dataset from a csv file.</p>
+
+    <h3>Inputs</h3>
+	<dl class="message-properties">
+		<dd>
+			anything that triggers the operation.
+		</dd>
+	</dl>
+
+	<h3>Outputs</h3>
+	<ol class="node-ports">
+		<li>Standard output
+			<dl class="message-properties">
+				<dt>payload.data <span class="property-type">2D array</span></dt>
+				<dd>the loaded dataset without it's target.</dd>
+			</dl>
+			<dl class="message-properties">
+				<dt>payload.target <span class="property-type">array</span></dt>
+				<dd>the loaded target extracted from the dataset.</dd>
+			</dl>
+			<dl class="message-properties">
+				<dt>payload.columns <span class="property-type">array</span></dt>
+				<dd>the column names extracted from the dataset.</dd>
+			</dl>
+		</li>
+		<li>Standard error
+			<dl class="message-properties">
+				<dt>payload <span class="property-type">string</span></dt>
+				<dd>the standard error of the command.</dd>
+			</dl>
+		</li>
+	</ol>
+
+    <h3>Details</h3>
+    <p>Once triggered, this node loads the dataset from <code>filename</code> under <code>foldername</code>
+    which needs to be a <code>csv</code> file.</p>
+    <p>Target Column Number</p>
+    <p><code>col</code> parameter indicates which column should be treated as target column. 0 value means
+    the first column. This value can be negative. If so, the new value for this parameter will be
+    <code>#columns-col</code></p>
+    <p>Has Header</p>
+    <p><code>hasheader</code> parameter tells if the dataset has headers.
+    <p>It has 2 outputs. The first one is an object having 2D dataset without the target column as
+    <code>payload.data</code> and the target column as <code>payload.target</code>. The second one is the error.</p>
+
+</script>

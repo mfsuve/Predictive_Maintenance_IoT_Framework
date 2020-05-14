@@ -1,0 +1,31 @@
+{
+    "name": "one_process_python_nodered",
+    "version": "1.0.0",
+    "description": "Since converting to json back and forth between python processes in nodes package, I try to use only 1 python process.",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "python",
+        "nodered",
+        "machine",
+        "learning",
+        "node-red",
+        "predictive",
+        "maintenance",
+        "pdm"
+    ],
+    "author": "Mustafa Furkan Süve",
+    "license": "ISC",
+    "node-red": {
+        "nodes": {
+            "load dataset": "dataset/load_dataset.js",
+            "minmax scaler": "preprocess/scaler/minmax/minmax.js",
+            "standard scaler": "preprocess/scaler/standard/standard.js",
+            "train test split": "model_selection/train_test_split/train_test_split.js",
+            "svm": "models/classification/svm/svm.js",
+            "test model": "result/test_model.js"
+        }
+    }
+}
