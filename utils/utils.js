@@ -15,9 +15,25 @@ var nodes = {};
 
 //initialize child process
 const initProc = () => {
+    // console.trace("init proc");
     if (proc == null) {
         proc = spawn(pcmd, [__dirname + '/../main.py'], ['pipe', 'pipe', 'pipe']);
         console.log("**************** Created python process | PID: " + proc.pid + " ********************");
+
+        // function myFunc() {
+        //     console.log("=======================================================");
+        //     console.log("In timeout...");
+        //     if (proc) {
+        //         console.log(`proc is not null | PID: ${proc.pid}`);
+        //         // console.log(proc);
+        //         // console.log(`proc.connected = ${proc.connected}`);
+        //     } else {
+        //         console.log(`proc is null`);
+        //     }
+        //     console.log("=======================================================");
+        //     setTimeout(myFunc, 10000);
+        // }
+        // myFunc();
 
         //handle results
         proc.stdout.on('data', (data) => {
@@ -111,35 +127,63 @@ const initProc = () => {
             }
         });
 
-        //handle crashes
-        ['beforeExit', 'exit'].forEach((eventType) => {
-            console.log("Main process listening on " + eventType);
-            proc.on(eventType, () => {
-                console.log("**************** Exiting main process | PID: " + proc.pid + " ********************");
-                proc = null;
-            });
-        });
+        // // handle crashes
+        // ['beforeExit', 'exit'].forEach((eventType) => {
+        //     console.log("Main process listening on " + eventType + " PID: " + proc.pid);
+        //     proc.on(eventType, (e, s) => {
+        //         if (this)
+        //             console.log("Main process recieved " + eventType + " PID: " + this.pid);
+        //         else
+        //             console.log("Main process recieved " + eventType);
+        //         console.trace("In " + eventType);
+        //         console.log("e:");
+        //         console.log(e);
+        //         console.log("s:");
+        //         console.log(s);
+        //         if (this) {
+        //             console.log("connected:");
+        //             console.log(this.connected);
+        //         }
+        //         console.log("e.stack:");
+        //         console.log(e.stack);
+        //         if (this)
+        //             console.log("**************** Exiting main process | PID: " + this.pid + " ********************");
+        //         else
+        //             console.log("**************** Exiting main process ********************");
+        //         proc = null;
+        //     });
+        // });
 
-        //catches ctrl+c event
-        ['SIGINT', 'SIGUSR1', 'SIGUSR2', 'SIGTERM', 'close', 'error'].forEach((eventType) => {
-            console.log("Main process listening on " + eventType);
-            proc.on(eventType, () => {
-                console.log("Main process recieved " + eventType);
-                proc.exit(2);
-                proc = null;
-            });
-        });
+        // //catches ctrl+c event
+        // ['SIGINT', 'SIGUSR1', 'SIGUSR2', 'SIGTERM', 'close', 'error', 'disconnect'].forEach((eventType) => {
+        //     console.log("Main process listening on " + eventType + " PID: " + proc.pid);
+        //     proc.on(eventType, () => {
+        //         if (this) {
+        //             console.log("Main process recieved " + eventType + " PID: " + this.pid);
+        //             console.log("connected:");
+        //             console.log(this.connected);
+        //         } else
+        //             console.log("Main process recieved " + eventType);
+        //         // if (proc)
+        //         //     proc.exit(2);
+        //         // proc = null;
+        //     });
+        // });
 
-        //catches uncaught exceptions
-        ['uncaughtException', 'unhandledRejection'].forEach((eventType) => {
-            console.log("Main process listening on " + eventType);
-            proc.on(eventType, (e) => {
-                console.log("Main process recieved " + eventType);
-                console.log(e.stack);
-                proc.exit(99);
-                proc = null;
-            });
-        });
+        // //catches uncaught exceptions
+        // ['uncaughtException', 'unhandledRejection'].forEach((eventType) => {
+        //     console.log("Main process listening on " + eventType + " PID: " + proc.pid);
+        //     proc.on(eventType, (e) => {
+        //         if (this)
+        //             console.log("Main process recieved " + eventType + " PID: " + this.pid);
+        //         else
+        //             console.log("Main process recieved " + eventType);
+        //         console.log(e.stack);
+        //         // if (proc)
+        //         //     proc.exit(99);
+        //         // proc = null;
+        //     });
+        // });
 
     }
 };
@@ -201,15 +245,13 @@ module.exports = {
             node.status(status.NONE);
             delete nodes[node.id];
             if (proc != null) {
-                console.log("   Trying to exit from main process");
-                console.log((proc == null) ? "proc is null." : "proc is not null.");
-                proc.kill();
-                proc.exit();
-                // proc.emit('exit');
-                // console.log((proc == null) ? "proc is null." : "proc is not null.");
-                // proc = null;
+                proc.stdin.write('\n'); // this gives python process an exception and it will terminate
+                // proc.exit();
+                proc = null;
             }
             done();
         });
+
+        // console.log("**************** End of run | PID: " + proc.pid + " ********************");
     }
 };

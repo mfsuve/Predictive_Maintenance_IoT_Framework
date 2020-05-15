@@ -1,3 +1,4 @@
+import os
 import json
 from time import sleep
 from pprint import pformat
@@ -57,8 +58,8 @@ def call_node(pool, config):
     
 
 def print_num_running_nodes(sec=10):
-    print(f'Number of running nodes: {Node.num_running}')
-    timer = Timer(sec, print_num_running_nodes)
+    print(f'Number of running nodes: {Node.num_running} | PID: {os.getpid()}')
+    timer = Timer(sec, print_num_running_nodes, args=(sec,))
     timer.setDaemon(True)
     timer.start()
 
@@ -66,13 +67,22 @@ def print_num_running_nodes(sec=10):
 if __name__ == '__main__':
     global log
     log = init_logger('nodered')
+    print("Started python process")
     
     # print_num_running_nodes(20)
     
     with Pool() as pool:
         while True:
-            config = json.loads(input())
+            try:
+                config = json.loads(input())
+            except json.decoder.JSONDecodeError:
+                print('Encountered an JSONDecodeError, Exitting...')
+                break
+            except BaseException:
+                print('Encountered something, Exitting...', format_exc())
+                raise
             call_node_thread = Thread(target=call_node, args=(pool, config))
             call_node_thread.setDaemon(True)
             call_node_thread.start()
             
+    print(f'End of the python process, PID: {os.getpid()}')
