@@ -1,0 +1,85 @@
+<script type="text/javascript">
+RED.nodes.registerType('test model', {
+    category: 'ML Test',
+    color: '#E6E0F8',
+    defaults: {
+        name: {value:""},
+        metric: {value:"accuracy"},
+    },
+    inputs:1,
+    outputs:1,
+    icon: "font-awesome/fa-question-circle-o",
+    label: function() {
+        return this.name || this.metric;
+    },
+    labelStyle: function() {
+        return this.name ? "node_label_italic" : "";
+    }
+});
+</script>
+
+
+<script type="text/x-red" data-template-name="test model">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-metric"><i class="fa fa-tag"></i> Metric</label>
+        <select id="node-input-metric" style="width:200px">
+            <option value="accuracy" selected>Accuracy</option>
+            <option value="precision">Precision</option>
+            <option value="recall">Recall</option>
+            <option value="f1">F1 Score</option>
+        </select>
+    </div>
+</script>
+
+
+<script type="text/x-red" data-help-name="test model">
+    <p>Tests the incoming model with an incoming input.</p>
+
+    <h3>Inputs</h3>
+	<dl class="message-properties">
+		<dd>
+			anything that triggers the operation.
+		</dd>
+	</dl>
+
+	<h3>Outputs</h3>
+	<ol class="node-ports">
+		<li>Standard output
+			<dl class="message-properties">
+				<dt>payload.data <span class="property-type">2D array</span></dt>
+				<dd>the loaded dataset without it's target.</dd>
+			</dl>
+			<dl class="message-properties">
+				<dt>payload.target <span class="property-type">array</span></dt>
+				<dd>the loaded target extracted from the dataset.</dd>
+			</dl>
+			<dl class="message-properties">
+				<dt>payload.columns <span class="property-type">array</span></dt>
+				<dd>the column names extracted from the dataset.</dd>
+			</dl>
+		</li>
+		<li>Standard error
+			<dl class="message-properties">
+				<dt>payload <span class="property-type">string</span></dt>
+				<dd>the standard error of the command.</dd>
+			</dl>
+		</li>
+	</ol>
+
+    <h3>Details</h3>
+    <p>Once triggered, this node loads the dataset from <code>filename</code> under <code>foldername</code>
+    which needs to be a <code>csv</code> file.</p>
+    <p>Target Column Number</p>
+    <p><code>col</code> parameter indicates which column should be treated as target column. 0 value means
+    the first column. This value can be negative. If so, the new value for this parameter will be
+    <code>#columns-col</code></p>
+    <p>Has Header</p>
+    <p><code>hasheader</code> parameter tells if the dataset has headers.
+    <p>It has 2 outputs. The first one is an object having 2D dataset without the target column as
+    <code>payload.data</code> and the target column as <code>payload.target</code>. The second one is the error.</p>
+
+</script>
