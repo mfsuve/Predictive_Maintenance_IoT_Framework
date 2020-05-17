@@ -5,10 +5,7 @@
  */
 
 const status = require('./status.js')
-const { spawn } = require('child_process')
-
-//use 'python3' on linux and 'python' on anything else
-const pcmd = process.platform === 'linux' ? 'python3' : 'python'
+const { exec } = require('child_process')
 
 var proc = null;
 var nodes = {};
@@ -17,7 +14,8 @@ var nodes = {};
 const initProc = () => {
     // console.trace("init proc");
     if (proc == null) {
-        proc = spawn(pcmd, [__dirname + '/../main.py'], ['pipe', 'pipe', 'pipe']);
+        proc = exec(`conda activate pdm && python "${__dirname}/../main.py" && conda deactivate`, ['pipe', 'pipe', 'pipe']);
+        // proc = spawn(pcmd, [__dirname + '/../main.py'], ['pipe', 'pipe', 'pipe']);
         console.log("**************** Created python process | PID: " + proc.pid + " ********************");
 
         // function myFunc() {
@@ -125,6 +123,13 @@ const initProc = () => {
                 console.log("err: " + err);
                 console.log(data.toString());
             }
+        });
+
+        proc.on('exit', () => {
+            if (proc)
+                console.log(`**************** Process terminated ****************`);
+            else
+                console.log(`**************** Process terminated | PID: ${proc.pid} ****************`);
         });
 
         // // handle crashes
@@ -235,7 +240,7 @@ module.exports = {
                 node.config.prevout = msg.out;
                 node.config.prev_nodeid = msg.nodeid;
             }
-            // send to python child
+            // send to python process
             python(node);
         });
 
@@ -245,13 +250,10 @@ module.exports = {
             node.status(status.NONE);
             delete nodes[node.id];
             if (proc != null) {
-                proc.stdin.write('\n'); // this gives python process an exception and it will terminate
-                // proc.exit();
+                proc.stdin.write('\n'); // this gives python process an exception so that it will terminate
                 proc = null;
             }
             done();
         });
-
-        // console.log("**************** End of run | PID: " + proc.pid + " ********************");
     }
 };
