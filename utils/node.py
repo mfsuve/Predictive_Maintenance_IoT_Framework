@@ -1,5 +1,6 @@
 import json
 import logging
+from types import GeneratorType
 from multiprocessing import Lock, Queue
 
 from utils.utils import nodered_function
@@ -43,7 +44,23 @@ class Node:
             if not isinstance(outputs, list): # In case of an exception
                 self._error(outputs)
             elif self.end: # This is an end node, send this value to node-red
-                self._done(str(outputs[0][0]))
+                if isinstance(outputs[0][0], (GeneratorType, map)): # Send sequential results #!(not tested)
+                    for i, output in enumerate(outputs[0][0]):
+                        self._done(str(output), cont=i+1)
+                    self._done()
+                else:
+                    self._done(str(outputs[0][0]))
+            elif isinstance(outputs[0][0], (GeneratorType, map)): # Save sequential results (in case of a generator)
+                for i, gen_output in enumerate(outputs[0][0]):
+                    if not isinstance(gen_output, list):
+                        if isinstance(gen_output, tuple):
+                            gen_output = [gen_output]
+                        else:
+                            gen_output = [(gen_output,)]
+                    for out, output in enumerate(gen_output):
+                        self.results[out] = output
+                    self._done(cont=i+1)
+                self._done()
             else:
                 for out, output in enumerate(outputs):
                     self.results[out] = output
@@ -73,7 +90,7 @@ class Node:
             if prev_node_error:
                 self.queue.put((prev_node.topic, 'error'))
             else:
-                self.queue.put((prev_node.topic, prev_node.results[prev_out]))
+                self.queue.put((prev_node.topic, prev_node.results[prev_out])) # TODO: make the result generator and send it, define in node-red
     
 
     def _error(self, msg=''):
@@ -82,16 +99,23 @@ class Node:
         print(f'Error at {self.id}', f'{self.num_running} running nodes')
         
     
-    def _done(self, msg=None):
-        if msg is not None:
-            log.info(json.dumps({'nodeid': self.id, 'msg': msg}))
-            print(f'Node {self.id} sent this message:', msg)
-        else:
-            log.info(self.id)
-        self.running = False
-        print(f'Done {self.id}', f'{self.num_running} running nodes')
+    def _done(self, msg=None, cont=None):
+        to_send = dict(nodeid=self.id)
             
-
+        if msg is not None:
+            to_send['msg'] = msg
+            print(f'Node {self.id} sent this message:', msg)            
+        
+        if cont is not None:
+            to_send['cont'] = cont
+            print(f'Done and continue {cont}. times {self.id}', f'{self.num_running} running nodes')
+        else:
+            self.running = False
+            print(f'Done {self.id}', f'{self.num_running} running nodes')
+        
+        log.info(json.dumps(to_send))
+        
+    
     @classmethod 
     def _dec_running(cls):
         with cls.num_running_lock:

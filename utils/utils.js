@@ -11,10 +11,10 @@ var proc = null;
 var nodes = {};
 
 //initialize child process
-const initProc = () => {
+const initProc = (env) => {
     // console.trace("init proc");
     if (proc == null) {
-        proc = exec(`conda activate pdm && python "${__dirname}/../main.py" && conda deactivate`, ['pipe', 'pipe', 'pipe']);
+        proc = exec(`conda activate ${env} && python "${__dirname}/../main.py" && conda deactivate`, ['pipe', 'pipe', 'pipe']);
         // proc = spawn(pcmd, [__dirname + '/../main.py'], ['pipe', 'pipe', 'pipe']);
         console.log("**************** Created python process | PID: " + proc.pid + " ********************");
 
@@ -41,26 +41,19 @@ const initProc = () => {
             // for all nodes (sometimes, due to threading in python, multiple nodeids come seperated by '\n')
             data.toString().trim().split('\n').forEach((_data) => {
 
-                try {
-                    // for end node
-                    _data = JSON.parse(_data.trim());
-                    nodeid = _data.nodeid;
-                    node = nodes[nodeid];
-                    if (_data.msg == 'error') {
+                _data = JSON.parse(_data.trim());
+                nodeid = _data.nodeid;
+                node = nodes[nodeid];
+                if (_data.msg) {
+                    if (_data.msg == 'error') { // Previous node had an error
                         node.status(status.NONE);
+                        return;
                     } else {
                         msg = {
                             payload: _data.msg
                         }; // end node will have only one output
-                        node.status(status.DONE);
-                        node.send(msg);
                     }
-                } catch {
-                    nodeid = _data.trim();
-                    // nodeid = data.toString().trim();
-                    node = nodes[nodeid];
-                    node.status(status.DONE);
-
+                } else {
                     // Send all outputs except for the error one (last one, if exists)
                     msg = Array(node.wires.length);
                     for (var i = 0; i < node.wires.length; ++i) {
@@ -73,15 +66,16 @@ const initProc = () => {
                             payload: node.config.pyfunc + " done!"
                         };
                     }
-                    if (node.haserror)
-                        msg[node.wires.length - 1] = null;
-
                     console.log("Data about to be sent:");
                     msg.forEach((m) => {
                         console.log(m);
                     });
-                    node.send(msg);
                 }
+                if (_data.cont == undefined)
+                    node.status(status.DONE);
+                else
+                    node.status(status.COUNT(_data.cont));
+                node.send(msg);
             });
         });
 
@@ -131,71 +125,12 @@ const initProc = () => {
             else
                 console.log(`**************** Process terminated | PID: ${proc.pid} ****************`);
         });
-
-        // // handle crashes
-        // ['beforeExit', 'exit'].forEach((eventType) => {
-        //     console.log("Main process listening on " + eventType + " PID: " + proc.pid);
-        //     proc.on(eventType, (e, s) => {
-        //         if (this)
-        //             console.log("Main process recieved " + eventType + " PID: " + this.pid);
-        //         else
-        //             console.log("Main process recieved " + eventType);
-        //         console.trace("In " + eventType);
-        //         console.log("e:");
-        //         console.log(e);
-        //         console.log("s:");
-        //         console.log(s);
-        //         if (this) {
-        //             console.log("connected:");
-        //             console.log(this.connected);
-        //         }
-        //         console.log("e.stack:");
-        //         console.log(e.stack);
-        //         if (this)
-        //             console.log("**************** Exiting main process | PID: " + this.pid + " ********************");
-        //         else
-        //             console.log("**************** Exiting main process ********************");
-        //         proc = null;
-        //     });
-        // });
-
-        // //catches ctrl+c event
-        // ['SIGINT', 'SIGUSR1', 'SIGUSR2', 'SIGTERM', 'close', 'error', 'disconnect'].forEach((eventType) => {
-        //     console.log("Main process listening on " + eventType + " PID: " + proc.pid);
-        //     proc.on(eventType, () => {
-        //         if (this) {
-        //             console.log("Main process recieved " + eventType + " PID: " + this.pid);
-        //             console.log("connected:");
-        //             console.log(this.connected);
-        //         } else
-        //             console.log("Main process recieved " + eventType);
-        //         // if (proc)
-        //         //     proc.exit(2);
-        //         // proc = null;
-        //     });
-        // });
-
-        // //catches uncaught exceptions
-        // ['uncaughtException', 'unhandledRejection'].forEach((eventType) => {
-        //     console.log("Main process listening on " + eventType + " PID: " + proc.pid);
-        //     proc.on(eventType, (e) => {
-        //         if (this)
-        //             console.log("Main process recieved " + eventType + " PID: " + this.pid);
-        //         else
-        //             console.log("Main process recieved " + eventType);
-        //         console.log(e.stack);
-        //         // if (proc)
-        //         //     proc.exit(99);
-        //         // proc = null;
-        //     });
-        // });
-
     }
 };
 
 //send config as json to python process
 const python = (node) => {
-    initProc();
+    initProc('pdm');
     console.log("node:");
     console.log(node);
     proc.stdin.write(JSON.stringify(node.config) + '\n');
@@ -207,7 +142,7 @@ module.exports = {
         RED.nodes.createNode(node, config);
         node.status(status.NONE);
 
-        initProc();
+        initProc('pdm');
 
         console.log("Saving node with id:");
         console.log("    " + node.id);

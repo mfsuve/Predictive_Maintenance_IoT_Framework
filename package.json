@@ -25,6 +25,7 @@
             "standard scaler": "nodes/preprocess/scaler/standard/standard.js",
             "train test split": "nodes/model_selection/train_test_split/train_test_split.js",
             "svm": "nodes/models/classification/svm/svm.js",
+            "icarl": "nodes/models/classification/continuous/icarl.js",
             "test model": "nodes/result/test_model.js"
         }
     }

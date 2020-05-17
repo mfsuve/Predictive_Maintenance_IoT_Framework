@@ -12,14 +12,13 @@ log = logging.getLogger('nodered')
 # ! a list for one output, it should be put in a tuple
 # * single output for single output nodes
 # * list of outputs for multiple output nodes
-# TODO: Do multiple asynchronous inputs
 ##########################################
 # TODO: Put the output in an Output object to store info like
 # TODO: if it is an error, you can also itearte the output
 # TODO: inside the function_end function
 def nodered_function(**input_names):
-    if input_names is None:
-        input_names = {}
+    # if input_names is None:
+    #     input_names = {}
     def decorator(func):
         @wraps(func)
         def wrapper(input_queue=None, **kwargs):

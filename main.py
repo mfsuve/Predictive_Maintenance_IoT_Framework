@@ -16,6 +16,7 @@ from nodes.dataset.load_dataset import load_dataset
 from nodes.preprocess.scaler.scaler import minmax_scaler, standard_scaler
 from nodes.model_selection.train_test_split.train_test_split import split
 from nodes.models.classification.svm.svm import svm
+from nodes.models.classification.continuous.icarl import icarl
 from nodes.result.test_model import test
 
 # * Logging:
