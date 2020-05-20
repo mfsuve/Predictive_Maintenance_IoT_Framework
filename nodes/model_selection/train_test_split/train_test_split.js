@@ -8,8 +8,8 @@ module.exports = function(RED) {
         node.topic = 'data';
 
         node.config = {
-            // Corresponding python function
-            pyfunc: 'split',
+            // Corresponding python class
+            pynode: 'Split',
             testPercentage: config.testPercentage
         };
 

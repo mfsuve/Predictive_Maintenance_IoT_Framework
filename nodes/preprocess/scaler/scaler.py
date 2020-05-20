@@ -1,21 +1,25 @@
 import pandas as pd
 import sys
 
-from utils.utils import nodered_function
 from utils.utils import myprint as print
+from utils.node import Data
 
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import MinMaxScaler as MMS, StandardScaler as SS
 
-import logging
+class MinMaxScaler(Data):
+    def __init__(self, pool, id):
+        super().__init__(pool, id)
+        self.inputs = [Data]
 
+    def function(self, X, y):
+        print(f'MinMax Scaling...')
+        return MMS().fit_transform(X), y
 
-@nodered_function(data=('X', 'y'))
-def minmax_scaler(X, y):
-    print(f'MinMax Scaling...')
-    return MinMaxScaler().fit_transform(X), y
+class StandardScaler(Data):
+    def __init__(self, pool, id):
+        super().__init__(pool, id)
+        self.inputs = [Data]
 
-
-@nodered_function(data=('X', 'y'))
-def standard_scaler(X, y):
-    print(f'Standard Scaling...')
-    return StandardScaler().fit_transform(X), y
+    def function(self, X, y):
+        print(f'Standard Scaling...')
+        return SS().fit_transform(X), y

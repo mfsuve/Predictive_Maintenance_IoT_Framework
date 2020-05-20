@@ -7,8 +7,8 @@ module.exports = function(RED) {
         node.topic = 'data';
 
         node.config = {
-            // Corresponding python function
-            pyfunc: 'standard_scaler'
+            // Corresponding python node
+            pyfunc: 'StandardScaler'
         };
 
         utils.run(RED, node, config);

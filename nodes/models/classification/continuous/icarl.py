@@ -2,19 +2,19 @@ import pandas as pd
 import sys
 import json
 import numpy as np
-from time import sleep
 
-from utils.utils import nodered_function
 from utils.utils import myprint as print
+from utils.node import Model
 
-from sklearn.svm import SVC
+class iCaRL(Model):
+    def __init__(self, pool, id):
+        super().__init__(pool, id)
+        self.stream = True
 
-
-@nodered_function(data=('X', 'y'))
-def icarl(X, y, layerSizes, maxInDataSize, keepDataSize, maxOldNum):
-    # for _X, _y in zip(X, y):
-    #     pass
-    for i in range(5):
-        sleep(2)
-        yield i
+    def function(self, stream_data, layerSizes, maxInDataSize, keepDataSize, maxOldNum):
+        for data in stream_data:
+            print(f'stream data: {data}')
+            yield data
+        # for X, y in stream_data:
+        #     yield 55
     

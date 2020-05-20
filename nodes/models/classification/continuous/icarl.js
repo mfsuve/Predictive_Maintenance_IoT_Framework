@@ -6,11 +6,10 @@ module.exports = function(RED) {
         var node = this;
 
         node.topic = 'model';
-        // TODO: define that this is a streaming node
 
         node.config = {
-            // Corresponding python function
-            pyfunc: 'icarl',
+            // Corresponding python class
+            pynode: 'iCaRL',
             layerSizes: config.layerSizes,
             maxInDataSize: parseInt(config.maxInDataSize),
             keepDataSize: parseInt(config.keepDataSize),

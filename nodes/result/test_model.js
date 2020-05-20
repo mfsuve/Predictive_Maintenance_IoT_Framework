@@ -7,13 +7,10 @@ module.exports = function(RED) {
         var node = this;
 
         node.topic = 'test';
-        // Does node have error output
-        // node.haserror = true;
 
         node.config = {
-            // Corresponding python function
-            pyfunc: 'test',
-            end: true,
+            // Corresponding python class
+            pynode: 'TestModel',
             metric: config.metric
         };
 

@@ -63,7 +63,7 @@ const initProc = (env) => {
                             nodeid: node.id,
                             out: i,
                             error: false,
-                            payload: node.config.pyfunc + " done!"
+                            payload: node.config.pynode + " done!"
                         };
                     }
                     console.log("Data about to be sent:");
@@ -97,7 +97,7 @@ const initProc = (env) => {
             try {
                 data = JSON.parse(data.toString());
                 // data = {}
-                // data.pyfunc = 'load_dataset';
+                // data.pynode = 'load_dataset';
                 // data.error = 'error';
                 node = nodes[data.nodeid];
                 node.status(status.ERROR)
@@ -147,9 +147,6 @@ module.exports = {
         console.log("Saving node with id:");
         console.log("    " + node.id);
         nodes[node.id] = node;
-        if (node.config.end == undefined) {
-            node.config.end = false;
-        }
 
         //handle input
         node.on('input', (msg) => {
@@ -164,7 +161,6 @@ module.exports = {
                 node.config.error = false;
             }
 
-            node.config.topic = node.topic;
             node.config.id = node.id;
 
             // To be able to get previous node's output
@@ -180,7 +176,6 @@ module.exports = {
         });
 
         node.on('close', (done) => {
-            // TODO: Tell python to remove this node from the "nodes dict"
             console.log("Called close for node " + node.id);
             node.status(status.NONE);
             delete nodes[node.id];

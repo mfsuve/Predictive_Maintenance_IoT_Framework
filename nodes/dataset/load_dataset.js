@@ -7,12 +7,10 @@ module.exports = function(RED) {
         var node = this;
 
         node.topic = 'data';
-        // Does node have error output
-        // node.haserror = true;
 
         node.config = {
-            // Corresponding python function
-            pyfunc: 'load_dataset',
+            // Corresponding python class
+            pynode: 'LoadDataset',
             path: path.join(config.foldername, config.filename),
             col: parseInt(config.col),
             hasheader: Boolean(config.hasheader),

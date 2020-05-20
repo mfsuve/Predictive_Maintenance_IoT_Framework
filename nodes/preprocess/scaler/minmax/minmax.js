@@ -8,8 +8,8 @@ module.exports = function(RED) {
         node.topic = 'data';
 
         node.config = {
-            // Corresponding python function
-            pyfunc: 'minmax_scaler'
+            // Corresponding python class
+            pynode: 'MinMaxScaler'
         };
 
         utils.run(RED, node, config);

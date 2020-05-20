@@ -1,26 +1,30 @@
 import json
 import logging
 from types import GeneratorType
-from multiprocessing import Lock, Queue
+from abc import ABCMeta, abstractmethod
+from traceback import format_exc
+from threading import Lock
+from queue import Queue
 
-from utils.utils import nodered_function
-from utils.utils import myprint as print
+from utils.utils import myprint as print, make_list_of_tuples
 from utils.timed_dict import TimedDict
 
 log = logging.getLogger('nodered')
 
-class Node:
+class Node(metaclass=ABCMeta):
     num_running = 0
     num_running_lock = Lock()
-    def __init__(self, pool, id, topic, function, end):
+    def __init__(self, pool, id, topic, end=False, inputs=None, stream=False):
         self.pool = pool
         self.id = id
         self.topic = topic
-        self.function = function
         self._running = False
         self.results = TimedDict(1)
-        self.queue = Queue()
+        self.__input_queue = Queue()
+        self.stream_queue = Queue()
         self.end = end
+        self.inputs = [] if inputs is None else inputs
+        self.stream = stream # * If streaming (always running for storing some internal state), only one input is allowed
         
         
     @property
@@ -31,16 +35,16 @@ class Node:
     @running.setter
     def running(self, running):
         if not self.running and running:
-            self._inc_running()
+            self.__inc_running()
         elif self.running and not running:
-            self._dec_running()
+            self.__dec_running()
         self._running = running
     
     
     # Callback result function of node threads
-    def _function_end(self, outputs):
+    def __function_end(self, outputs):
+        print(f'Data that will be sent from node {self.id} ({self.name}):', outputs)
         if outputs is not None:
-            print(f'Data will be sent from node {self.id} ({self.name}):', outputs)
             if not isinstance(outputs, list): # In case of an exception
                 self._error(outputs)
             elif self.end: # This is an end node, send this value to node-red
@@ -50,16 +54,14 @@ class Node:
                     self._done()
                 else:
                     self._done(str(outputs[0][0]))
-            elif isinstance(outputs[0][0], (GeneratorType, map)): # Save sequential results (in case of a generator)
-                for i, gen_output in enumerate(outputs[0][0]):
-                    if not isinstance(gen_output, list):
-                        if isinstance(gen_output, tuple):
-                            gen_output = [gen_output]
-                        else:
-                            gen_output = [(gen_output,)]
-                    for out, output in enumerate(gen_output):
+            elif isinstance(outputs[0][0], (GeneratorType, map, filter, zip)): # Save sequential results (in case of a generator)
+                for i, gen_output in enumerate(outputs[0][0]):      # Generator loop
+                    print('gen_output:', gen_output)
+                    gen_output = make_list_of_tuples(gen_output)    # Make sure output is a list of tuples
+                    for out, output in enumerate(gen_output):       # Saving all outputs for all output ports
                         self.results[out] = output
                     self._done(cont=i+1)
+                print('Done all together')
                 self._done()
             else:
                 for out, output in enumerate(outputs):
@@ -71,26 +73,86 @@ class Node:
     
     def run(self, config, prev_node=None, prev_out=None, prev_node_error=None):
         print(f'prev_node: {"None" if prev_node is None else prev_node.name}', f'prev_out: {prev_out}')
+        print(f'{self.name} is{"" if self.running else " not"} running.')
         # It doesn't have a previous node, so don't send any incoming data (except node config)
         if prev_out is None: # This is the node that starts our flow
             if self.num_running == 0: # If no nodes are running
-                print(f'before self.num_running: {self.num_running}')
+                # print(f'before self.num_running: {self.num_running}')
                 self.running = True
-                print(f'after self.num_running: {self.num_running}')
-                print(f'kwargs:', config)
-                self.pool.apply_async(self.function, kwds=config, callback=self._function_end)
+                # print(f'after self.num_running: {self.num_running}')
+                print(f'prev_out is None - kwargs:', config)
+                self.pool.apply_async(self.__wrap_function, kwds=config, callback=self.__function_end)
             else: # elif not self.running:
-                print('Error: There are still nodes running.')
+                # print('Error: There are still nodes running.')
                 self._error('There are still nodes running.')
         else:
-            print(f'{self.function.__name__} is{"" if self.running else " not"} running.')
-            if not self.running: # For multiple inputs
-                self.running = True;
-                self.pool.apply_async(self.function, args=(self.queue,), kwds=config, callback=self._function_end)
+            if not self.running:
+                self.pool.apply_async(self.__wrap_function, kwds=config, callback=self.__function_end)
             if prev_node_error:
-                self.queue.put((prev_node.topic, 'error'))
+                self.__input_queue.put((prev_node.__class__, 'error'))
+            else: # For multiple inputs
+                if self.stream:
+                    self.stream_queue.put(prev_node.results[prev_out])
+                else:
+                    self.running = True;
+                    self.__input_queue.put((prev_node.__class__, prev_node.results[prev_out])) # TODO: make the result generator and send it, define in node-red
+
+
+    def __wrap_function(self, **kwargs):
+        try:
+            print(self.name, f'kwargs:', kwargs)
+            
+            if self.stream:
+                print('In stream')
+                _class = self.inputs[0]
+                def gen():
+                    while True:
+                        yield self.stream_queue.get()
+                data = gen()
+                kwargs.update(_class.format(data))
+                
             else:
-                self.queue.put((prev_node.topic, prev_node.results[prev_out])) # TODO: make the result generator and send it, define in node-red
+                print('In not stream')
+                _inputs = self.inputs.copy()
+                print('inputs:', _inputs)
+                def index(C): # give index where class C occurs in a list of classes (_inputs), even with subclasses
+                    for i, _C in enumerate(_inputs):
+                        if issubclass(C, _C):
+                           return i 
+                    return None
+                while _inputs: # Loop and get all inputs
+                    print(self.name, f'waiting for input...')
+                    _class, data = self.__input_queue.get()
+                    print(self.name, f'Got an input from {_class.__name__}', 'data:', data)
+                    if data == 'error': # Previous node had an error
+                        return None
+                    # Record that the input from _class has been arrived, only accept others if there are.
+                    idx = index(_class)
+                    if idx is not None:
+                        kwargs.update(_class.format(data))
+                        _inputs.pop(idx)
+            
+            returned = None
+            try:
+                returned = self.function(**kwargs)
+            except Exception as e:                                  # In case of an exception
+                return repr(e) + '\n' + format_exc()
+            print('returned:', returned)
+            if returned is None:                                    # In case nothing returns
+                return []
+            return make_list_of_tuples(returned)                    # In case one out returns
+        
+        except Exception:
+            print(format_exc())
+            return []
+        
+    @abstractmethod
+    def function(self, **kwargs):
+        raise NotImplementedError()
+    
+    @classmethod
+    def format(cls, data):
+        raise NotImplementedError()
     
 
     def _error(self, msg=''):
@@ -117,20 +179,52 @@ class Node:
         
     
     @classmethod 
-    def _dec_running(cls):
+    def __dec_running(cls):
         with cls.num_running_lock:
             cls.num_running -= 1
 
 
     @classmethod 
-    def _inc_running(cls):
+    def __inc_running(cls):
         with cls.num_running_lock:
             cls.num_running += 1
             
     
     @property
     def name(self):
-        return self.function.__name__
+        return self.__class__.__name__
         
         
+class Data(Node):
+    def __init__(self, pool, id):
+        super().__init__(pool,
+                         id,
+                         topic='data')
     
+    @classmethod
+    def format(cls, data):
+        if isinstance(data, GeneratorType):
+            return zip(('stream_data',), (data,))
+        else:
+            return zip(('X', 'y'), data)
+        
+
+class Model(Node):
+    def __init__(self, pool, id):
+        super().__init__(pool,
+                         id,
+                         topic='model',
+                         inputs=[Data])
+    
+    @classmethod
+    def format(cls, data):
+        return zip(('model',), data)
+
+
+class Test(Node):
+    def __init__(self, pool, id):
+        super().__init__(pool,
+                         id,
+                         topic='test',
+                         end=True,
+                         inputs=[Data, Model])
