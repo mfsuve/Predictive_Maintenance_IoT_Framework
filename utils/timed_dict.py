@@ -5,10 +5,17 @@ from utils.utils import myprint as print
 
 # Stores the results and removes them after `secs` seconds
 class TimedDict(dict):
-    def __init__(self, secs=1):
+    def __init__(self, secs=1, exclude=None):
+        if exclude is None:
+            self.exclude = tuple()
+        else:
+            try:
+                self.exclude = tuple(exclude)
+            except TypeError:
+                self.exclude = exclude
         self.secs = secs
         self.threads = {}
-    
+        
     def close(self):
         for thread in self.threads.values():
             thread.cancel()
@@ -19,10 +26,11 @@ class TimedDict(dict):
             print(f'Updated value of {key}', 'New keys:', list(self.threads.keys()))
         else:
             print(f'Stored value of {key}', 'New keys', list(self.threads.keys()) + [key])
-        thread = Timer(self.secs, self.timeout, (key,))
-        thread._name = key
-        thread.start()
-        self.threads[key] = thread
+        if not isinstance(value, self.exclude):
+            thread = Timer(self.secs, self.timeout, (key,))
+            thread.setDaemon(True)
+            thread.start()
+            self.threads[key] = thread
         return super().__setitem__(key, value)
     
     def timeout(self, key):
@@ -31,8 +39,8 @@ class TimedDict(dict):
         super().__delitem__(key)
     
     def __delitem__(self, key):
-        pass
-            
+        if isinstance(self[key], self.exclude):
+            return super().__delitem__(key)
         
 
 if __name__ == '__main__':
