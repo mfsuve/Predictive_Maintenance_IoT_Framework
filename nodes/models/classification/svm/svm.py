@@ -9,8 +9,8 @@ from utils.node import Model
 from sklearn.svm import SVC
 
 class SVM(Model):
-    def __init__(self, pool, id):
-        super().__init__(pool, id)
+    def __init__(self, *args):
+        super().__init__(*args)
 
     def function(self, X, y, kernel, degree, C, gammaSelect, gamma):
         gamma = float(gamma) if gammaSelect == 'value' else gammaSelect

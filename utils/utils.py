@@ -4,61 +4,45 @@ from pprint import pformat
 from traceback import format_exc
 from functools import wraps
 import logging
+from threading import Thread, currentThread
 
 log = logging.getLogger('nodered')
 
 
-# # ! Function having this decorator should not return
-# # ! a list for one output, it should be put in a tuple
-# # * single output for single output nodes
-# # * list of outputs for multiple output nodes
-# ##########################################
-# # TODO: Put the output in an Output object to store info like
-# # TODO: if it is an error, you can also itearte the output
-# # TODO: inside the function_end function
-# def nodered_function(*inputs):
-#     # stream_data = any(isinstance(C, Stream) for C in inputs)
-#     inputs = {C.name.lower(): C for C in inputs} # Assuming all input classes have the same name as the topics
-#     def decorator(func):
-#         @wraps(func)
-#         def wrapper(input_queue=None, **kwargs):
-#             try:
+class BaseThread(Thread):
+    def __init__(self, callback=None, *args, **kwargs):
+        target = kwargs.pop('target')
+        super().__init__(target=self.target_with_callback, *args, **kwargs)
+        self.callback = callback
+        self.method = target
+
+    def target_with_callback(self, *args, **kwargs):
+        name = currentThread().name
+        myprint(f'Running {name} in BaseThread')
+        result = self.method(*args, **kwargs)
+        myprint(f'Result coming from {name} in BaseThread:', result)
+        if self.callback is not None:
+            myprint(f'Calling back {self.callback.__name__} function for {name} in BaseThread')
+            self.callback(result)
             
-#                 myprint(func.__name__, f'kwargs:', kwargs, f'inputs:', inputs)
-                
-#                 if input_queue is not None:
-#                     for i in range(len(inputs)):
-#                         myprint(func.__name__, f'waiting for input...')
-#                         topic, data = input_queue.get()
-#                         myprint(func.__name__, f'Got {i+1}. input:', 'topic:', topic, 'data:', data)
-#                         if data == 'error':
-#                             return None
-                        
-#                         # inputs = (Data, Model)
-#                         # topic, data = model, SVM
-                        
-#                         kwargs.update(inputs[topic].format(data))
-                
-#                 returned = None
-#                 try:
-#                     returned = func(**kwargs)
-#                 except Exception as e:                                  # In case of an exception
-#                     return repr(e) + '\n' + format_exc()
-#                 if returned is None:                                    # In case nothing returns
-#                     return []
-#                 if not isinstance(returned, list):                      # In case one out returns
-#                     if isinstance(returned, tuple):
-#                         returned = [returned]
-#                     else:
-#                         returned = [(returned,)]
-#                 return returned
             
-#             except Exception:
-#                 myprint(format_exc())
-#                 return []
-            
-#         return wrapper
-#     return decorator
+def threaded(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            callback = args[0].function_end
+        except (IndexError, AttributeError):
+            callback = None
+        try:
+            name = f'{args[0].__name__} class'
+        except (IndexError, AttributeError):
+            name = f'{func.__name__} function'
+        myprint(f'Threading {name}', f'callback: {callback}', 'args:', args, 'kwargs:', kwargs)
+        thread = BaseThread(target=func, callback=callback, name=name, args=args, kwargs=kwargs)
+        thread.setDaemon(True)
+        thread.start()
+        return thread
+    return wrapper
 
 
 def myprint(*args, end='', sep='\n'):

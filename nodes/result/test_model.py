@@ -9,8 +9,8 @@ from utils.node import Test
 from sklearn import metrics
 
 class TestModel(Test):
-    def __init__(self, pool, id):
-        super().__init__(pool, id)
+    def __init__(self, *args):
+        super().__init__(*args)
 
     # ! Burada train ve test için aynı anda bakarsan 2 tane, 2.si processing'de kalıyor
     # TODO: Kontrol et!

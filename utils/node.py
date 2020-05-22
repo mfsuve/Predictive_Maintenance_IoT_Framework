@@ -6,7 +6,7 @@ from traceback import format_exc
 from threading import Lock
 from queue import Queue
 
-from utils.utils import myprint as print, make_list_of_tuples
+from utils.utils import myprint as print, make_list_of_tuples, threaded
 from utils.timed_dict import TimedDict
 
 log = logging.getLogger('nodered')
@@ -14,8 +14,7 @@ log = logging.getLogger('nodered')
 class Node(metaclass=ABCMeta):
     num_running = 0
     num_running_lock = Lock()
-    def __init__(self, pool, id, topic, end=False, inputs=None, stream=False):
-        self.pool = pool
+    def __init__(self, id, topic, end=False, inputs=None, stream=False):
         self.id = id
         self.topic = topic
         self._running = False
@@ -41,8 +40,8 @@ class Node(metaclass=ABCMeta):
         self._running = running
     
     
-    # Callback result function of node threads
-    def __function_end(self, outputs):
+    # Will be called after self.function ends
+    def function_end(self, outputs):
         print(f'Data that will be sent from node {self.id} ({self.name}):', outputs)
         if outputs is not None:
             if not isinstance(outputs, list): # In case of an exception
@@ -81,13 +80,13 @@ class Node(metaclass=ABCMeta):
                 self.running = True
                 # print(f'after self.num_running: {self.num_running}')
                 print(f'prev_out is None - kwargs:', config)
-                self.pool.apply_async(self.__wrap_function, kwds=config, callback=self.__function_end)
+                self.__wrap_function(**config)
             else: # elif not self.running:
                 # print('Error: There are still nodes running.')
                 self._error('There are still nodes running.')
         else:
             if not self.running:
-                self.pool.apply_async(self.__wrap_function, kwds=config, callback=self.__function_end)
+                self.__wrap_function(**config)
             if prev_node_error:
                 self.__input_queue.put((prev_node.__class__, 'error'))
             else: # For multiple inputs
@@ -98,6 +97,7 @@ class Node(metaclass=ABCMeta):
                     self.__input_queue.put((prev_node.__class__, prev_node.results[prev_out])) # TODO: make the result generator and send it, define in node-red
 
 
+    @threaded
     def __wrap_function(self, **kwargs):
         try:
             print(self.name, f'kwargs:', kwargs)
@@ -196,10 +196,8 @@ class Node(metaclass=ABCMeta):
         
         
 class Data(Node):
-    def __init__(self, pool, id):
-        super().__init__(pool,
-                         id,
-                         topic='data')
+    def __init__(self, id):
+        super().__init__(id, topic='data')
     
     @classmethod
     def format(cls, data):
@@ -210,11 +208,8 @@ class Data(Node):
         
 
 class Model(Node):
-    def __init__(self, pool, id):
-        super().__init__(pool,
-                         id,
-                         topic='model',
-                         inputs=[Data])
+    def __init__(self, id):
+        super().__init__(id, topic='model', inputs=[Data])
     
     @classmethod
     def format(cls, data):
@@ -222,9 +217,5 @@ class Model(Node):
 
 
 class Test(Node):
-    def __init__(self, pool, id):
-        super().__init__(pool,
-                         id,
-                         topic='test',
-                         end=True,
-                         inputs=[Data, Model])
+    def __init__(self, id):
+        super().__init__(id, topic='test', end=True, inputs=[Data, Model])

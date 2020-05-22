@@ -12,12 +12,12 @@ class LoadDataset(Data):
     
     interpolation_methods = ['linear', 'quadratic', 'cubic']
     
-    def __init__(self, pool, id):
-        super().__init__(pool, id)
+    def __init__(self, *args):
+        super().__init__(*args)
 
 
     def load(self, path, hasheader, target_col):
-        # ! Add more na_values when encountered
+        # * Add more na_values when encountered
         X = pd.read_csv(path, header=0 if hasheader else None, na_values=['na'])
         r, c = X.shape
         if target_col < 0:

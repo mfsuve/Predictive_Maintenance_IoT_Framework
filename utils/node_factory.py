@@ -6,8 +6,7 @@ for filename in glob('C:\\Users\\mus-k\\Desktop\\Üniversite\\Tez\\Node Red\\nod
     filename = filename[filename.find('nodes\\'):]
     filename = filename.replace('\\', '.')[:-3]
     exec(f'import {filename}')
-
-
+    
 class NodeFactory:
     nodes = None
     @classmethod
@@ -17,11 +16,10 @@ class NodeFactory:
                 cls.nodes[C.__name__] = C
             else:
                 cls.__init(C)
-    
+
     @classmethod
-    def create(cls, name, pool, nodeid) -> Node:
+    def create(cls, name, *args):
         if cls.nodes is None:
             cls.nodes = {}
             cls.__init(Node)
-        return cls.nodes[name](pool, nodeid)
-    
+        return cls.nodes[name](*args)

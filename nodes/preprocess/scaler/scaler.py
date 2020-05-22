@@ -7,8 +7,8 @@ from utils.node import Data
 from sklearn.preprocessing import MinMaxScaler as MMS, StandardScaler as SS
 
 class MinMaxScaler(Data):
-    def __init__(self, pool, id):
-        super().__init__(pool, id)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.inputs = [Data]
 
     def function(self, X, y):
@@ -16,8 +16,8 @@ class MinMaxScaler(Data):
         return MMS().fit_transform(X), y
 
 class StandardScaler(Data):
-    def __init__(self, pool, id):
-        super().__init__(pool, id)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.inputs = [Data]
 
     def function(self, X, y):
