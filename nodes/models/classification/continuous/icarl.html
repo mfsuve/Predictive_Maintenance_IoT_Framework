@@ -5,7 +5,7 @@ RED.nodes.registerType('icarl', {
     defaults: {
         name: {value:""},
         layerSizes: {value:""},
-        maxInDatasSize: {value:1000, required:true, validate:function(v) {
+        maxInDataSize: {value:1000, required:true, validate:function(v) {
             return RED.validators.number()(v) && v > 100;
         }},
         keepDataSize: {value:20, required:true, validate:function(v) {
@@ -38,8 +38,8 @@ RED.nodes.registerType('icarl', {
         <input type="text" id="node-input-layerSizes">
     </div>
     <div class="form-row">
-        <label for="node-input-maxInDatasSize"><i class="fa fa-file"></i> Maximum accumulated data before training</label>
-        <input type="number" id="node-input-maxInDatasSize" value="1000" min="100">
+        <label for="node-input-maxInDataSize"><i class="fa fa-file"></i> Maximum accumulated data before training</label>
+        <input type="number" id="node-input-maxInDataSize" value="1000" min="100">
     </div>
     <div class="form-row">
         <label for="node-input-keepDataSize"><i class="fa fa-file"></i> Proportion of data to keep after training</label>
