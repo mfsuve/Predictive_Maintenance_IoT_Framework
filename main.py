@@ -5,7 +5,7 @@ from pprint import pformat
 from traceback import format_exc
 # from multiprocessing import Pool # TODO: Use processes instead of threads
 
-from utils.utils import myprint as print, threaded
+from utils.utils import myprint as print, threaded, device
 from utils.logger import init_logger
 from utils.node_factory import NodeFactory
 
@@ -37,7 +37,8 @@ def call_node(config):
 
 if __name__ == '__main__':
     log = init_logger('nodered')
-    print("Started python process")
+    print('Started python process')
+    print(f'Using device {device}')
     
     while True:
         try:

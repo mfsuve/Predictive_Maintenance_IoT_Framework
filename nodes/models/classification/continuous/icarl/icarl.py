@@ -3,9 +3,9 @@ import sys
 import json
 import numpy as np
 
-from utils.utils import myprint as print, to_tensor
+from utils.utils import myprint as print, to_tensor, device, onehot
 from utils.node import Model
-from utils.nn import create_model
+from utils.model import Network
 
 import torch
 
@@ -23,24 +23,47 @@ class iCaRL(Model):
     @property
     def y(self):
         return self._y[:self.size]
-
+    
+    
+    @X.setter
+    def X(self, val):
+        self._X[:self.size] = val
+    
+    
+    @y.setter
+    def y(self, val):
+        self._y[:self.size] = val
+        
+    
+    @property
+    def model(self):
+        if self._model is None:
+            self._model = Network(self.feature_size, self.layerSizes, torch.unique(self.y).tolist())
+            self._model.to(device)
+            # self.num_class = torch.unique(self.y).size().index()
+            # self.
+        return self._model
+    
 
     def __init_data(self, stream_data, layerSizes, maxInDataSize, keepDataSize, maxOldNum):
+        # [| __________ | __ | __ | __ | __ |]
+        #     new data       old data ...
+        #  <--------- overall data --------->
         self.maxInDataSize = maxInDataSize
         self.maxOldNum = maxOldNum
+        self.layerSizes = layerSizes
         self.insize = 0                 # Size of the actual new coming data
         self.size = maxInDataSize       # Overall train size
         self.remainder = None
+        self._model = None
         
-        keepsize = (maxInDataSize * keepDataSize) // 100
-        maxsize = keepsize * maxOldNum + maxInDataSize
+        self.keep_size = (maxInDataSize * keepDataSize) // 100
+        self.full_size = self.keep_size * maxOldNum + maxInDataSize
         X_in, y_in = next(stream_data)
-        data_shape = (maxsize, X_in.shape[1])
-        self.maxsize = maxsize
-        self.keepsize = keepsize
-        self._X = torch.zeros(data_shape)
-        self._y = torch.zeros(maxsize)
-        self.append(X_in, y_in)
+        self.feature_size = X_in.shape[1]
+        self._X = torch.zeros((self.full_size, self.feature_size))
+        self._y = torch.zeros(self.full_size)
+        return self.append(X_in, y_in)
 
 
     def append(self, X_in, y_in):
@@ -61,39 +84,37 @@ class iCaRL(Model):
                 
     
     # * Call only when full
-    def reset(self):
-        self._X[self.maxInDataSize:] = self._X[self.maxInDataSize-self.keepsize:-self.keepsize]
+    def reset_data(self):
+        # TODO: make categorical **************************************
+        tokeep = self._X[self.maxInDataSize-self.keep_size:-self.keep_size]
         
-        # TODO: fix y's of old ones (get softmax output from the model)
-        self._y[self.maxInDataSize:] = self._y[self.maxInDataSize-self.keepsize:-self.keepsize]
+        self._y[self.maxInDataSize:] = self.model(tokeep)
+        self._X[self.maxInDataSize:] = tokeep
         
         self.insize = 0
-        self.size = min(self.size + self.keepsize, self.maxsize)
+        self.size = min(self.size + self.keep_size, self.full_size)
         if self.remainder is not None:
             remainder = self.remainder
             self.remainder = None
             self.append(*remainder)
             
     
-    def train(self):
-        pass
-        # TODO: Train model here
-
-
-    def function(self, stream_data, layerSizes, maxInDataSize, keepDataSize, maxOldNum):
+    # TODO: Try to implement the part where 'numClass' can be increased
+    def function(self, stream_data, layerSizes, maxInDataSize, keepDataSize, maxOldNum, numClass):
         
-        # TODO: Implement iCaRL method here
-            # TODO: First aggregate the data, after the conditions are met with the given configurations, continue learning
+        # * DONE: First, create model
+        # * DONE: Implement iCaRL method here
+            # * DONE: First aggregate the data, after the conditions are met with the given configurations, continue learning
         # TODO: Then, send aps data sequentially here
         # TODO: Finally, try a socket connection to get the data
         
-        self.__init_data(stream_data, layerSizes, maxInDataSize, keepDataSize, maxOldNum)
+        full = self.__init_data(stream_data, layerSizes, maxInDataSize, keepDataSize, maxOldNum)
         
         for X_in, y_in in stream_data:
-            full = self.append(X_in, y_in)
             if full:
-                self.train()
-                self.reset()
+                loss = self.model.train(self.X, self.y)
+                self.reset_data()
+            full = self.append(X_in, y_in)
             
             # yield data
         # for X, y in stream_data:

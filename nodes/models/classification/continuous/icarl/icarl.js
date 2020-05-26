@@ -1,7 +1,7 @@
 module.exports = function(RED) {
     function iCaRLNode(config) {
 
-        const utils = require('../../../../utils/utils');
+        const utils = require('../../../../../utils/utils');
 
         var node = this;
 
