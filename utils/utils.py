@@ -22,11 +22,8 @@ class BaseThread(Thread):
 
     def target_with_callback(self, *args, **kwargs):
         name = currentThread().name
-        myprint(f'Running {name} in BaseThread')
         result = self.method(*args, **kwargs)
-        myprint(f'Result coming from {name} in BaseThread:', result)
         if self.callback is not None:
-            myprint(f'Calling back {self.callback.__name__} function for {name} in BaseThread')
             self.callback(result)
             
             
@@ -38,10 +35,10 @@ def threaded(func):
         except (IndexError, AttributeError):
             callback = None
         try:
-            name = f'{args[0].__name__} class'
+            name = f'{args[0].__class__.__name__} class'
         except (IndexError, AttributeError):
             name = f'{func.__name__} function'
-        myprint(f'Threading {name}', f'callback: {callback}', 'args:', args, 'kwargs:', kwargs)
+        myprint(f'Threading {name}', f'callback: {callback}')
         thread = BaseThread(target=func, callback=callback, name=name, args=args, kwargs=kwargs)
         thread.setDaemon(True)
         thread.start()
