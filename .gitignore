@@ -1,6 +1,7 @@
 __pycache__ 
 test.py
 test1.py
+test2.py
 *.log
 settings.json
 events.out.*
