@@ -10,7 +10,7 @@ module.exports = function(RED) {
         node.config = {
             // Corresponding python class
             pynode: 'Split',
-            testPercentage: config.testPercentage
+            testPercentage: parseInt(config.testPercentage)
         };
 
         utils.run(RED, node, config);

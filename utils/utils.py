@@ -1,15 +1,11 @@
 import json
 import sys
-import torch
 from pprint import pformat
 from traceback import format_exc
 from functools import wraps
 import logging
 from threading import Thread, currentThread
 
-
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-myprint(f'Using device {device}')
 log = logging.getLogger('nodered')
 
 
@@ -63,6 +59,3 @@ def make_list_of_tuples(val):
             return [val]
         else:
             return [(val,)]
-        
-def to_tensor(data):
-    return torch.from_numpy(data).float().to(device)

@@ -3,7 +3,8 @@ import sys
 import json
 import numpy as np
 
-from utils.utils import myprint as print, to_tensor, device, onehot
+from utils.utils import myprint as print
+from utils.net.utils import to_tensor, device
 from utils.node import Model
 from utils.model import Network
 

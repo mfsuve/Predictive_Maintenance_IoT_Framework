@@ -1,0 +1,223 @@
+<script type="text/javascript">
+RED.nodes.registerType('dgr', {
+    category: 'ML Model',
+    color: '#DAC4B4',
+    defaults: {
+        name: {value:""},
+
+        CLayers: {value:3, required:true, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }},
+        CHidden: {value:256, required:true, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }},
+        CHasSmooth: {value:false, required:true},
+        CHiddenSmooth: {value:64, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }},
+        Clr: {value:0.01, required:true, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }},
+
+        GLayers: {value:3, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }},
+        GHidden: {value:256, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }},
+        GHasSmooth: {value:false},
+        GHiddenSmooth: {value:64, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }},
+        Glr: {value:0.01, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }},
+        GZdim: {value:20, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }},
+        autoGenParams: {value:false},
+
+        taskSize: {value:5000, required:true, validate:function(v) {
+            return RED.validators.number()(v) && v >= 10;
+        }},
+        epochs: {value:10, required:true, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }},
+        batchSize: {value:128, required:true, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }}
+    },
+    inputs:1,
+    outputs:1,
+    icon: "font-awesome/fa-level-up-alt", // level-up-alt
+    label: function() {
+        return this.name || "Deep Generative Replay";
+    },
+    labelStyle: function() {
+        return this.name ? "node_label_italic" : "";
+    },
+    oneditprepare: function() {
+        if (this.CHasSmooth) {
+            $("#node-input-CHiddenSmooth").show();
+        } else {
+            $("#node-input-CHiddenSmooth").hide();
+        }
+        $("#node-input-CHasSmooth").on("change", function() {
+            smooth = $("#node-input-CHasSmooth").prop('checked');
+            if (smooth) {
+                $("#node-input-CHiddenSmooth").show(200).focus();
+            } else {
+                $("#node-input-CHiddenSmooth").hide(200);
+            }
+        });
+        
+        if (this.GHasSmooth) {
+            $("#node-input-GHiddenSmooth").show();
+        } else {
+            $("#node-input-GHiddenSmooth").hide();
+        }
+        $("#node-input-GHasSmooth").on("change", function() {
+            smooth = $("#node-input-GHasSmooth").prop('checked');
+            if (smooth) {
+                $("#node-input-GHiddenSmooth").show(200).focus();
+            } else {
+                $("#node-input-GHiddenSmooth").hide(200);
+            }
+        });
+
+        if (this.autoGenParams) {
+            $("#genops").show();
+            $("#infoAutoGen").hide();
+        } else {
+            $("#genops").hide();
+            $("#infoAutoGen").show();
+        }
+        $("#node-input-autoGenParams").on("change", function() {
+            autogen = $("#node-input-autoGenParams").prop('checked');
+            if (!autogen) {
+                $("#genops").show(200);
+                $("#infoAutoGen").hide(200);
+            } else {
+                $("#genops").hide(200);
+                $("#infoAutoGen").show(200);
+            }
+        });
+    }
+});
+</script>
+
+
+<script type="text/x-red" data-template-name="dgr">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <label for="node-input-taskSize" style="width:350px;">Maximum Accumulated Data Size Before Training</br>
+        <input type="number" id="node-input-taskSize" value="5000" style="width:80px; margin-top:10px;" min="10">
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <label for="node-input-batchSize" style="width:80px; text-align:center;">Batch Size</label>
+        <label for="node-input-epochs" style="width:80px; text-align:center;">Epochs</label></br>
+        <label>&nbsp;</label>
+        <input type="number" id="node-input-batchSize" value="128" style="width:80px;" min="1">
+        <input type="number" id="node-input-epochs" value="10" style="width:80px;" min="1">
+    </div>
+    <hr align="middle"/>
+    <div class="form-row">
+        <span style="width:100%; font-size:120%; margin-bottom:20px;"><b>Classifier Options</b></span>
+    </div>
+    <div class="form-row" style="padding-left:20px;">
+        <label for="node-input-CLayers" style="width:150px;">Number of Layers</label>
+        <input type="number" id="node-input-CLayers" value="3" style="width:80px;" min="1"></br>
+
+        <label for="node-input-CHidden" style="width:150px; margin-top:10px;">Hidden Layer Sizes</label>
+        <input type="number" id="node-input-CHidden" value="256" style="width:80px;" min="1">
+        
+        <input style="width:20px; margin:0px;" type="checkbox" id="node-input-CHasSmooth">
+        <label style="width:auto;" for="node-input-CHasSmooth"> Smooth</label>
+        <input type="text" id="node-input-CHiddenSmooth" value="64" style="width:80px; margin-left:7px;" min="1"></br>
+        
+        <label for="node-input-Clr" style="width:150px; margin-top:10px;">Learning Rate</label>
+        <input type="text" id="node-input-Clr" value="0.01" style="width:80px;" min="0">
+    </div>
+    <hr align="middle"/>
+    <div class="form-row">
+        <span style="width:100%; font-size:120%"><b>Generator (Variational AutoEncoder) Options</b>           |           </span>
+        <input type="checkbox" id="node-input-autoGenParams" style="width:20px; margin-top:0px; margin-bottom:2px;">
+        <label for="node-input-autoGenParams" style="width:auto;"><i class="fa fa-magic"></i>  Auto</label>
+    </div>
+    <div class="form-row" style="padding-left:20px;" id="genops">
+        <label for="node-input-GLayers" style="width:150px;">Number of Layers</label>
+        <input type="number" id="node-input-GLayers" value="3" style="width:80px;" min="1"></br>
+
+        <label for="node-input-GHidden" style="width:150px; margin-top:10px;">Hidden Layer Sizes</label>
+        <input type="number" id="node-input-GHidden" value="256" style="width:80px;" min="1">
+        
+        <input style="width:20px; margin:0px;" type="checkbox" id="node-input-GHasSmooth">
+        <label style="width:auto;" for="node-input-GHasSmooth"> Smooth</label>
+        <input type="text" id="node-input-GHiddenSmooth" value="64" style="width:80px; margin-left:7px;" min="1"></br>
+
+        <label for="node-input-GZdim" style="width:150px; margin-top:10px;">Z-Dimension</label>
+        <input type="number" id="node-input-GZdim" value="20" style="width:80px;" min="1"></br>
+        
+        <label for="node-input-Glr" style="width:150px; margin-top:10px;">Learning Rate</label>
+        <input type="text" id="node-input-Glr" value="0.01" style="width:80px;" min="0">
+    </div>
+    <p style="border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9;" id="infoAutoGen">
+        Layer information of the Classifier will be used.</br>
+        <i class="fa fa-arrow-right" style="font-size:80%; margin-left:10px;"></i>
+        Z-Dimension of the generator will be set as square root of the feature size of the input.
+    </p>
+</script>
+
+
+<script type="text/x-red" data-help-name="dgr">
+    <p>Loads the dataset from a csv file.</p>
+
+    <h3>Inputs</h3>
+	<dl class="message-properties">
+		<dd>
+			anything that triggers the operation.
+		</dd>
+	</dl>
+
+	<h3>Outputs</h3>
+	<ol class="node-ports">
+		<li>Standard output
+			<dl class="message-properties">
+				<dt>payload.data <span class="property-type">2D array</span></dt>
+				<dd>the loaded dataset without it's target.</dd>
+			</dl>
+			<dl class="message-properties">
+				<dt>payload.target <span class="property-type">array</span></dt>
+				<dd>the loaded target extracted from the dataset.</dd>
+			</dl>
+			<dl class="message-properties">
+				<dt>payload.columns <span class="property-type">array</span></dt>
+				<dd>the column names extracted from the dataset.</dd>
+			</dl>
+		</li>
+		<li>Standard error
+			<dl class="message-properties">
+				<dt>payload <span class="property-type">string</span></dt>
+				<dd>the standard error of the command.</dd>
+			</dl>
+		</li>
+	</ol>
+
+    <h3>Details</h3>
+    <p>Once triggered, this node loads the dataset from <code>filename</code> under <code>foldername</code>
+    which needs to be a <code>csv</code> file.</p>
+    <p>Target Column Number</p>
+    <p><code>col</code> parameter indicates which column should be treated as target column. 0 value means
+    the first column. This value can be negative. If so, the new value for this parameter will be
+    <code>#columns-col</code></p>
+    <p>Has Header</p>
+    <p><code>hasheader</code> parameter tells if the dataset has headers.
+    <p>It has 2 outputs. The first one is an object having 2D dataset without the target column as
+    <code>payload.data</code> and the target column as <code>payload.target</code>. The second one is the error.</p>
+
+</script>
