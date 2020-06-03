@@ -33,10 +33,12 @@ class Node(metaclass=ABCMeta):
     
     @running.setter
     def running(self, running):
-        if not self.running and running:
-            self.__inc_running()
-        elif self.running and not running:
-            self.__dec_running()
+        if not self.stream:
+            if not self.running and running:
+                self.__inc_running()
+            elif self.running and not running:
+                self.__dec_running()
+        print(f'Setting {self.name} from {"" if self._running else "not "}running to {"" if running else "not "}running')
         self._running = running
     
     
@@ -82,19 +84,21 @@ class Node(metaclass=ABCMeta):
                 print(f'prev_out is None - kwargs:', config)
                 self.__wrap_function(**config)
             else: # elif not self.running:
-                # print('Error: There are still nodes running.')
                 self._error('There are still nodes running.')
         else:
             if not self.running:
                 self.__wrap_function(**config)
             if prev_node_error:
+                print(f'{self.name} prev_node_error')
                 self.__input_queue.put((prev_node.__class__, 'error'))
             else: # For multiple inputs
                 if self.stream:
+                    print(f'streaming node')
                     self.stream_queue.put(prev_node.results[prev_out])
                 else:
-                    self.running = True;
-                    self.__input_queue.put((prev_node.__class__, prev_node.results[prev_out])) # TODO: make the result generator and send it, define in node-red
+                    print(f'not streaming node')
+                    self.__input_queue.put((prev_node.__class__, prev_node.results[prev_out]))
+                self.running = True;
 
 
     @threaded
@@ -107,14 +111,16 @@ class Node(metaclass=ABCMeta):
                 _class = self.inputs[0]
                 def gen():
                     while True:
-                        yield self.stream_queue.get()
+                        d = self.stream_queue.get()
+                        if d is None:
+                            break
+                        yield d
                 data = gen()
                 kwargs.update(_class.format(data))
                 
             else:
                 print('In not stream')
                 _inputs = self.inputs.copy()
-                print('inputs:', _inputs)
                 def index(C): # give index where class C occurs in a list of classes (_inputs), even with subclasses
                     for i, _C in enumerate(_inputs):
                         if issubclass(C, _C):
