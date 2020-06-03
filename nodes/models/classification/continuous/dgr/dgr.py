@@ -34,6 +34,7 @@ class DeepGenerativeReplay(Model):
         self._model = None
         self.size = 0
         self.task = 0
+        self.remainder = None
         
         X_in, y_in = next(stream_data)
         self.feature_size = X_in.shape[1]
@@ -43,7 +44,6 @@ class DeepGenerativeReplay(Model):
         
         self.prev_model = None
         self.prev_generator = None
-        self.remainder = None
         
         # The function that will be used to create the model once all the data for the first task has arrived
         # (Because I need to exctract the number of classes from y values)
@@ -110,7 +110,7 @@ class DeepGenerativeReplay(Model):
             print(f'{epoch:>5} Epoch')
             for batch, (x, y) in enumerate(data_loader, 1):
                 x, y = x.to(device), y.to(device, dtype=torch.int64)
-                print(f'    {batch:>5} Batch')
+                print(f'{batch:>9} Batch')
                 if self.prev_generator is not None:
                     gen_x = self.prev_generator.sample(batchSize)
                     gen_scores = self.prev_model(gen_x)
@@ -120,7 +120,6 @@ class DeepGenerativeReplay(Model):
                 self.generator.train_step(x, y, gen_x=gen_x, gen_y=gen_y, scores=scores, gen_scores=gen_scores, rnt=1./self.task)
 
 
-    ### TODO: Get the parameters from node-red
     def function(self, stream_data, taskSize, CLayers, CHidden, Clr, GZdim, GLayers, GHidden, Glr, epochs, batchSize, CHiddenSmooth=None, GHiddenSmooth=None):
         '''Aggregate streaming data, train when full and continue
 
@@ -136,7 +135,6 @@ class DeepGenerativeReplay(Model):
         
         indata = 1
         full = self.__init_data(stream_data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr)
-        # for indata, (X_in, y_in) in enumerate(stream_data, 2): # TODO: append'den hemen önceye al
         while True:
             indata += 1
             while full:
@@ -146,10 +144,12 @@ class DeepGenerativeReplay(Model):
                 yield self.model
                 print(f'DGR | Resetting data')
                 full = self.reset_data()
+                print(f'DGR | full: {full} after resetting')
             try:
                 X_in, y_in = next(stream_data)
                 print(f'DGR | Got {indata}. data')
             except StopIteration:
+                print(f'DGR | Stop Iteration')
                 break
             print(f'DGR | Appending incoming data')
             full = self.append(X_in, y_in)

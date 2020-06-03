@@ -104,7 +104,6 @@ class AutoEncoder(Trainable):
         recon_loss = self.recon_loss(x, x_recon).mean()
         variat_loss = self.variat_loss(mu, logvar).mean()
         variat_loss /= x.size()[1]
-        print('Calculating loss of Variational AutoEncoder:', f'variatL is divided by {x.size()[1]}', '(this number needs to be feature size)')
 
         return recon_loss + variat_loss
 

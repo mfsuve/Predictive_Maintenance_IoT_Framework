@@ -38,7 +38,7 @@ class Node(metaclass=ABCMeta):
                 self.__inc_running()
             elif self.running and not running:
                 self.__dec_running()
-        print(f'Setting {self.name} from {"" if self._running else "not "}running to {"" if running else "not "}running')
+        # print(f'Setting {self.name} from {"" if self._running else "not "}running to {"" if running else "not "}running')
         self._running = running
     
     
