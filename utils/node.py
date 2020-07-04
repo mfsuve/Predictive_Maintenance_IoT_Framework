@@ -42,28 +42,34 @@ class Node(metaclass=ABCMeta):
         self._running = running
     
     
-    # Will be called after self.function ends
+    # Will be called after self.function ends (this should be here, threaded decorator will be looking for this)
     def function_end(self, outputs):
         print(f'Data that will be sent from node {self.id} ({self.name}):', outputs)
         if outputs is not None:
             if not isinstance(outputs, list): # In case of an exception
                 self._error(outputs)
             elif self.end: # This is an end node, send this value to node-red
-                if isinstance(outputs[0][0], (GeneratorType, map)): # Send sequential results #!(not tested)
+                if isinstance(outputs[0][0], (GeneratorType, map, filter, zip)): # Send sequential results #!(not tested)
                     for i, output in enumerate(outputs[0][0]):
                         self._done(str(output), cont=i+1)
                     self._done()
                 else:
                     self._done(str(outputs[0][0]))
             elif isinstance(outputs[0][0], (GeneratorType, map, filter, zip)): # Save sequential results (in case of a generator)
-                for i, gen_output in enumerate(outputs[0][0]):      # Generator loop
-                    print('gen_output:', gen_output)
-                    gen_output = make_list_of_tuples(gen_output)    # Make sure output is a list of tuples
-                    for out, output in enumerate(gen_output):       # Saving all outputs for all output ports
-                        self.results[out] = output
-                    self._done(cont=i+1)
-                print('Done all together')
-                self._done()
+                try:
+                    for i, gen_output in enumerate(outputs[0][0]):      # Generator loop
+                        print('gen_output:', gen_output)
+                        gen_output = make_list_of_tuples(gen_output)    # Make sure output is a list of tuples
+                        for out, output in enumerate(gen_output):       # Saving all outputs for all output ports
+                            self.results[out] = output
+                        self._done(cont=i+1)
+                    print('Done all together')
+                    self._done()
+                # * In case of an exception in the generator
+                # I need to this here because stream nodes automatically returns generator
+                # and there is no exception for that to catch in __wrap_function where we call self.function
+                except Exception as e:
+                    self._error(repr(e) + '\n' + format_exc())
             else:
                 for out, output in enumerate(outputs):
                     self.results[out] = output
@@ -108,6 +114,7 @@ class Node(metaclass=ABCMeta):
             
             if self.stream:
                 print('In stream')
+                # Streaming nodes should have one and only one input
                 _class = self.inputs[0]
                 def gen():
                     while True:
@@ -140,7 +147,7 @@ class Node(metaclass=ABCMeta):
             
             returned = None
             try:
-                returned = self.function(**kwargs)
+                returned = self.function(**kwargs)                  # * self.function will return a generator (e.g. for DGR) if it contains yield in the class implementation
             except Exception as e:                                  # In case of an exception
                 return repr(e) + '\n' + format_exc()
             print('returned:', returned)
