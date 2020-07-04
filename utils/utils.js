@@ -18,21 +18,6 @@ const initProc = (env) => {
         // proc = spawn(pcmd, [__dirname + '/../main.py'], ['pipe', 'pipe', 'pipe']);
         console.log("**************** Created python process | PID: " + proc.pid + " ********************");
 
-        // function myFunc() {
-        //     console.log("=======================================================");
-        //     console.log("In timeout...");
-        //     if (proc) {
-        //         console.log(`proc is not null | PID: ${proc.pid}`);
-        //         // console.log(proc);
-        //         // console.log(`proc.connected = ${proc.connected}`);
-        //     } else {
-        //         console.log(`proc is null`);
-        //     }
-        //     console.log("=======================================================");
-        //     setTimeout(myFunc, 10000);
-        // }
-        // myFunc();
-
         //handle results
         proc.stdout.on('data', (data) => {
 
@@ -111,7 +96,8 @@ const initProc = (env) => {
                     }
                 );
 
-                node.send(msg)
+                node.send(msg);
+                // node.error(msg);
             } catch (err) {
                 console.log("In stderr of process | Catched error:");
                 console.log("err: " + err);
@@ -152,6 +138,10 @@ module.exports = {
         node.on('input', (msg) => {
             console.log("Input msg:");
             console.log(msg);
+
+            if (node.onmessage != undefined) {
+                node.onmessage(msg);
+            }
 
             if (msg.error) { // prev node error
                 node.status(status.NONE);
