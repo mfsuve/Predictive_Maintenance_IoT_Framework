@@ -10,13 +10,14 @@ RED.nodes.registerType('load dataset', {
         hasheader: {value:true},
         encode: {value:"N"},
         fillConstant: {value:"0"},
-        fillSelect: {value:"none"}
+        fillSelect: {value:"none"},
+        payloadFilename: {value:false}
     },
     inputs:1,
     outputs:1,
     icon: "file.png",
     label: function() {
-        return this.name || this.filename;
+        return this.name || (this.payloadFilename ? "msg.payload" : this.filename);
     },
     labelStyle: function() {
         return this.name ? "node_label_italic" : "";
@@ -35,6 +36,21 @@ RED.nodes.registerType('load dataset', {
                 $("#node-input-fillConstant").hide();
             }
         });
+
+        if (this.payloadFilename) {
+            $("#filename").hide();
+        } else {
+            $("#filename").show();
+        }
+        $("#node-input-payloadFilename").on("change", function() {
+            var v = $("#node-input-payloadFilename").prop('checked');
+            if (v) {
+                $("#filename").hide();
+            } else {
+                $("#filename").show();
+                $("#node-input-filename").focus();
+            }
+        });
     }
 });
 </script>
@@ -50,11 +66,15 @@ RED.nodes.registerType('load dataset', {
         <input type="text" id="node-input-foldername" placeholder="Folder Name">
     </div>
     <div class="form-row">
-        <label for="node-input-filename"><i class="fa fa-file"></i> File Name</label>
+        <label for="node-input-payloadFilename"><i class="fa fa-file"></i> File Name</label>
+        <input type="checkbox" id="node-input-payloadFilename" style="width:20px; vertical-align:baseline; margin-right:5px;"> Use <code>msg.payload</code> as File Name
+    </div>
+    <div class="form-row" id="filename">
+        <label for="node-input-filename">&nbsp;</label>
         <input type="text" id="node-input-filename" placeholder="File Name">
     </div>
     <div class="form-row">
-        <label for="node-input-hasheader">&nbsp;</label>
+        <label>&nbsp;</label>
         <input type="checkbox" id="node-input-hasheader" style="width:20px; vertical-align:baseline; margin-right:5px;"> Has header
     </div>
     <hr align="middle"/>

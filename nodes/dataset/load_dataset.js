@@ -11,13 +11,19 @@ module.exports = function(RED) {
         node.config = {
             // Corresponding python class
             pynode: 'LoadDataset',
-            path: path.join(config.foldername, config.filename),
+            // path: path.join(config.foldername, config.filename),
             col: parseInt(config.col),
             hasheader: Boolean(config.hasheader),
             encode: config.encode,
             fillConstant: config.fillConstant,
             fillSelect: config.fillSelect
         };
+        node.onmessage = (msg) => {
+            if (config.payloadFilename)
+                node.config.path = path.join(config.foldername, msg.payload);
+            else
+                node.config.path = path.join(config.foldername, config.filename);
+        }
 
         utils.run(RED, node, config);
 
