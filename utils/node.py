@@ -191,6 +191,10 @@ class Node(metaclass=ABCMeta):
         log.info(json.dumps(to_send))
         
     
+    def _status(self, msg):
+        log.error(json.dumps({'nodeid': self.id, 'status': f'{msg}'}))
+    
+    
     @classmethod 
     def __dec_running(cls):
         with cls.num_running_lock:

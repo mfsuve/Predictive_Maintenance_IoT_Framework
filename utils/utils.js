@@ -23,13 +23,16 @@ const initProc = (env) => {
 
             console.log("Outgoing data: " + data.toString());
 
-            // for all nodes (sometimes, due to threading in python, multiple nodeids come seperated by '\n')
+            // for all nodes (sometimes, due to threading in python, multiple inputs come seperated by '\n')
             data.toString().trim().split('\n').forEach((_data) => {
 
                 _data = JSON.parse(_data.trim());
                 nodeid = _data.nodeid;
                 node = nodes[nodeid];
-                if (_data.msg) {
+                if (_data.status) {
+                    node.status(status.TEXT(_data.status));
+                    return;
+                } else if (_data.msg) {
                     if (_data.msg == 'error') { // Previous node had an error
                         node.status(status.NONE);
                         return;
@@ -37,9 +40,9 @@ const initProc = (env) => {
                         msg = {
                             payload: _data.msg
                         }; // end node will have only one output
+                        // TODO: Give this node the ability to have multiple outputs
                     }
                 } else {
-                    // Send all outputs except for the error one (last one, if exists)
                     msg = Array(node.wires.length);
                     for (var i = 0; i < node.wires.length; ++i) {
                         // This data is coming from this output of this node
@@ -170,7 +173,7 @@ module.exports = {
             node.status(status.NONE);
             delete nodes[node.id];
             if (proc != null) {
-                proc.stdin.write('\n'); // this gives python process an exception so that it will terminate
+                proc.stdin.write('\n'); // this gives python process a json exception so that it will terminate
                 proc = null;
             }
             done();
