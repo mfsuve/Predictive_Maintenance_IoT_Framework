@@ -73,6 +73,7 @@ class DeepGenerativeReplay(Model):
             self.y[self.size:self.size+input_size] = y_in
             self.size += input_size
         print(f'DGR | input size: {input_size}', f'DGR | size: {self.size}', f'DGR | full: {self.size >= self.taskSize}', f'DGR | task size: {self.taskSize}')
+        self.status(f'{self.size}/{self.taskSize} | trained {self.task}')
         return self.size >= self.taskSize
                 
     
@@ -88,6 +89,8 @@ class DeepGenerativeReplay(Model):
             remainder = self.remainder
             self.remainder = None
             return self.append(*remainder)
+        else:
+            self.status(f'{self.size}/{self.taskSize} | trained {self.task}')
         return False
             
             
@@ -139,6 +142,7 @@ class DeepGenerativeReplay(Model):
             indata += 1
             while full:
                 print(f'DGR | Full, will train...')
+                self.status(f'{self.task + 1}. training')
                 self.train(epochs, batchSize)
                 print(f'DGR | yielding model...')
                 yield self.model

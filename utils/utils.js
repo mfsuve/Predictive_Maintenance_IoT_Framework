@@ -30,11 +30,13 @@ const initProc = (env) => {
                 nodeid = _data.nodeid;
                 node = nodes[nodeid];
                 if (_data.status) {
+                    console.log("Trying to set the status as:");
+                    console.log(_data.status);
                     node.status(status.TEXT(_data.status));
                     return;
                 } else if (_data.msg) {
                     if (_data.msg == 'error') { // Previous node had an error
-                        node.status(status.NONE);
+                        node.status(status.NONE); // TODO: Try to cascade this message to next nodes
                         return;
                     } else {
                         msg = {
@@ -71,15 +73,17 @@ const initProc = (env) => {
         proc.stderr.on('data', (data) => {
 
             console.log("\n\nNode error:");
-            console.log("============================")
+            console.log("============================");
             try {
                 console.log("stderr in try");
                 console.log(JSON.parse(data.toString()).error);
+                console.log("============================");
+                console.log(JSON.parse(data.toString()));
             } catch (err) {
                 console.log("stderr in catch");
                 console.log(data.toString());
             }
-            console.log("============================")
+            console.log("============================");
             console.log("\n\n");
 
             try {
