@@ -11,6 +11,8 @@ from utils.timed_dict import TimedDict
 
 log = logging.getLogger('nodered')
 
+# TODO: Weighted KNN for Continuous/Incremental/Online Learning (research)
+
 class Node(metaclass=ABCMeta):
     num_running = 0
     num_running_lock = Lock()
@@ -191,8 +193,9 @@ class Node(metaclass=ABCMeta):
         log.info(json.dumps(to_send))
         
     
-    def _status(self, msg):
-        log.error(json.dumps({'nodeid': self.id, 'status': f'{msg}'}))
+    def status(self, msg):
+        print(f'Trying to set the status as:', msg)
+        log.info(json.dumps({'nodeid': self.id, 'status': f'{msg}'}))
     
     
     @classmethod 
