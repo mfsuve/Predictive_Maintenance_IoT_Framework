@@ -15,8 +15,7 @@ const initProc = (env) => {
     // console.trace("init proc");
     if (proc == null) {
         proc = exec(`conda activate ${env} && python "${__dirname}/../main.py" && conda deactivate`, ['pipe', 'pipe', 'pipe']);
-        // proc = spawn(pcmd, [__dirname + '/../main.py'], ['pipe', 'pipe', 'pipe']);
-        console.log("**************** Created python process | PID: " + proc.pid + " ********************");
+        console.log("**************** Created python process ********************");
 
         //handle results
         proc.stdout.on('data', (data) => {
@@ -29,43 +28,48 @@ const initProc = (env) => {
                 _data = JSON.parse(_data.trim());
                 nodeid = _data.nodeid;
                 node = nodes[nodeid];
+
                 if (_data.status) {
-                    console.log("Trying to set the status as:");
-                    console.log(_data.status);
+                    // Change Status
                     node.status(status.TEXT(_data.status));
                     return;
-                } else if (_data.msg) {
-                    if (_data.msg == 'error') { // Previous node had an error
-                        node.status(status.NONE); // TODO: Try to cascade this message to next nodes
-                        return;
-                    } else {
-                        msg = {
-                            payload: _data.msg
-                        }; // end node will have only one output
-                        // TODO: Give this node the ability to have multiple outputs
+                } else if (_data.prev_error) { // TODO: Buna gerek kalmayabilir, error kısmında node.send yerine node.error dediğimde otomatik kesiyor olabilir
+                    // Stop because previous node had an error
+                    node.status(status.NONE); // TODO: Try to cascade this message to next nodes
+                    return;
+                } else if (_data.done) {
+                    // Set status as 'DONE'
+                    node.status(status.DONE);
+                    return;
+                } else if (_data.message) {
+                    // Send message to nodered to print it in debug node
+                    message = Array(node.wires.length);
+                    for (var i = 0; i < node.wires.length; ++i) {
+                        if (_data.message[i] === null)
+                            message[i] = null;
+                        else
+                            message[i] = {
+                                topic: node.topic,
+                                payload: _data.message[i]
+                            };
                     }
                 } else {
-                    msg = Array(node.wires.length);
+                    // Just send a signal to notify the next nodes to continue
+                    message = Array(node.wires.length);
                     for (var i = 0; i < node.wires.length; ++i) {
-                        // This data is coming from this output of this node
-                        // Read the data coming from there in python
-                        msg[i] = {
+                        message[i] = {
                             nodeid: node.id,
                             out: i,
-                            error: false,
                             payload: node.config.pynode + " done!"
                         };
                     }
-                    console.log("Data about to be sent:");
-                    msg.forEach((m) => {
-                        console.log(m);
-                    });
                 }
-                if (_data.cont == undefined)
-                    node.status(status.DONE);
-                else
-                    node.status(status.COUNT(_data.cont));
-                node.send(msg);
+                console.log("Data about to be sent:");
+                message.forEach((m) => {
+                    console.log(m);
+                });
+                node.status(status.PROCESSING);
+                node.send(message);
             });
         });
 
@@ -93,30 +97,12 @@ const initProc = (env) => {
                 // data.error = 'error';
                 node = nodes[data.nodeid];
                 node.status(status.ERROR)
-
-                msg = Array.from(Array(node.wires.length), (x, i) =>
-                    error = {
-                        nodeid: node.id,
-                        out: i,
-                        payload: data.error,
-                        error: true
-                    }
-                );
-
-                node.send(msg);
-                // node.error(msg);
+                node.error(data.error);
             } catch (err) {
                 console.log("In stderr of process | Catched error:");
                 console.log("err: " + err);
                 console.log(data.toString());
             }
-        });
-
-        proc.on('exit', () => {
-            if (proc)
-                console.log(`**************** Process terminated ****************`);
-            else
-                console.log(`**************** Process terminated | PID: ${proc.pid} ****************`);
         });
     }
 };

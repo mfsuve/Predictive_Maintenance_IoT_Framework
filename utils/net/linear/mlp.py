@@ -66,7 +66,3 @@ class MLP(nn.Module):
             x = layer(x)
         return x
     
-
-    # @property
-    # def name(self):
-    #     return self.label

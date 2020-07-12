@@ -5,7 +5,7 @@ module.exports = function(RED) {
 
         var node = this;
 
-        node.topic = 'model';
+        node.topic = 'DGR'; // TODO: topic'leri düzenle
 
         node.config = {
             // * Corresponding python class

@@ -26,16 +26,7 @@ class BaseThread(Thread):
 def threaded(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        try:
-            callback = args[0].function_end
-        except (IndexError, AttributeError):
-            callback = None
-        try:
-            name = f'{args[0].__class__.__name__} class'
-        except (IndexError, AttributeError):
-            name = f'{func.__name__} function'
-        myprint(f'Threading {name}', f'callback: {callback}')
-        thread = BaseThread(target=func, callback=callback, name=name, args=args, kwargs=kwargs)
+        thread = BaseThread(target=func, callback=None, name=func.__name__, args=args, kwargs=kwargs)
         thread.setDaemon(True)
         thread.start()
         return thread
@@ -52,10 +43,3 @@ def myprint(*args, end='', sep='\n'):
     final_string += end
     log.warning(final_string)
    
- 
-def make_list_of_tuples(val):
-    if not isinstance(val, list):
-        if isinstance(val, tuple):
-            return [val]
-        else:
-            return [(val,)]

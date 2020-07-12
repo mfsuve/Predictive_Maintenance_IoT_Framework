@@ -9,9 +9,6 @@ module.exports = {
     DONE: { fill: 'green', shape: 'dot', text: 'done' },
     ERROR: { fill: 'red', shape: 'dot', text: 'error' },
     NONE: {},
-    COUNT: function(c) {
-        return { fill: 'yellow', shape: 'dot', text: `processed ${c}` }
-    },
     TEXT: function(t) {
         return { fill: 'yellow', shape: 'dot', text: `${t}` }
     }

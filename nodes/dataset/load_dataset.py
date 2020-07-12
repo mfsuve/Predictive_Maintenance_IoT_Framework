@@ -93,5 +93,5 @@ class LoadDataset(Data):
             except ValueError:
                 raise ValueError(f"Can't use {fillSelect} interpolation on {path.split('/')[-1]}. Please try another option.")
         
-        return X, y, onlyTest
+        self.send_next_node((X, y, onlyTest))
     

@@ -49,11 +49,11 @@ class DeepGenerativeReplay(Model):
         self.prev_model = None
         self.prev_generator = None
         
+        self.test(X_in, y_in)
+        
         full = False
         if not onlyTest:
             full = self.append(X_in, y_in)
-        
-        # TODO: Get predictions
         
         return full 
 
@@ -134,6 +134,11 @@ class DeepGenerativeReplay(Model):
             for i in loss_values:
                 file.write(f'{i}\n')
             file.write(f'TASK {self.task}\n')
+            
+    
+    def test(self, X_in, y_in):
+        y_pred = self.model.predict(X_in.to_numpy())
+        self.send_nodered(None, y_pred.tolist())
 
 
     def function(self, stream_data, taskSize, CLayers, CHidden, Clr, GZdim, GLayers, GHidden, Glr, epochs, batchSize, classes, CHiddenSmooth=None, GHiddenSmooth=None):
@@ -158,16 +163,18 @@ class DeepGenerativeReplay(Model):
                 self.status(f'{self.task + 1}. training')
                 self.train(epochs, batchSize)
                 print(f'DGR | yielding model...')
-                yield self.model
+                self.send_next_node(self.model)
                 print(f'DGR | Resetting data')
                 full = self.reset_data()
                 print(f'DGR | full: {full} after resetting')
             try:
-                X_in, y_in, onlyTest = next(stream_data)
+                X_in, y_in, onlyTest = next(stream_data) # TODO: X_in hep DataFrame olmalı
+                assert isinstance(X_in, pd.DataFrame)
                 print(f'DGR | Got {indata}. data', 'Only for testing' if onlyTest else 'For training and testing')
             except StopIteration:
                 print(f'DGR | Stop Iteration')
                 break
+            self.test(X_in, y_in)
             if not onlyTest:
                 print(f'DGR | Appending incoming data')
                 full = self.append(X_in, y_in)

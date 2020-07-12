@@ -1,6 +1,6 @@
 from utils.utils import myprint as print
 
-from utils.net.utils import Trainable
+from utils.net.utils import Trainable, to_tensor, device
 from utils.net.linear.mlp import MLP
 from torch import nn, optim
 from torch.nn import functional as F
@@ -26,6 +26,16 @@ class Classifier(Trainable):
         
     def forward(self, x):
         return self.mlp(x)
+    
+    
+    def predict(self, x):
+        mode = self.training
+        self.eval()
+        x = to_tensor(x).to(device)
+        y_hat = self(x)
+        predicted = y_hat.detach().argmax(1)
+        self.train(mode=mode)
+        return predicted.cpu().detach().numpy()
     
     
     def dist_loss(self, scores, target_scores, T=2.):

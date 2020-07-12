@@ -6,8 +6,8 @@ from traceback import format_exc
 from threading import Lock
 from queue import Queue
 
-from utils.utils import myprint as print, make_list_of_tuples, threaded
-from utils.timed_dict import TimedDict
+from utils.utils import myprint as print, threaded
+from utils.output import Output
 
 log = logging.getLogger('nodered')
 
@@ -18,16 +18,16 @@ log = logging.getLogger('nodered')
 class Node(metaclass=ABCMeta):
     num_running = 0
     num_running_lock = Lock()
-    def __init__(self, id, topic, end=False, inputs=None, stream=False):
+    def __init__(self, id, inputs=None):
         self.id = id
-        self.topic = topic
         self._running = False
-        self.results = TimedDict(1)
+        self.output = Output(secs=1)
+        
         self.__input_queue = Queue()
         self.stream_queue = Queue()
-        self.end = end
         self.inputs = [] if inputs is None else inputs
-        self.stream = stream # * If streaming (always running for storing some internal state), only one input is allowed
+        
+        self.stream = False
         
         
     @property
@@ -46,51 +46,13 @@ class Node(metaclass=ABCMeta):
         self._running = running
     
     
-    # Will be called after self.function ends (this should be here, threaded decorator will be looking for this)
-    def function_end(self, outputs):
-        print(f'Data that will be sent from node {self.id} ({self.name}):', outputs)
-        if outputs is not None:
-            if not isinstance(outputs, list): # In case of an exception
-                self._error(outputs)
-            elif self.end: # This is an end node, send this value to node-red
-                if isinstance(outputs[0][0], (GeneratorType, map, filter, zip)): # Send sequential results #!(not tested)
-                    for i, output in enumerate(outputs[0][0]):
-                        self._done(str(output), cont=i+1)
-                    self._done()
-                else:
-                    self._done(str(outputs[0][0]))
-            elif isinstance(outputs[0][0], (GeneratorType, map, filter, zip)): # Save sequential results (in case of a generator)
-                try:
-                    for i, gen_output in enumerate(outputs[0][0]):      # Generator loop
-                        print('gen_output:', gen_output)
-                        gen_output = make_list_of_tuples(gen_output)    # Make sure output is a list of tuples
-                        for out, output in enumerate(gen_output):       # Saving all outputs for all output ports
-                            self.results[out] = output
-                        self._done(cont=i+1)
-                    print('Done all together')
-                    self._done()
-                # * In case of an exception in the generator
-                # I need to this here because stream nodes automatically returns generator
-                # and there is no exception for that to catch in __wrap_function where we call self.function
-                except Exception as e:
-                    self._error(repr(e) + '\n' + format_exc())
-            else:
-                for out, output in enumerate(outputs):
-                    self.results[out] = output
-                self._done()
-        else: # previous node had an error
-            self._done('error')
-            
-    
     def run(self, config, prev_node=None, prev_out=None, prev_node_error=None):
         print(f'prev_node: {"None" if prev_node is None else prev_node.name}', f'prev_out: {prev_out}')
         print(f'{self.name} is{"" if self.running else " not"} running.')
         # It doesn't have a previous node, so don't send any incoming data (except node config)
         if prev_out is None: # This is the node that starts our flow
             if self.num_running == 0: # If no nodes are running
-                # print(f'before self.num_running: {self.num_running}')
                 self.running = True
-                # print(f'after self.num_running: {self.num_running}')
                 print(f'prev_out is None - kwargs:', config)
                 self.__wrap_function(**config)
             else: # elif not self.running:
@@ -104,10 +66,10 @@ class Node(metaclass=ABCMeta):
             else: # For multiple inputs
                 if self.stream:
                     print(f'streaming node')
-                    self.stream_queue.put(prev_node.results[prev_out])
+                    self.stream_queue.put(prev_node.output[prev_out])
                 else:
                     print(f'not streaming node')
-                    self.__input_queue.put((prev_node.__class__, prev_node.results[prev_out]))
+                    self.__input_queue.put((prev_node.__class__, prev_node.output[prev_out]))
                 self.running = True;
 
 
@@ -142,25 +104,22 @@ class Node(metaclass=ABCMeta):
                     _class, data = self.__input_queue.get()
                     print(self.name, f'Got an input from {_class.__name__}', 'data:', data)
                     if data == 'error': # Previous node had an error
-                        return None
+                        self._prev_error()
                     # Record that the input from _class has been arrived, only accept others if there are.
                     idx = index(_class)
                     if idx is not None:
                         kwargs.update(_class.format(data))
                         _inputs.pop(idx)
             
-            returned = None
             try:
-                returned = self.function(**kwargs)                  # * self.function will return a generator (e.g. for DGR) if it contains yield in the class implementation
+                self.function(**kwargs)                             # * self.function will return a generator (e.g. for DGR) if it contains yield in the class implementation
+                print(f'self.function is done!')
+                self._done()
             except Exception as e:                                  # In case of an exception
-                return repr(e) + '\n' + format_exc()
-            if returned is None:                                    # In case nothing returns
-                return []
-            return make_list_of_tuples(returned)                    # In case one out returns
+                self._error(repr(e) + '\n' + format_exc())
         
         except Exception:
             print(format_exc())
-            return []
         
     @abstractmethod
     def function(self, **kwargs):
@@ -171,31 +130,32 @@ class Node(metaclass=ABCMeta):
         raise NotImplementedError()
     
 
-    def _error(self, msg=''):
-        log.error(json.dumps({'nodeid': self.id, 'error': f'{msg}'}))
+    def _error(self, message=''):
+        log.error(json.dumps({'nodeid': self.id, 'error': f'{message}'}))
         self.running = False
-        print(f'Error at {self.id}', f'{self.num_running} running nodes')
+        
+        
+    def _prev_error(self):
+        log.info(json.dumps({'nodeid': self.id, 'prev_error': True}))
+        self.running = False
+    
+    
+    def _done(self):
+        log.info(json.dumps({'nodeid': self.id, 'done': True}))
+        self.running = False
         
     
-    def _done(self, msg=None, cont=None):
-        to_send = dict(nodeid=self.id)
-            
-        if msg is not None:
-            to_send['msg'] = msg
-            print(f'Node {self.id} sent this message:', msg)            
-        
-        if cont is not None:
-            to_send['cont'] = cont
-            print(f'Done and continue {cont}. times {self.id}', f'{self.num_running} running nodes')
-        else:
-            self.running = False
-            print(f'Done {self.id}', f'{self.num_running} running nodes')
-        
-        log.info(json.dumps(to_send))
+    def status(self, message):
+        log.info(json.dumps({'nodeid': self.id, 'status': f'{message}'}))
         
     
-    def status(self, msg):
-        log.info(json.dumps({'nodeid': self.id, 'status': f'{msg}'}))
+    def send_next_node(self, *outputs):
+        self.output += outputs
+        log.info(json.dumps({'nodeid': self.id}))
+        
+    
+    def send_nodered(self, *outputs):
+        log.info(json.dumps({'nodeid': self.id, 'message': list(outputs)}))
     
     
     @classmethod 
@@ -216,8 +176,8 @@ class Node(metaclass=ABCMeta):
         
         
 class Data(Node):
-    def __init__(self, id):
-        super().__init__(id, topic='data')
+    def __init__(self, *args):
+        super().__init__(*args)
     
     @classmethod
     def format(cls, data):
@@ -228,8 +188,8 @@ class Data(Node):
         
 
 class Model(Node):
-    def __init__(self, id):
-        super().__init__(id, topic='model', inputs=[Data])
+    def __init__(self, *args):
+        super().__init__(*args, inputs=[Data])                  # TODO: ? Define inputs in the actual pynodes (e.g. LoadDataset, DGR ...)
     
     @classmethod
     def format(cls, data):
@@ -237,5 +197,5 @@ class Model(Node):
 
 
 class Test(Node):
-    def __init__(self, id):
-        super().__init__(id, topic='test', end=True, inputs=[Data, Model])
+    def __init__(self, *args):
+        super().__init__(*args, inputs=[Data, Model])           # TODO: ? Define inputs in the actual pynodes (e.g. LoadDataset, DGR ...)

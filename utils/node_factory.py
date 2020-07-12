@@ -21,5 +21,6 @@ class NodeFactory:
     def create(cls, name, *args):
         if cls.nodes is None:
             cls.nodes = {}
+            # Add all classes with no subclasses (e.g. all node classes corresponding to NodeRed nodes) into nodes dictionary
             cls.__init(Node)
         return cls.nodes[name](*args)
