@@ -3,6 +3,7 @@ import sys
 import json
 import numpy as np
 import copy
+import os
 
 from utils.utils import myprint as print
 from utils.node import Model
@@ -17,47 +18,43 @@ class DeepGenerativeReplay(Model):
     def __init__(self, *args):
         super().__init__(*args)
         self.stream = True
+        
+        if os.path.isfile('loss.txt'):
+            os.remove('loss.txt')
 
 
-    @property
-    def model(self):
-        if self._model is None:
-            # * It is assumed that y will have all classes for the first task
-            self.classes = set(self.y.tolist())
-            self.init_models(len(self.classes))
-        return self._model
-    
-
-    def __init_data(self, stream_data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr):
+    def __init_data(self, stream_data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr, classes):
         self.taskSize = taskSize
+        self.classes = classes
+                
+        X_in, y_in, onlyTest = next(stream_data)
+        self.feature_size = X_in.shape[1]
+        self.X = np.zeros((self.taskSize, self.feature_size))
+        self.y = np.zeros(self.taskSize)
 
-        self._model = None
+        ## * Initializin models (Classifier and Generator)
+        #  * Classifier
+        self.model = Classifier(input_size=self.feature_size, classes=classes, layers=CLayers, hid_size=CHidden,
+                                 hid_smooth=CHiddenSmooth).to(device)
+        self.model.optimizer = torch.optim.Adam(self.model.parameters(), lr=Clr) # Can reset the optimizer after each task?
+        #  * Generator (z_dim is set to be square root of the feature size if not specified, can change later)
+        self.generator = AutoEncoder(input_size=self.feature_size, z_dim=int(np.sqrt(self.feature_size) if GZdim < 1 else GZdim),
+                                        layers=GLayers, hid_size=GHidden, hid_smooth=GHiddenSmooth).to(device)
+        self.generator.optimizer = torch.optim.Adam(self.generator.parameters(), lr=Glr) # Can reset the optimizer after each task?
+        
         self.size = 0
         self.task = 0
         self.remainder = None
         
-        X_in, y_in = next(stream_data)
-        self.feature_size = X_in.shape[1]
-        self.X = np.zeros((self.taskSize, self.feature_size))
-        self.y = np.zeros(self.taskSize)
-        full = self.append(X_in, y_in)
-        
         self.prev_model = None
         self.prev_generator = None
         
-        # The function that will be used to create the model once all the data for the first task has arrived
-        # (Because I need to exctract the number of classes from y values)
-        def init_models(classes):
-            # * Classifier
-            self._model = Classifier(input_size=self.feature_size, classes=classes, layers=CLayers, hid_size=CHidden,
-                                     hid_smooth=CHiddenSmooth).to(device)
-            self._model.optimizer = torch.optim.Adam(self._model.parameters(), lr=Clr) # Can reset the optimizer after each task?
-            # * Generator (z_dim is set to be square root of the feature size if not specified, can change later)
-            self.generator = AutoEncoder(input_size=self.feature_size, z_dim=int(np.sqrt(self.feature_size) if GZdim < 1 else GZdim),
-                                         layers=GLayers, hid_size=GHidden, hid_smooth=GHiddenSmooth).to(device)
-            self.generator.optimizer = torch.optim.Adam(self.generator.parameters(), lr=Glr) # Can reset the optimizer after each task?
-        self.init_models = init_models
-                
+        full = False
+        if not onlyTest:
+            full = self.append(X_in, y_in)
+        
+        # TODO: Get predictions
+        
         return full 
 
 
@@ -108,8 +105,11 @@ class DeepGenerativeReplay(Model):
         gen_scores = None
         scores = None
         
+        loss_values = []
+        
         print(f'epochs: {epochs}', f'batch size: {batchSize}')
         for epoch in range(1, epochs + 1): # ? I added this
+            total_correct, total_loss = 0, 0
             print(f'{epoch:>5} Epoch')
             for batch, (x, y) in enumerate(data_loader, 1):
                 x, y = x.to(device), y.to(device, dtype=torch.int64)
@@ -117,13 +117,26 @@ class DeepGenerativeReplay(Model):
                 if self.prev_generator is not None:
                     gen_x = self.prev_generator.sample(batchSize)
                     gen_scores = self.prev_model(gen_x)
-                print(f'Training model')
-                self.model.train_step(x, y, gen_x=gen_x, gen_y=gen_y, scores=scores, gen_scores=gen_scores, rnt=1./self.task)
-                print(f'Training generator')
-                self.generator.train_step(x, y, gen_x=gen_x, gen_y=gen_y, scores=scores, gen_scores=gen_scores, rnt=1./self.task)
+                loss, correct = self.model.train_batch(x, y, gen_x=gen_x, gen_y=gen_y, scores=scores, gen_scores=gen_scores, rnt=1./self.task)
+                self.generator.train_batch(x, y, gen_x=gen_x, gen_y=gen_y, scores=scores, gen_scores=gen_scores, rnt=1./self.task)
+                
+                total_correct += correct
+                total_loss += loss
+                
+            total_correct /= self.taskSize
+            total_loss /= self.taskSize
+            
+            self.status(f'{self.task}. training | Loss: {total_loss}')
+            
+            loss_values.append(total_loss)
+        
+        with open('loss.txt', 'a') as file:
+            for i in loss_values:
+                file.write(f'{i}\n')
+            file.write(f'TASK {self.task}\n')
 
 
-    def function(self, stream_data, taskSize, CLayers, CHidden, Clr, GZdim, GLayers, GHidden, Glr, epochs, batchSize, CHiddenSmooth=None, GHiddenSmooth=None):
+    def function(self, stream_data, taskSize, CLayers, CHidden, Clr, GZdim, GLayers, GHidden, Glr, epochs, batchSize, classes, CHiddenSmooth=None, GHiddenSmooth=None):
         '''Aggregate streaming data, train when full and continue
 
         INPUT:  - [stream_data]     (tuple of 2x) <np.array> partial input data coming from node-red
@@ -137,7 +150,7 @@ class DeepGenerativeReplay(Model):
         # TODO: Next, preprocess data
         
         indata = 1
-        full = self.__init_data(stream_data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr)
+        full = self.__init_data(stream_data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr, classes)
         while True:
             indata += 1
             while full:
@@ -150,11 +163,12 @@ class DeepGenerativeReplay(Model):
                 full = self.reset_data()
                 print(f'DGR | full: {full} after resetting')
             try:
-                X_in, y_in = next(stream_data)
-                print(f'DGR | Got {indata}. data')
+                X_in, y_in, onlyTest = next(stream_data)
+                print(f'DGR | Got {indata}. data', 'Only for testing' if onlyTest else 'For training and testing')
             except StopIteration:
                 print(f'DGR | Stop Iteration')
                 break
-            print(f'DGR | Appending incoming data')
-            full = self.append(X_in, y_in)
+            if not onlyTest:
+                print(f'DGR | Appending incoming data')
+                full = self.append(X_in, y_in)
             

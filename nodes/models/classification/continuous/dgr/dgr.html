@@ -41,14 +41,18 @@ RED.nodes.registerType('dgr', {
             return RED.validators.number()(v) && v >= 10;
         }},
         epochs: {value:10, required:true, validate:function(v) {
-            return RED.validators.number()(v) && v > 0;
+            return RED.validators.number()(v) && v >= 1;
         }},
         batchSize: {value:128, required:true, validate:function(v) {
-            return RED.validators.number()(v) && v > 0;
+            return RED.validators.number()(v) && v >= 1;
+        }},
+        classes: {value:2, required:true, validate:function(v) {
+            return RED.validators.number()(v) && v >= 2;
         }}
     },
     inputs:1,
-    outputs:1,
+    outputs:2,
+    outputLabels: ["Model", "Predictions"],
     icon: "font-awesome/fa-level-up-alt", // level-up-alt
     label: function() {
         return this.name || "Deep Generative Replay";
@@ -119,11 +123,13 @@ RED.nodes.registerType('dgr', {
     </div>
     <div class="form-row">
         <label>&nbsp;</label>
-        <label for="node-input-batchSize" style="width:80px; text-align:center;">Batch Size</label>
-        <label for="node-input-epochs" style="width:80px; text-align:center;">Epochs</label></br>
+        <label for="node-input-batchSize" style="width:80px; text-align:center; display:inline-block; vertical-align:middle;">Batch Size</label>
+        <label for="node-input-epochs" style="width:80px; text-align:center; display:inline-block; vertical-align:middle;">Epochs</label>
+        <label for="node-input-classes" style="width:80px; text-align:center; display:inline-block; vertical-align:middle;">Number of Classes</label></br>
         <label>&nbsp;</label>
         <input type="number" id="node-input-batchSize" value="128" style="width:80px;" min="1">
         <input type="number" id="node-input-epochs" value="10" style="width:80px;" min="1">
+        <input type="number" id="node-input-classes" value="2" style="width:80px;" min="2">
     </div>
     <hr align="middle"/>
     <div class="form-row">
@@ -145,7 +151,7 @@ RED.nodes.registerType('dgr', {
     </div>
     <hr align="middle"/>
     <div class="form-row">
-        <span style="width:100%; font-size:120%"><b>Generator (Variational AutoEncoder) Options</b>           |           </span>
+        <span style="width:100%; font-size:120%"><b>Generator (Variational AutoEncoder) Options</b><span style="padding:0 10px;">|</span></span>
         <input type="checkbox" id="node-input-autoGenParams" style="width:20px; margin-top:0px; margin-bottom:2px;">
         <label for="node-input-autoGenParams" style="width:auto;"><i class="fa fa-magic"></i>  Auto</label>
     </div>
@@ -167,7 +173,7 @@ RED.nodes.registerType('dgr', {
         <input type="text" id="node-input-Glr" value="0.01" style="width:80px;" min="0">
     </div>
     <p style="border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9;" id="infoAutoGen">
-        Layer information of the Classifier will be used.</br>
+        Classifier options will be used.</br>
         <i class="fa fa-arrow-right" style="font-size:80%; margin-left:10px;"></i>
         Z-Dimension of the generator will be set as square root of the feature size of the input.
     </p>
