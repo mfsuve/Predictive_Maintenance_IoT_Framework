@@ -13,6 +13,8 @@ log = logging.getLogger('nodered')
 
 # TODO: Weighted KNN for Continuous/Incremental/Online Learning (research)
 
+# TODO: Create Output class #
+
 class Node(metaclass=ABCMeta):
     num_running = 0
     num_running_lock = Lock()
@@ -152,7 +154,6 @@ class Node(metaclass=ABCMeta):
                 returned = self.function(**kwargs)                  # * self.function will return a generator (e.g. for DGR) if it contains yield in the class implementation
             except Exception as e:                                  # In case of an exception
                 return repr(e) + '\n' + format_exc()
-            print('returned:', returned)
             if returned is None:                                    # In case nothing returns
                 return []
             return make_list_of_tuples(returned)                    # In case one out returns
@@ -194,7 +195,6 @@ class Node(metaclass=ABCMeta):
         
     
     def status(self, msg):
-        print(f'Trying to set the status as:', msg)
         log.info(json.dumps({'nodeid': self.id, 'status': f'{msg}'}))
     
     
@@ -224,7 +224,7 @@ class Data(Node):
         if isinstance(data, GeneratorType):
             return zip(('stream_data',), (data,))
         else:
-            return zip(('X', 'y'), data)
+            return zip(('X', 'y', 'onlyTest'), data)
         
 
 class Model(Node):

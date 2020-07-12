@@ -16,7 +16,10 @@ module.exports = function(RED) {
             hasheader: Boolean(config.hasheader),
             encode: config.encode,
             fillConstant: config.fillConstant,
-            fillSelect: config.fillSelect
+            fillSelect: config.fillSelect,
+            removeAllnan: config.removeAllnan,
+            removeAllsame: config.removeAllsame,
+            onlyTest: config.onlyTest
         };
         node.onmessage = (msg) => {
             if (config.payloadFilename)

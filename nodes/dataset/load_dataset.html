@@ -11,7 +11,10 @@ RED.nodes.registerType('load dataset', {
         encode: {value:"N"},
         fillConstant: {value:"0"},
         fillSelect: {value:"none"},
-        payloadFilename: {value:false}
+        payloadFilename: {value:false},
+        removeAllnan: {value:false},
+        removeAllsame: {value:false},
+        onlyTest: {value:false}
     },
     inputs:1,
     outputs:1,
@@ -45,9 +48,9 @@ RED.nodes.registerType('load dataset', {
         $("#node-input-payloadFilename").on("change", function() {
             var v = $("#node-input-payloadFilename").prop('checked');
             if (v) {
-                $("#filename").hide();
+                $("#filename").hide(200);
             } else {
-                $("#filename").show();
+                $("#filename").show(200);
                 $("#node-input-filename").focus();
             }
         });
@@ -70,12 +73,16 @@ RED.nodes.registerType('load dataset', {
         <input type="checkbox" id="node-input-payloadFilename" style="width:20px; vertical-align:baseline; margin-right:5px;"> Use <code>msg.payload</code> as File Name
     </div>
     <div class="form-row" id="filename">
-        <label for="node-input-filename">&nbsp;</label>
+        <label>&nbsp;</label>
         <input type="text" id="node-input-filename" placeholder="File Name">
     </div>
     <div class="form-row">
         <label>&nbsp;</label>
         <input type="checkbox" id="node-input-hasheader" style="width:20px; vertical-align:baseline; margin-right:5px;"> Has header
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-onlyTest" style="width:20px; vertical-align:baseline; margin-right:5px;"> Use only for testing
     </div>
     <hr align="middle"/>
     <div class="form-row">
@@ -84,10 +91,10 @@ RED.nodes.registerType('load dataset', {
         <input type="number" id="node-input-col" value="0" style="width:100px">
     </div>
     <div class="form-row">
-        <label for="node-input-encode">Preprocessing</label>
+        <label>Preprocessing</label>
     </div>
     <div class="form-row" style="padding-left:20px;">
-        <label for="node-input-encode"><i class="fa fa-hashtag"></i> Encode</span></label>
+        <label for="node-input-encode"><i class="fa fa-hashtag"></i> Encode</label>
         <select id="node-input-encode">
             <option value="N" selected>None</option>
             <option value="S">Simple</option>
@@ -95,7 +102,7 @@ RED.nodes.registerType('load dataset', {
         </select>
     </div>
     <div class="form-row" style="padding-left:20px;">
-        <label for="node-input-fillType"><i class="fa fa-pencil-square-o"></i> Fill N/A</span></label>
+        <label for="node-input-fillSelect"><i class="fa fa-pencil-square-o"></i> Fill N/A</label>
         <select id="node-input-fillSelect">
             <option value="none" selected>None</option>
             <option value="nearest">Nearest</option>
@@ -108,6 +115,14 @@ RED.nodes.registerType('load dataset', {
             <option value="cubic">Cubic interpolation</option>
         </select>
         <input type="number" id="node-input-fillConstant" value="0" style="width:70px;">
+    </div>
+    <div class="form-row" style="padding-left:20px;">
+        <label style="width: 100%;"><i class="fa fa-eraser"></i> Remove Columns</label>
+        <label for="node-input-removeAllnan"></i>&nbsp;</label>
+        <input type="checkbox" id="node-input-removeAllnan" style="width:20px; vertical-align:baseline; margin-right:5px;"> Remove Columns with all N/A Values
+        <br>
+        <label for="node-input-removeAllsame"></i>&nbsp;</label>
+        <input type="checkbox" id="node-input-removeAllsame" style="width:20px; vertical-align:baseline; margin-right:5px;"> Remove Columns with all Same Values
     </div>
 </script>
 

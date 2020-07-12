@@ -13,8 +13,11 @@ from sklearn.model_selection import train_test_split as ttsplit
 class Split(Data):
     def __init__(self, *args):
         super().__init__(*args)
+        self.inputs = [Data]
     
-    def function(self, X, y, testPercentage):
+    def function(self, X, y, onlyTest, testPercentage):
         X_train, X_test, y_train, y_test = ttsplit(X, y, test_size=testPercentage / 100)
-        return [(X_train, y_train), (X_test, y_test)]
+        return [(X_train, y_train, onlyTest), (X_test, y_test, True)]
+        #      * Use X_train for train depending on the configuraiton
+        #      * Use X_test only for testing
     

@@ -11,15 +11,15 @@ class MinMaxScaler(Data):
         super().__init__(*args)
         self.inputs = [Data]
 
-    def function(self, X, y):
+    def function(self, X, y, onlyTest):
         print(f'MinMax Scaling...')
-        return MMS().fit_transform(X), y
+        return MMS().fit_transform(X), y, onlyTest
 
 class StandardScaler(Data):
     def __init__(self, *args):
         super().__init__(*args)
         self.inputs = [Data]
 
-    def function(self, X, y):
+    def function(self, X, y, onlyTest):
         print(f'Standard Scaling...')
-        return SS().fit_transform(X), y
+        return SS().fit_transform(X), y, onlyTest

@@ -28,12 +28,22 @@ class LoadDataset(Data):
         return X, y
 
 
-    def drop_unimportant(self, X:pd.DataFrame, y):
+    def drop_unimportant(self, X:pd.DataFrame, y, removeAllnan:bool, removeAllsame:bool):
         # remove 'all nan' and 'all same' columns
-        more_2unique_cols = X.nunique() > 1
+        
+        # remove 'all nan' rows
         not_nan_idices = X.notna().any(axis=1)
-        X = X.loc[not_nan_idices, more_2unique_cols]
+        X = X.loc[not_nan_idices]
         y = y[not_nan_idices]
+        
+        # remove 'all nan' columns
+        if removeAllnan:
+            X.dropna(axis='columns', how='all', inplace=True)
+        
+        # remove 'all same' columns
+        if removeAllsame:
+            X = X.loc[:, X.nunique() > 1]
+        
         return X, y
 
 
@@ -50,14 +60,14 @@ class LoadDataset(Data):
         return X, y
 
 
-    def function(self, path, col, hasheader, encode, fillConstant, fillSelect):
+    def function(self, path, col, hasheader, encode, fillConstant, fillSelect, removeAllnan, removeAllsame, onlyTest):
         
         # Reading the data
         X, y = self.load(path, hasheader, col)
         print(f'Loaded dataset from {path}', f'X.shape is {X.shape}', f'y.shape is {y.shape}')
 
         # Dropping all nan rows and cols, all same cols
-        X, y = self.drop_unimportant(X, y)
+        X, y = self.drop_unimportant(X, y, removeAllnan, removeAllsame)
 
         # Encoding
         X, y = self.encoding(X, y, encode)
@@ -83,5 +93,5 @@ class LoadDataset(Data):
             except ValueError:
                 raise ValueError(f"Can't use {fillSelect} interpolation on {path.split('/')[-1]}. Please try another option.")
         
-        return X, y
+        return X, y, onlyTest
     

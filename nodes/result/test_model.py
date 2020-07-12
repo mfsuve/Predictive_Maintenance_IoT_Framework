@@ -14,7 +14,8 @@ class TestModel(Test):
 
     # ! Burada train ve test için aynı anda bakarsan 2 tane, 2.si processing'de kalıyor
     # TODO: Kontrol et!
-    def function(self, X, y, model, metric):
+    # TODO: onlyTest'e bak
+    def function(self, X, y, onlyTest, model, metric):
         print('Testing model', f'X.shape: {X.shape}', f'y_true.shape: {y.shape}')
         y_pred = model.predict(X)
         if metric == 'accuracy':
