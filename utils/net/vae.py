@@ -108,10 +108,8 @@ class AutoEncoder(Trainable):
         return recon_loss + variat_loss
 
 
-    ##------ TRAINING FUNCTIONS --------##
-
-    def train_step(self, x, y, gen_x, gen_y, scores, gen_scores, rnt):
-        super().train_step()
+    def train_batch(self, x, y, gen_x, gen_y, scores, gen_scores, rnt):
+        super().train_batch()
 
         x_recon, mu, logvar, z = self(x)
         total_loss = self.loss(x, x_recon, mu, logvar)

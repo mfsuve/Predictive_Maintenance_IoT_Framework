@@ -48,12 +48,14 @@ class Classifier(Trainable):
         return KD_loss
     
         
-    def train_step(self, x, y, gen_x, gen_y, scores, gen_scores, rnt):
-        super().train_step()
+    def train_batch(self, x, y, gen_x, gen_y, scores, gen_scores, rnt):
+        super().train_batch()
         
         y_hat = self(x)
-        print(f'In Classifier', f'y.dtype: {y.dtype}', f'y_hat.dtype: {y_hat.dtype}')
         total_loss = self.loss(y_hat, y)
+
+        predicted = y_hat.detach().argmax(1)
+        correct = (predicted == y).sum().item()
         
         if gen_x is not None:
             y_hat = self(gen_x)
@@ -62,4 +64,6 @@ class Classifier(Trainable):
         
         total_loss.backward()
         self.optimizer.step()
+        
+        return total_loss.item(), correct
         

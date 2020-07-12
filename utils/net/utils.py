@@ -13,9 +13,9 @@ class Trainable(nn.Module, metaclass=ABCMeta):
         self.optimizer = None
 
     @abstractmethod
-    def train_step(self):
+    def train_batch(self):
         if self.optimizer is None:
-            raise AttributeError("'optimizer' and 'loss' attributes need to be initialized before training.")
+            raise AttributeError("'optimizer' needs to be initialized before training.")
         self.train()
         self.optimizer.zero_grad()
 
