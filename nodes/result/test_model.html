@@ -4,13 +4,16 @@ RED.nodes.registerType('test model', {
     color: '#E6E0F8',
     defaults: {
         name: {value:""},
-        metric: {value:"accuracy"}
+        accuracy: {value:true},
+        precision: {value:false},
+        recall: {value:false},
+        f1: {value:false}
     },
     inputs:1,
     outputs:1,
     icon: "font-awesome/fa-question-circle-o",
     label: function() {
-        return this.name || this.metric;
+        return this.name || "Test Model";
     },
     labelStyle: function() {
         return this.name ? "node_label_italic" : "";
@@ -24,14 +27,25 @@ RED.nodes.registerType('test model', {
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
+    <hr align="middle"/>
     <div class="form-row">
-        <label for="node-input-metric"><i class="fa fa-tag"></i> Metric</label>
-        <select id="node-input-metric" style="width:200px">
-            <option value="accuracy" selected>Accuracy</option>
-            <option value="precision">Precision</option>
-            <option value="recall">Recall</option>
-            <option value="f1">F1 Score</option>
-        </select>
+        <label style="width:100%;"><i class="fa fa-tag"></i> Metrics</label>
+        <div style="margin-left:100px; margin-bottom:5px;">
+            <input type="checkbox" id="node-input-accuracy" style="width:20px; margin: 0px 4px 2px 0px;" checked>
+            <label for="node-input-accuracy">Accuracy</label>
+        </div>
+        <div style="margin-left:100px; margin-bottom:5px;">
+            <input type="checkbox" id="node-input-precision" style="width:20px; margin: 0px 4px 2px 0px;">
+            <label for="node-input-precision">Precision</label>
+        </div>
+        <div style="margin-left:100px; margin-bottom:5px;">
+            <input type="checkbox" id="node-input-recall" style="width:20px; margin: 0px 4px 2px 0px;">
+            <label for="node-input-recall">Recall</label>
+        </div>
+        <div style="margin-left:100px; margin-bottom:5px;">
+            <input type="checkbox" id="node-input-f1" style="width:20px; margin: 0px 4px 2px 0px;">
+            <label for="node-input-f1">F1 Score</label>
+        </div>
     </div>
 </script>
 

@@ -1,17 +1,19 @@
 module.exports = function(RED) {
     function TestModelNode(config) {
 
-        const path = require('path');
         const utils = require('../../utils/utils');
 
         var node = this;
 
-        node.topic = 'test';
+        node.topic = 'Test';
 
         node.config = {
             // Corresponding python class
             pynode: 'TestModel',
-            metric: config.metric
+            accuracy: config.accuracy,
+            precision: config.precision,
+            recall: config.recall,
+            f1: config.f1
         };
 
         utils.run(RED, node, config);
