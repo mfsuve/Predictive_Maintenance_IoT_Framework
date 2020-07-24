@@ -4,11 +4,11 @@ import json
 import numpy as np
 
 from utils.utils import myprint as print
-from utils.node import Model
+from utils.node import Node
 
 from sklearn.svm import SVC
 
-class SVM(Model):
+class SVM(Node):
     def __init__(self, *args):
         super().__init__(*args)
 

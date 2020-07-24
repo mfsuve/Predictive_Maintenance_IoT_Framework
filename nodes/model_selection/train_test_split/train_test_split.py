@@ -4,13 +4,13 @@ import json
 import numpy as np
 
 from utils.utils import myprint as print
-from utils.node import Data
+from utils.node import Node
 
 from sklearn.model_selection import train_test_split as ttsplit
 
 
 # ? Random state de input olarak verilebilir mi?
-class Split(Data):
+class Split(Node):
     def __init__(self, *args):
         super().__init__(*args)
         self.inputs = [Data]

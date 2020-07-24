@@ -4,6 +4,8 @@ from utils.timed_dict import TimedDict
 import enum
 
 
+# * Might not be necessary
+# * will delete later
 class Output:
     def __init__(self, secs=None):
         self.results = TimedDict(secs)

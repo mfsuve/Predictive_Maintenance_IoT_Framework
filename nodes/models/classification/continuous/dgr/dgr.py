@@ -6,7 +6,7 @@ import copy
 import os
 
 from utils.utils import myprint as print
-from utils.node import Model
+from utils.node import Node
 from utils.net.classifier import Classifier
 from utils.net.vae import AutoEncoder
 from utils.net.utils import device, SimpleDataset
@@ -14,20 +14,21 @@ from utils.net.utils import device, SimpleDataset
 import torch
 from torch.utils.data import DataLoader
 
-class DeepGenerativeReplay(Model):
+class DeepGenerativeReplay(Node):
     def __init__(self, *args):
         super().__init__(*args)
-        self.stream = True
+        self.initialized = False
+        self.full = False
         
-        if os.path.isfile('loss.txt'):
-            os.remove('loss.txt')
+        if os.path.isfile('Loss_Hydraulic_Systems.txt'):
+            os.remove('Loss_Hydraulic_Systems.txt')
 
 
-    def __init_data(self, stream_data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr, classes):
+    def __init_data(self, data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr, classes):
         self.taskSize = taskSize
         self.classes = classes
                 
-        X_in, y_in, onlyTest = next(stream_data)
+        X_in, y_in, onlyTest = data
         self.feature_size = X_in.shape[1]
         self.X = np.zeros((self.taskSize, self.feature_size))
         self.y = np.zeros(self.taskSize)
@@ -55,6 +56,7 @@ class DeepGenerativeReplay(Model):
         if not onlyTest:
             full = self.append(X_in, y_in)
         
+        self.initialized = True
         return full 
 
 
@@ -86,8 +88,7 @@ class DeepGenerativeReplay(Model):
             remainder = self.remainder
             self.remainder = None
             return self.append(*remainder)
-        else:
-            self.status(f'{self.size}/{self.taskSize} | trained {self.task}')
+        self.status(f'{self.size}/{self.taskSize} | trained {self.task}')
         return False
             
             
@@ -107,6 +108,7 @@ class DeepGenerativeReplay(Model):
         
         loss_values = []
         
+        print(f'DGR | Number of 1 class: {(self.y == 1).sum()}', f'DGR | Number of 0 class: {(self.y == 0).sum()}')
         print(f'epochs: {epochs}', f'batch size: {batchSize}')
         for epoch in range(1, epochs + 1): # ? I added this
             total_correct, total_loss = 0, 0
@@ -128,12 +130,13 @@ class DeepGenerativeReplay(Model):
             
             self.status(f'{self.task}. training | Loss: {total_loss}')
             
+            # TODO: Can do something with this loss_values and accuracies (total_correct)
             loss_values.append(total_loss)
         
-        with open('loss.txt', 'a') as file:
+        with open('Loss_Hydraulic_Systems.txt', 'a') as file:
             for i in loss_values:
                 file.write(f'{i}\n')
-            file.write(f'TASK {self.task}\n')
+            file.write(f'TASK {self.task} msg #1: {(self.y == 1).sum()} | #0: {(self.y == 0).sum()}\n')
             
     
     def test(self, X_in, y_in):
@@ -141,7 +144,7 @@ class DeepGenerativeReplay(Model):
         self.send_nodered(None, y_pred.tolist())
 
 
-    def function(self, stream_data, taskSize, CLayers, CHidden, Clr, GZdim, GLayers, GHidden, Glr, epochs, batchSize, classes, CHiddenSmooth=None, GHiddenSmooth=None):
+    def function(self, data, taskSize, CLayers, CHidden, Clr, GZdim, GLayers, GHidden, Glr, epochs, batchSize, classes, CHiddenSmooth=None, GHiddenSmooth=None):
         '''Aggregate streaming data, train when full and continue
 
         INPUT:  - [stream_data]     (tuple of 2x) <np.array> partial input data coming from node-red
@@ -154,28 +157,25 @@ class DeepGenerativeReplay(Model):
                                       '''
         # TODO: Next, preprocess data
         
-        indata = 1
-        full = self.__init_data(stream_data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr, classes)
-        while True:
-            indata += 1
-            while full:
-                print(f'DGR | Full, will train...')
-                self.status(f'{self.task + 1}. training')
-                self.train(epochs, batchSize)
-                print(f'DGR | yielding model...')
-                self.send_next_node(self.model)
-                print(f'DGR | Resetting data')
-                full = self.reset_data()
-                print(f'DGR | full: {full} after resetting')
-            try:
-                X_in, y_in, onlyTest = next(stream_data) # TODO: X_in hep DataFrame olmalı
-                assert isinstance(X_in, pd.DataFrame)
-                print(f'DGR | Got {indata}. data', 'Only for testing' if onlyTest else 'For training and testing')
-            except StopIteration:
-                print(f'DGR | Stop Iteration')
-                break
+        print(f'DGR | Got data', 'Only for testing' if data[2] else 'For training and testing')
+        
+        if not self.initialized:
+            self.full = self.__init_data(data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr, classes)
+        else:   
+            X_in, y_in, onlyTest = data # TODO: X_in hep DataFrame olmalı
+            assert isinstance(X_in, pd.DataFrame), "DGR | X always needs to be a DataFrame!"
+            
             self.test(X_in, y_in)
             if not onlyTest:
-                print(f'DGR | Appending incoming data')
-                full = self.append(X_in, y_in)
+                self.full = self.append(X_in, y_in)
+
+        while self.full:
+            # print(f'DGR | Full, will train...')
+            self.status(f'{self.task + 1}. training')
+            self.train(epochs, batchSize)
+            # print(f'DGR | yielding model...')
+            self.send_next_node(self.model, None)
+            # print(f'DGR | Resetting data')
+            self.full = self.reset_data()
+            # print(f'DGR | full: {full} after resetting')
             

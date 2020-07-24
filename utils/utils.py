@@ -1,5 +1,6 @@
 import json
 import sys
+import numpy as np
 from pprint import pformat
 from traceback import format_exc
 from functools import wraps
@@ -8,6 +9,19 @@ from threading import Thread, currentThread
 
 log = logging.getLogger('nodered')
 
+
+# * Works with numpy typed inputs
+class MyJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super().default(obj)
+        
 
 class BaseThread(Thread):
     def __init__(self, callback=None, *args, **kwargs):

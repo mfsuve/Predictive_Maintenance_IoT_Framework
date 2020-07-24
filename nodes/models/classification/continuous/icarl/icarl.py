@@ -5,12 +5,12 @@ import numpy as np
 
 from utils.utils import myprint as print
 from utils.net.utils import to_tensor, device
-from utils.node import Model
+from utils.node import Node
 from utils.model import Network
 
 import torch
 
-class iCaRL(Model):
+class iCaRL(Node):
     def __init__(self, *args):
         super().__init__(*args)
         self.stream = True

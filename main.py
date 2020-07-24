@@ -33,7 +33,7 @@ def call_node(config):
     if prev_out == -1: # This is the first node starting the flow (no prev_node, prev_out, prev_error)
         nodes[nodeid].run(config)
     else:
-        nodes[nodeid].run(config, nodes[prev_nodeid], prev_out, prev_node_error)
+        nodes[nodeid].run(config, nodes[prev_nodeid], prev_out)
     
 
 if __name__ == '__main__':

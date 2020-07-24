@@ -4,11 +4,11 @@ import json
 import numpy as np
 
 from utils.utils import myprint as print
-from utils.node import Data
+from utils.node import Node
 
 from sklearn.preprocessing import LabelEncoder
 
-class LoadDataset(Data):
+class LoadDataset(Node):
     
     interpolation_methods = ['linear', 'quadratic', 'cubic']
     
@@ -29,8 +29,6 @@ class LoadDataset(Data):
 
 
     def drop_unimportant(self, X:pd.DataFrame, y, removeAllnan:bool, removeAllsame:bool):
-        # remove 'all nan' and 'all same' columns
-        
         # remove 'all nan' rows
         not_nan_idices = X.notna().any(axis=1)
         X = X.loc[not_nan_idices]
@@ -46,7 +44,12 @@ class LoadDataset(Data):
         
         return X, y
 
-
+    # TODO: Sürekli gelen veride econding'lerin consistent olması lazım
+    # TODO: Bunun için bu enconding kısmı ayrı bir node olarak koyulabilir
+    # TODO: Node'a ister misin gibi configuration koymuyorum çünkü eğer ayrı node olarak yaparsam
+    # TODO: ilerde WebSocket'ten gelen verileri de direk ona sokabilirim.
+        # TODO: Yeni node olarak yapınca eskisini tutup sürekli update ederek mi
+        # TODO: yoksa her defasında yeniden mi fitle şeklinde opsiyon koayabilirim.
     def encoding(self, X, y, encode):
         if encode != 'N': # If encoding is set as Simple or OneHot in Node-Red
             le = LabelEncoder()
@@ -60,17 +63,23 @@ class LoadDataset(Data):
         return X, y
 
 
-    def function(self, path, col, hasheader, encode, fillConstant, fillSelect, removeAllnan, removeAllsame, onlyTest):
+    def function(self, data, path, col, hasheader, encode, fillConstant, fillSelect, removeAllnan, removeAllsame, onlyTest):
         
         # Reading the data
         X, y = self.load(path, hasheader, col)
         print(f'Loaded dataset from {path}', f'X.shape is {X.shape}', f'y.shape is {y.shape}')
 
+        print(f'1: y.sum(): {y.sum()}')
+
         # Dropping all nan rows and cols, all same cols
         X, y = self.drop_unimportant(X, y, removeAllnan, removeAllsame)
 
+        print(f'2: y.sum(): {y.sum()}')
+
         # Encoding
         X, y = self.encoding(X, y, encode)
+        
+        print(f'3: y.sum(): {y.sum()}')
         
         # Filling missing values
         if fillSelect == 'constant':
@@ -94,4 +103,5 @@ class LoadDataset(Data):
                 raise ValueError(f"Can't use {fillSelect} interpolation on {path.split('/')[-1]}. Please try another option.")
         
         self.send_next_node((X, y, onlyTest))
+        self.done()
     
