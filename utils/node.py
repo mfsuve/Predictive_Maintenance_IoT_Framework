@@ -70,9 +70,9 @@ class Node(metaclass=ABCMeta):
         self.running = False
         
         
-    def _prev_error(self):
-        log.info(json.dumps({'nodeid': self.id, 'prev_error': True}))
-        self.running = False
+    # def _prev_error(self):
+    #     log.info(json.dumps({'nodeid': self.id, 'prev_error': True}))
+    #     self.running = False
     
     
     def done(self):

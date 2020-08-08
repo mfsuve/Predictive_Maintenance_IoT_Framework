@@ -6,7 +6,7 @@ import numpy as np
 from utils.utils import myprint as print
 from utils.net.utils import to_tensor, device
 from utils.node import Node
-from utils.model import Network
+# from utils.model import Network
 
 import torch
 

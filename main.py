@@ -24,7 +24,6 @@ def call_node(config):
     # Which output port does this message come from previous node
     prev_out = int(config.pop('prevout'))
     prev_nodeid = str(config.pop('prev_nodeid')).strip()
-    prev_node_error = bool(config.pop('error'))
 
     if nodeid not in nodes:
         nodes[nodeid] = NodeFactory.create(node, nodeid)

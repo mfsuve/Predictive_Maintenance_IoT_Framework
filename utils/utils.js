@@ -33,10 +33,6 @@ const initProc = (env) => {
                     // Change Status
                     node.status(status.TEXT(_data.status));
                     return;
-                } else if (_data.prev_error) { // TODO: Buna gerek kalmayabilir, error kısmında node.send yerine node.error dediğimde otomatik kesiyor olabilir
-                    // Stop because previous node had an error
-                    node.status(status.NONE); // TODO: Try to cascade this message to next nodes
-                    return;
                 } else if (_data.done) {
                     // Set status as 'DONE'
                     node.status(status.DONE);
@@ -136,13 +132,7 @@ module.exports = {
                 node.onmessage(msg);
             }
 
-            if (msg.error) { // prev node error
-                node.status(status.NONE);
-                node.config.error = true;
-            } else {
-                node.status(status.PROCESSING);
-                node.config.error = false;
-            }
+            node.status(status.PROCESSING);
 
             node.config.id = node.id;
 
