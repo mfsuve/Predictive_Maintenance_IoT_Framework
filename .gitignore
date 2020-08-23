@@ -5,3 +5,4 @@ test2.py
 *.log
 settings.json
 events.out.*
+config_creator.py
