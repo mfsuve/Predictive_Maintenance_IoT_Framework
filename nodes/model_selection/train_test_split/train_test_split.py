@@ -14,6 +14,7 @@ class Split(Node):
     def __init__(self, *args):
         super().__init__(*args)
         self.inputs = [Data]
+        self.type = Node.Type.DATA
     
     def function(self, X, y, onlyTest, testPercentage):
         X_train, X_test, y_train, y_test = ttsplit(X, y, test_size=testPercentage / 100)

@@ -11,6 +11,7 @@ from sklearn.svm import SVC
 class SVM(Node):
     def __init__(self, *args):
         super().__init__(*args)
+        self.type = Node.Type.MODEL
 
     def function(self, X, y, onlyTest, kernel, degree, C, gammaSelect, gamma):
         # TODO: When onlyTest is True, expect this node to be configured using pretrained model (this is not a stream node, otherwise there would be no model to test on)

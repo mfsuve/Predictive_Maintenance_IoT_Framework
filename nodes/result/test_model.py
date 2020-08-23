@@ -15,10 +15,8 @@ class TestModel(Node):
     def __init__(self, *args):
         super().__init__(*args)
 
-    # ! Burada train ve test için aynı anda bakarsan 2 tane, 2.si processing'de kalıyor
-    # TODO: Kontrol et!
-    def function(self, X, y, onlyTest, model, accuracy, precision, recall, f1):
-        print('Testing model', f'X.shape: {X.shape}', f'y_true.shape: {y.shape}')
+        if data.type != Node.Type.DATA and data.type != Node.Type.MODEL:
+            raise ValueError(f"Input needs to be a 'data' or a 'model' bu got '{data.type.name.lower()}'")
         y_pred = model.predict(X)
         if metric == 'accuracy':
             result = metrics.accuracy_score(y, y_pred)

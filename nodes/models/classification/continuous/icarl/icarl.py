@@ -10,7 +10,7 @@ from utils.node import Node
 
 import torch
 
-class iCaRL(Node):
+class iCaRL:
     def __init__(self, *args):
         super().__init__(*args)
         self.stream = True

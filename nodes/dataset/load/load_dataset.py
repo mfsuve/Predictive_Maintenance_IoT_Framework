@@ -11,6 +11,7 @@ class LoadDataset(Node):
     
     def __init__(self, *args):
         super().__init__(*args)
+        self.type = Node.Type.DATA
 
 
     def load(self, path, hasheader, hasTarget, target_col):

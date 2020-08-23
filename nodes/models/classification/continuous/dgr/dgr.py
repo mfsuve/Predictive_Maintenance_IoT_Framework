@@ -20,6 +20,7 @@ class DeepGenerativeReplay(Node):
         super().__init__(*args)
         self.initialized = False
         self.full = False
+        self.type = Node.Type.MODEL
         
         if os.path.isfile('Loss_Hydraulic_Systems.txt'):
             os.remove('Loss_Hydraulic_Systems.txt')
@@ -156,7 +157,8 @@ class DeepGenerativeReplay(Node):
                                       final hidden layer has [CHiddenSmooth] units (if only 1 hidden layer, it has [CHidden] units)
                 - []
                                       '''
-        # TODO: Next, preprocess data
+        if data.type != Node.Type.DATA:
+            raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         
         print(f'DGR | Got data', 'Only for testing' if data[2] else 'For training and testing')
         

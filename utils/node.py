@@ -17,9 +17,18 @@ log = logging.getLogger('nodered')
 
 # ** İlerde her node'u bir Process yapabilirsin
 class Node(metaclass=ABCMeta):
+    
+    # * Defined to be able to differentiate multiple inputs
+    class Type(enum.Enum):
+        MODEL = 1
+        DATA = 2
+        NODERED = 3
+        # * Can add more Type's later
+    
     def __init__(self, id):
         self.id = id
-        self._running = False
+        self.type = None
+        # self._running = False
         self.output = Output(secs=1)
         self.__input_queue = Queue()
         
