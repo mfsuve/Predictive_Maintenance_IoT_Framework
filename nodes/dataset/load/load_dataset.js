@@ -19,7 +19,7 @@ module.exports = function(RED) {
             fillSelect: config.fillSelect,
             removeAllnan: config.removeAllnan,
             removeAllsame: config.removeAllsame,
-            onlyTest: config.onlyTest
+            hasTarget: config.hasTarget,
         };
         node.onmessage = (msg) => {
             if (config.payloadFilename)

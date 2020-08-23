@@ -16,15 +16,19 @@ class LoadDataset(Node):
         super().__init__(*args)
 
 
-    def load(self, path, hasheader, target_col):
+    def load(self, path, hasheader, hasTarget, target_col):
         # * Add more na_values when encountered
-        X = pd.read_csv(path, header=0 if hasheader else None, na_values=['na'])
-        r, c = X.shape
-        if target_col < 0:
-            target_col += c
+        try:
+            X = pd.read_csv(path, header=0 if hasheader else None, na_values=['na'], skipinitialspace=True, encoding='utf-8')
+        except FileNotFoundError:
+            raise FileNotFoundError(f"No such file or directory: '{path}'")
 
-        y = X.iloc[:, target_col]
-        X = X.drop([X.columns[target_col]], axis=1)
+        if hasTarget:
+            y = X.iloc[:, target_col]
+            X = X.drop([X.columns[target_col]], axis=1)
+        else:
+            y = None
+            
         return X, y
 
 
@@ -32,17 +36,18 @@ class LoadDataset(Node):
         # remove 'all nan' rows
         not_nan_idices = X.notna().any(axis=1)
         X = X.loc[not_nan_idices]
-        y = y[not_nan_idices]
+        if y is not None:
+            y = y[not_nan_idices]
         
         # remove 'all nan' columns
         if removeAllnan:
             X.dropna(axis='columns', how='all', inplace=True)
         
         # remove 'all same' columns
-        if removeAllsame:
+        if removeAllsame and X.shape[0] > 1:
             X = X.loc[:, X.nunique() > 1]
         
-        return X, y
+        return X.reset_index(drop=True), y.to_numpy() if y is not None else None
 
     # TODO: Sürekli gelen veride econding'lerin consistent olması lazım
     # TODO: Bunun için bu enconding kısmı ayrı bir node olarak koyulabilir
@@ -66,19 +71,24 @@ class LoadDataset(Node):
     def function(self, data, path, col, hasheader, encode, fillConstant, fillSelect, removeAllnan, removeAllsame, onlyTest):
         
         # Reading the data
-        X, y = self.load(path, hasheader, col)
-        print(f'Loaded dataset from {path}', f'X.shape is {X.shape}', f'y.shape is {y.shape}')
+            X, y = self.load(path, hasheader, hasTarget, col)
 
         print(f'1: y.sum(): {y.sum()}')
 
         # Dropping all nan rows and cols, all same cols
         X, y = self.drop_unimportant(X, y, removeAllnan, removeAllsame)
 
-        print(f'2: y.sum(): {y.sum()}')
-
-        # Encoding
-        X, y = self.encoding(X, y, encode)
-        
+            # Assuring that the columns are the same with the configuration file
+            if hasheader:
+                if set(X.columns) != set(column_names) or len(X.columns) != len(column_names):
+                    # print(f'X.columns:', set(X.columns))
+                    # print(f'column_names:', set(column_names))
+                    raise ValueError('Column names of the input does not match with the config file.')
+            else: # * If there is not header, the columns should be in the same order defined in the config file
+                X.columns = column_names
+        else:
+            # TODO: Handle the data coming from websockets
+            pass
         print(f'3: y.sum(): {y.sum()}')
         
         # Filling missing values

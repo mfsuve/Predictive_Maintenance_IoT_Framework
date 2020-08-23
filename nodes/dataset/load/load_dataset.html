@@ -14,6 +14,7 @@ RED.nodes.registerType('load dataset', {
         payloadFilename: {value:false},
         removeAllnan: {value:false},
         removeAllsame: {value:false},
+        hasTarget: {value:true},
         onlyTest: {value:false}
     },
     inputs:1,
@@ -54,6 +55,21 @@ RED.nodes.registerType('load dataset', {
                 $("#node-input-filename").focus();
             }
         });
+
+        if (this.hasTarget) {
+            $("#target-col").show();
+        } else {
+            $("#target-col").hide();
+        }
+        $("#node-input-hasTarget").on("change", function() {
+            var v = $("#node-input-hasTarget").prop('checked');
+            if (v) {
+                $("#target-col").show();
+                $("#node-input-col").focus();
+            } else {
+                $("#target-col").hide();
+            }
+        });
     }
 });
 </script>
@@ -65,6 +81,15 @@ RED.nodes.registerType('load dataset', {
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
+    <div class="form-row" style="height:34px;">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-hasTarget" style="width:20px; vertical-align:baseline; margin-right:5px;" checked>
+        <label for="node-input-hasTarget" style="width:auto; padding-top:14px;"> Has target</label>
+        <span id="target-col">
+            <label for="node-input-col" style="width:auto;"> at column </label>
+            <input type="number" id="node-input-col" value="0" style="width:70px;">
+        </span>
+    </div>
         <label for="node-input-foldername"><i class="fa fa-folder"></i> Folder Name</label>
         <input type="text" id="node-input-foldername" placeholder="Folder Name">
     </div>
