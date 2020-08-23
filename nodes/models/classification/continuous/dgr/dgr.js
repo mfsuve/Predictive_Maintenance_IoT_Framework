@@ -7,6 +7,8 @@ module.exports = function(RED) {
 
         node.topic = 'DGR'; // TODO: topic'leri düzenle
 
+        node.hideProcessing = true;
+
         node.config = {
             // * Corresponding python class
             pynode: 'DeepGenerativeReplay',

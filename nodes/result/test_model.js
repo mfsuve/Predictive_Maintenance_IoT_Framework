@@ -7,6 +7,8 @@ module.exports = function(RED) {
 
         node.topic = 'Test';
 
+        node.hideProcessing = true;
+
         node.config = {
             // Corresponding python class
             pynode: 'TestModel',

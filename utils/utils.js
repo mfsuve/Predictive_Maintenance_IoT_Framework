@@ -11,6 +11,8 @@ var proc = null;
 var nodes = {};
 
 //initialize child process
+// TODO: her node için ayrı bir process aç
+// TODO: ** Bunu python'da açmam lazım, çünkü nodered üzerinden python'daki data paylaşımını yapamıyorum
 const initProc = (env) => {
     // console.trace("init proc");
     if (proc == null) {
@@ -64,7 +66,13 @@ const initProc = (env) => {
                 message.forEach((m) => {
                     console.log(m);
                 });
-                node.status(status.PROCESSING);
+                // console.log('**************************************************************');
+                // console.log('Node: ' + node.config.pynode);
+                // console.log('node.hideProcessing: ' + node.hideProcessing);
+                // console.log('!node.hideProcessing: ' + !node.hideProcessing);
+                // console.log('**************************************************************');
+                // if (!node.hideProcessing)
+                //     node.status(status.PROCESSING);
                 node.send(message);
             });
         });
@@ -108,6 +116,8 @@ const python = (node) => {
     initProc('pdm');
     console.log("node:");
     console.log(node);
+    console.log("*********************** proc.stdin.destroyed: " + proc.stdin.destroyed);
+    console.log("*********************** proc.stdin.writable: " + proc.stdin.writable);
     proc.stdin.write(JSON.stringify(node.config) + '\n');
 };
 
@@ -122,6 +132,8 @@ module.exports = {
         console.log("Saving node with id:");
         console.log("    " + node.id);
         nodes[node.id] = node;
+        // TODO: Burada nodered için node'ları tutarken direk python processine de bunları tut diye gönderebilirim
+        // TODO: Yani python'daki bütün node'lar da noderedi çalıştırdığımda initialize olur
 
         //handle input
         node.on('input', (msg) => {
@@ -132,7 +144,8 @@ module.exports = {
                 node.onmessage(msg);
             }
 
-            node.status(status.PROCESSING);
+            if (!node.hideProcessing)
+                node.status(status.PROCESSING);
 
             node.config.id = node.id;
 

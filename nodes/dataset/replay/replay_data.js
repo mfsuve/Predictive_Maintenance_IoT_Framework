@@ -8,6 +8,8 @@ module.exports = function(RED) {
 
         node.topic = 'data';
 
+        node.hideProcessing = true;
+
         node.config = {
             // Corresponding python class
             pynode: 'ReplayData',
