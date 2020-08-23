@@ -144,6 +144,10 @@ module.exports = {
                 node.config.prevout = msg.out;
                 node.config.prev_nodeid = msg.nodeid;
             }
+
+            // Send the actual message to the node as well
+            node.config.msg = msg;
+
             // send to python process
             python(node);
         });

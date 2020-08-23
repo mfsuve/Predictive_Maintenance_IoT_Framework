@@ -4,11 +4,16 @@ RED.nodes.registerType('load dataset', {
     color: '#E2D96E',
     defaults: {
         name: {value:""},
+        method: {value:"file"},
+        // csv file options
         foldername: {value:""},
-        filename: {value:"data.csv", required:true},
+        filename: {value:"data.csv"},
         col: {value:0, required:true, validate:RED.validators.number()},
         hasheader: {value:true},
         payloadFilename: {value:false},
+        // string input options
+        // -> None
+        // other options
         removeAllnan: {value:false},
         removeAllsame: {value:false},
         hasTarget: {value:true},
@@ -18,7 +23,11 @@ RED.nodes.registerType('load dataset', {
     outputs:1,
     icon: "file.png",
     label: function() {
-        return this.name || (this.payloadFilename ? "msg.payload" : this.filename);
+        return this.name.trim() || (this.method == "file" ? 
+                                        (this.payloadFilename ?
+                                            "msg.payload" :
+                                            (this.filename.trim() || "No file specified")) :
+                                        "Strings of Data");
     },
     labelStyle: function() {
         return this.name ? "node_label_italic" : "";
@@ -53,6 +62,24 @@ RED.nodes.registerType('load dataset', {
                 $("#target-col").hide();
             }
         });
+
+        if (this.method == "file") {
+            $("#csv_settings").show();
+            $("#socket_settings").hide();
+        } else {
+            $("#csv_settings").hide();
+            $("#socket_settings").show();
+        }
+        $("#node-input-method").on("change", function() {
+            var v = $("#node-input-method").val();
+            if (v == "file") {
+                $("#csv_settings").show(200);
+                $("#socket_settings").hide(200);
+            } else {
+                $("#csv_settings").hide(200);
+                $("#socket_settings").show(200);
+            }
+        });
     }
 });
 </script>
@@ -64,6 +91,13 @@ RED.nodes.registerType('load dataset', {
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
+    <div class="form-row">
+        <label for="node-input-method"><i class="fa fa-angle-double-right"></i> Read from </label>
+        <select id="node-input-method" style="width:232px;">
+            <option value="file" selected>CSV file</option>
+            <option value="socket">Strings of data</option>
+        </select>
+    </div>
     <div class="form-row" style="height:34px;">
         <label>&nbsp;</label>
         <input type="checkbox" id="node-input-hasTarget" style="width:20px; vertical-align:baseline; margin-right:5px;" checked>
@@ -73,36 +107,41 @@ RED.nodes.registerType('load dataset', {
             <input type="number" id="node-input-col" value="0" style="width:70px;">
         </span>
     </div>
-        <label for="node-input-foldername"><i class="fa fa-folder"></i> Folder Name</label>
-        <input type="text" id="node-input-foldername" placeholder="Folder Name">
-    </div>
-    <div class="form-row">
-        <label for="node-input-payloadFilename"><i class="fa fa-file"></i> File Name</label>
-        <input type="checkbox" id="node-input-payloadFilename" style="width:20px; vertical-align:baseline; margin-right:5px;"> Use <code>msg.payload</code> as File Name
-    </div>
-    <div class="form-row" id="filename">
-        <label>&nbsp;</label>
-        <input type="text" id="node-input-filename" placeholder="File Name">
-    </div>
-    <div class="form-row">
-        <label>&nbsp;</label>
-        <input type="checkbox" id="node-input-hasheader" style="width:20px; vertical-align:baseline; margin-right:5px;"> Has header
-    </div>
-    <div class="form-row">
-        <label>&nbsp;</label>
-        <input type="checkbox" id="node-input-onlyTest" style="width:20px; vertical-align:baseline; margin-right:5px;"> Use only for testing
-    </div>
     <hr align="middle"/>
-    <div class="form-row">
-        <label style="width:100%;"><i class="fa fa-dot-circle-o"></i> Target Column Number</label>
-        <label for="node-input-col"></i>&nbsp;</label>
-        <input type="number" id="node-input-col" value="0" style="width:100px">
-    </div>
+    <div id="csv_settings">
+        <h3>CSV Settings</h3>
+        <div style="padding-left:20px;">
+            <div class="form-row">
+                <label for="node-input-foldername"><i class="fa fa-folder"></i> Folder Name</label>
+                <input type="text" id="node-input-foldername" placeholder="Folder Name">
+            </div>
+            <div class="form-row">
+                <label for="node-input-payloadFilename"><i class="fa fa-file"></i> File Name</label>
+                <input type="checkbox" id="node-input-payloadFilename" style="width:20px; vertical-align:baseline; margin-right:5px;">
+                <label for="node-input-payloadFilename" style="width:300px;"> Use <code>msg.payload</code> as File Name</label>
+            </div>
+            <div class="form-row" id="filename">
+                <label>&nbsp;</label>
+                <input type="text" id="node-input-filename" placeholder="File Name">
+            </div>
+            <div class="form-row">
+                <label>&nbsp;</label>
+                <input type="checkbox" id="node-input-hasheader" style="width:20px; vertical-align:baseline; margin-right:5px;">
+                <label for="node-input-hasheader" style="width:300px;"> Has header</label>
+            </div>
+        </div>
     </div>
     <div id="socket_settings">
         <h3>String Data Settings</h3>
+        <div style="padding-left:20px;">
+            <p style="border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9;">
+                <i class="fa fa-circle" style="font-size:80%; margin-left:10px;"></i>   
+                This node now is expecting to get string of data.
+            </p>
         </div>
     </div>
+    <hr align="middle"/>
+    <h3>Preprocessing</h3>
     <div class="form-row" style="padding-left:20px;">
         <label style="width: 100%;"><i class="fa fa-eraser"></i> Remove Columns</label>
         <label for="node-input-removeAllnan"></i>&nbsp;</label>

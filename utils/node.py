@@ -27,12 +27,12 @@ class Node(metaclass=ABCMeta):
         
         
     def run(self, config, prev_node=None, prev_out=None):
+        msg = config.pop('msg')
         if prev_node is None:
             print('prev_node is None')
-            self.__input_queue.put((config, None))
-            # TODO: Put incoming message here, since this message is coming from node-red
-            pass
-        else:
+            # Since the data is coming from nodered, I send the actual message
+            self.__input_queue.put((config, Input(msg, Node.Type.NODERED)))
+        else:  # Data is coming from another pynode, therefore the actual message is irrelevant (it is something like 'this node is done')
             print('prev_node is not None')
             self.__input_queue.put((config, prev_node.output[prev_out]))
 

@@ -11,7 +11,7 @@ module.exports = function(RED) {
         node.config = {
             // Corresponding python class
             pynode: 'LoadDataset',
-            // path: path.join(config.foldername, config.filename),
+            isFile: config.method == 'file',
             col: parseInt(config.col),
             hasheader: Boolean(config.hasheader),
             removeAllnan: config.removeAllnan,
@@ -19,10 +19,13 @@ module.exports = function(RED) {
             hasTarget: config.hasTarget,
         };
         node.onmessage = (msg) => {
-            if (config.payloadFilename)
-                node.config.path = path.join(config.foldername, msg.payload);
-            else
-                node.config.path = path.join(config.foldername, config.filename);
+            if (node.config.isFile) {
+                if (config.payloadFilename)
+                    node.config.path = path.join(config.foldername.trim(), msg.payload.trim());
+                else
+                    node.config.path = path.join(config.foldername.trim(), config.filename.trim());
+            } else
+                node.config.path = '';
         }
 
         utils.run(RED, node, config);

@@ -49,13 +49,13 @@ class LoadDataset(Node):
 
     def function(self, data, path, col, hasheader, encode, fillConstant, fillSelect, removeAllnan, removeAllsame, onlyTest):
         
-        # Reading the data
+        if isFile:        
+            # Reading the data
             X, y = self.load(path, hasheader, hasTarget, col)
+            print(f'Loaded dataset from {path}', f'X.shape is {X.shape}', f'y.shape is {y.shape}')
 
-        print(f'1: y.sum(): {y.sum()}')
-
-        # Dropping all nan rows and cols, all same cols
-        X, y = self.drop_unimportant(X, y, removeAllnan, removeAllsame)
+            # Dropping all nan rows and cols, all same cols (in case they were wanted to be dropped)
+            X, y = self.drop_unimportant(X, y, removeAllnan, removeAllsame)
 
             # Assuring that the columns are the same with the configuration file
             if hasheader:
