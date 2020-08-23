@@ -7,9 +7,11 @@ from torch.nn import functional as F
 
 class Classifier(Trainable):
     def __init__(self, input_size, classes, layers, hid_size=1000, hid_smooth=None, drop=0,
-                 batch_norm=True, nl='leakyrelu', gated=False, excitability=False, excit_buffer=False):
+                 batch_norm=True, nl='leakyrelu', gated=False, excitability=False, excit_buffer=False, name=None):
         
         super().__init__()
+        
+        self.name = self.__class__.__name__ if name is None else name
         
         layers = int(layers)
         if layers < 1:

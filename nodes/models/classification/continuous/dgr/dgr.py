@@ -53,7 +53,7 @@ class DeepGenerativeReplay(Node):
         self.prev_model = None
         self.prev_generator = None
         
-        self.test(X_in, y_in)
+        # self.test(X_in, y_in)
         
         full = False
         if not onlyTest:
@@ -135,13 +135,15 @@ class DeepGenerativeReplay(Node):
             
             # TODO: Can do something with this loss_values and accuracies (total_correct)
             loss_values.append(total_loss)
+            
+        self.send_next_node(self.model)
         
         with open('Loss_Hydraulic_Systems.txt', 'a') as file:
             for i in loss_values:
                 file.write(f'{i}\n')
             file.write(f'TASK {self.task} msg #1: {(self.y == 1).sum()} | #0: {(self.y == 0).sum()}\n')
-            
-    
+
+
     def function(self, data, taskSize, CLayers, CHidden, Clr, GZdim, GLayers, GHidden, Glr, epochs, batchSize, CHiddenSmooth=None, GHiddenSmooth=None):
         '''Aggregate streaming data, train when full and continue
 
@@ -165,17 +167,12 @@ class DeepGenerativeReplay(Node):
             X_in, y_in, onlyTest = data
             assert isinstance(X_in, pd.DataFrame), "DGR | X always needs to be a DataFrame!"
             
-            self.test(X_in, y_in)
+            # self.test(X_in, y_in)
             if not onlyTest:
                 self.full = self.append(X_in, y_in)
 
         while self.full:
-            # print(f'DGR | Full, will train...')
             self.status(f'{self.task + 1}. training')
             self.train(epochs, batchSize)
-            # print(f'DGR | yielding model...')
-            self.send_next_node(self.model, None)
-            # print(f'DGR | Resetting data')
             self.full = self.reset_data()
-            # print(f'DGR | full: {full} after resetting')
             

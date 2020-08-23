@@ -9,21 +9,38 @@ from utils.config import Config
 
 from sklearn import metrics
 
-# TODO: Bunun farklı yerlerden gelebilecek inputları handle edebilecek şekilde tamamlanması lazım.
-# TODO: Ama ondan önce Flexsim kısmındaki breakdown simulation ve NodeRed'den gelen datayı kullanarak breakdown'ların zamanını belirleme kısmı yapılacak
 class TestModel(Node):
     def __init__(self, *args):
         super().__init__(*args)
+        self.model = None
+        self.config = Config()
+        
 
+    def function(self, data, accuracy, precision, recall, f1):
+        
         if data.type != Node.Type.DATA and data.type != Node.Type.MODEL:
             raise ValueError(f"Input needs to be a 'data' or a 'model' bu got '{data.type.name.lower()}'")
-        y_pred = model.predict(X)
-        if metric == 'accuracy':
-            result = metrics.accuracy_score(y, y_pred)
-        else:
-            result = getattr(metrics, f'{metric}_score')(y, y_pred, average=None)
-            
-        print(f'test model will return:' f'{metric.title()}: {result}')   
         
-        return f'{metric.title()}: {result}'
+        if data.type == Node.Type.MODEL:
+            self.model = data.output
+            self.status(f'Model: {self.model.name}')
+        elif self.model is not None:
+            X, y, _ = data.output
+            print('Testing model', f'X.shape: {X.shape}', f'y_true.shape: {y.shape}')
+            y_pred = self.model.predict(X.to_numpy())
+            
+            msg = {'predictions': self.config.names(y_pred),
+                   'ground_truth': self.config.names(y)}                # TODO: nodered'de dene hata var mı bak, ground truth'u göster dashboard'da.
+            if accuracy:                                                # TODO: Burda datayı biraz biriktir et sonra tahmin yap, ne kadar birikeceğini de sor.
+                msg['accuracy'] = metrics.accuracy_score(y, y_pred)
+            if precision:
+                msg['precision'] = metrics.precision_score(y, y_pred, average=None)
+            if recall:
+                msg['recall'] = metrics.recall_score(y, y_pred, average=None)
+            if f1:
+                msg['f1_score'] = metrics.f1_score(y, y_pred, average=None)
+        
+            self.send_nodered(msg)
+        else:
+            self.status('Model: None')
     
