@@ -1,13 +1,12 @@
 import json
 import logging
-from types import GeneratorType
+import enum
 from abc import ABCMeta, abstractmethod
 from traceback import format_exc
-from threading import Lock
 from queue import Queue
 
 from utils.utils import myprint as print, threaded, MyJSONEncoder
-from utils.output import Output
+from utils.io import Output, Input
 
 log = logging.getLogger('nodered')
 
@@ -49,7 +48,7 @@ class Node(metaclass=ABCMeta):
     @threaded
     def __wrap_function(self):
         for config, data in self.inputs():
-            print('** config **:', config, '** data **:', data)
+            print(self.name, '** config **:', config, '** data **:', data)
             try:
                 self.function(data, **config)
                 print(f'self.function is done!')
@@ -98,7 +97,7 @@ class Node(metaclass=ABCMeta):
         
     
     def send_next_node(self, *outputs):
-        self.output += outputs
+        self.output.add(outputs, self.type)
         log.info(json.dumps({'nodeid': self.id}))
         
     

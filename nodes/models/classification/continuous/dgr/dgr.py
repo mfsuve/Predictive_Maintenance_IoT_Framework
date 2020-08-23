@@ -159,6 +159,7 @@ class DeepGenerativeReplay(Node):
                                       '''
         if data.type != Node.Type.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
+        data = data.output
         
         print(f'DGR | Got data', 'Only for testing' if data[2] else 'For training and testing')
         
