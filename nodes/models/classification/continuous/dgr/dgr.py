@@ -30,9 +30,13 @@ class DeepGenerativeReplay(Node):
         self.task_size = taskSize
         config = Config()
         num_classes = config.num_classes
-        num_features = len(config.columns())
                 
-        X_in, y_in, onlyTest = data
+        X_in, y_in = data
+        # Getting num_feature from X_in since it might have been onehot encoded
+        num_features = X_in.shape[1]
+        
+        if y_in is None:
+            raise ValueError("Input data needs to have target values for training")
         self.X = np.zeros((self.task_size, num_features))
         self.y = np.zeros(self.task_size)
 
@@ -53,11 +57,7 @@ class DeepGenerativeReplay(Node):
         self.prev_model = None
         self.prev_generator = None
         
-        # self.test(X_in, y_in)
-        
-        full = False
-        if not onlyTest:
-            full = self.append(X_in, y_in)
+        full = self.append(X_in, y_in)
         
         self.initialized = True
         return full 
@@ -159,17 +159,14 @@ class DeepGenerativeReplay(Node):
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         data = data.output
         
-        print(f'DGR | Got data', 'Only for testing' if data[2] else 'For training and testing')
-        
         if not self.initialized:
             self.full = self.__init_data(data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr)
         else:   
-            X_in, y_in, onlyTest = data
+            X_in, y_in = data
+            if y_in is None:
+                raise ValueError("Input data needs to have target values for training")
             assert isinstance(X_in, pd.DataFrame), "DGR | X always needs to be a DataFrame!"
-            
-            # self.test(X_in, y_in)
-            if not onlyTest:
-                self.full = self.append(X_in, y_in)
+            self.full = self.append(X_in, y_in)
 
         while self.full:
             self.status(f'{self.task + 1}. training')

@@ -12,15 +12,14 @@ class FillMissing(Node):
         super().__init__(*args)
         self.type = Node.Type.DATA
         self.val = 0
-        self.last = 0
-        
+
         
     def function(self, data, fillConstant, fillSelect):
         
         if data.type != Node.Type.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         
-        X, y, onlyTest = data.output
+        X, y = data.output
         
         # TODO: Öncesinde ilk zamanlarda yaptığım gibi doldurulmaya çalışılabilir (githubdaki gibi, o ffill, quadratic ve cubic falan olandan).
         # TODO: Eğer o şekilde yapıldıktan sonra sonunda NaN kaldıysa aşağıdaki yöntemlerle devam edilebilir.
@@ -44,5 +43,5 @@ class FillMissing(Node):
         assert isinstance(X, pd.DataFrame)
         assert not X.isna().any().any()
         
-        self.send_next_node((X, y, onlyTest))
+        self.send_next_node((X, y))
         self.done()

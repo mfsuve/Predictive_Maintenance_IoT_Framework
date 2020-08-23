@@ -76,6 +76,9 @@ class LoadDataset(Node):
             pass
 
         
-        self.send_next_node((X, y, onlyTest))
+        # TODO: Son olarak y'nin None olabilme imkanını yaptın ve (onlyTest'i sildin, çünkü zaten ayrı bir test node'un var) -> Done
+        # TODO: bundan sonra diğer node'lar için de (onlyTest'i sil) -> Done  ve y=None olma ihtimalini handle et
+
+        self.send_next_node((X, y))
         self.done()
     

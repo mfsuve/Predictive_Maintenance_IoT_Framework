@@ -28,11 +28,11 @@ class Encoder(Node):
     def function(self, data, encode):
         if data.type != Node.Type.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
-        X, y, onlyTest = data.output
+        X, y = data.output
         
-        print(f'Before Encoding: {y}', f'#1: {(y == 1).sum()}', f'#0: {(y == 0).sum()}')
-        before_ones = (y == 1).sum()
-        before_zeros = (y == 0).sum()
+        # print(f'Before Encoding: {y}', f'#1: {(y == 1).sum()}', f'#0: {(y == 0).sum()}')
+        # before_ones = (y == 1).sum()
+        # before_zeros = (y == 0).sum()
         
         # Encoding
         if self.encoder is None:
@@ -41,13 +41,13 @@ class Encoder(Node):
             # self.encoder.fit(X, y)
         X, y = self.encoder.transform(X, y)
         
-        print(f'After Encoding: {y}', f'#1: {(y == 1).sum()}', f'#0: {(y == 0).sum()}')
-        after_ones = (y == 1).sum()
-        after_zeros = (y == 0).sum()
+        # print(f'After Encoding: {y}', f'#1: {(y == 1).sum()}', f'#0: {(y == 0).sum()}')
+        # after_ones = (y == 1).sum()
+        # after_zeros = (y == 0).sum()
         
-        print('They are equal' if (after_ones == before_ones and after_zeros == before_zeros) else 'They are different')
+        # print('They are equal' if (after_ones == before_ones and after_zeros == before_zeros) else 'They are different')
         
-        self.send_next_node((X, y, onlyTest))
+        self.send_next_node((X, y))
         self.done()
 
     
@@ -55,16 +55,20 @@ class Encoder(metaclass=ABCMeta):
     
     def __init__(self):
         self.config = Config()
+        self.fitted = False
     
     def fit(self, X):
         self.class_encoder = LE()
         self.class_encoder.fit(self.config.classes())
         self.config.inverse = self.class_encoder.inverse_transform
+        self.fitted = True
         return self
     
     @abstractmethod
     def transform(self, X, y):
-        raise NotImplementedError()
+        if not fitted:
+            raise ValueError("Encoders need to be fitted before transform")
+        return self.class_encoder.transform(y)
     
     def fit_transform(self, X, y):
         return self.fit(X, y).transform(X, y)
@@ -87,8 +91,7 @@ class SimpleEncoder(Encoder):
         # cat_cols = X.columns[X.dtypes == 'object'].tolist()
         cat_cols = self.config.categoric_columns
         X[cat_cols] = X[cat_cols].apply(lambda col: self.encoders[col.name].transform(col))
-        y = self.class_encoder.transform(y)
-        return X, y
+        return X, super().transform(X, y)
     
 
 class OneHotEncoder(Encoder):
@@ -106,5 +109,4 @@ class OneHotEncoder(Encoder):
     def transform(self, X, y):
         X = pd.get_dummies(X)
         X = X.reindex(columns=self.columns, fill_value=0)
-        y = self.class_encoder.transform(y)
-        return X, y
+        return X, super().transform(X, y)

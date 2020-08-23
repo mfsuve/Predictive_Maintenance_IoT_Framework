@@ -25,7 +25,9 @@ class TestModel(Node):
             self.model = data.output
             self.status(f'Model: {self.model.name}')
         elif self.model is not None:
-            X, y, _ = data.output
+            X, y = data.output
+            if y is None:
+                raise ValueError("To test the model, input data has to have a target")
             print('Testing model', f'X.shape: {X.shape}', f'y_true.shape: {y.shape}')
             y_pred = self.model.predict(X.to_numpy())
             

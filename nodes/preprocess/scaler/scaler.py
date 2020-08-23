@@ -19,7 +19,7 @@ class MinMaxScaler(Node):
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         print(f'MinMax Scaling...')
         
-        X, y, onlyTest = data.output
+        X, y = data.output
         if self.min is None:
             print('Scaler | self.min is None!')
             config = Config()
@@ -44,7 +44,7 @@ class MinMaxScaler(Node):
         # !! Burası datayı spamlayınca hata atıyor !!
         assert ((0 <= X[self.min.keys()]) & (X[self.min.keys()] <= 1)).all().all()
         
-        self.send_next_node((X, y, onlyTest))
+        self.send_next_node((X, y))
         self.done()
 
 
@@ -53,6 +53,6 @@ class StandardScaler(Node):
         super().__init__(*args)
         self.type = Node.Type.DATA
 
-    def function(self, X, y, onlyTest):
+    def function(self, X, y):
         print(f'Standard Scaling...')
-        return SS().fit_transform(X), y, onlyTest
+        return SS().fit_transform(X), y
