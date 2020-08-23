@@ -4,6 +4,7 @@ RED.nodes.registerType('load dataset', {
     color: '#E2D96E',
     defaults: {
         name: {value:""},
+        configPath: {value:"", required:true},
         method: {value:"file"},
         // csv file options
         foldername: {value:""},
@@ -91,6 +92,9 @@ RED.nodes.registerType('load dataset', {
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
+        <label for="node-input-configPath"><i class="fa fa-sliders"></i> Config Path</label>
+        <input type="text" id="node-input-configPath">
+    </div>
     <div class="form-row">
         <label for="node-input-method"><i class="fa fa-angle-double-right"></i> Read from </label>
         <select id="node-input-method" style="width:232px;">

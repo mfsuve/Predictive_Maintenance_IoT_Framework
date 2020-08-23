@@ -3,6 +3,7 @@ import sys
 
 from utils.utils import myprint as print
 from utils.node import Node
+from utils.config import Config
 
 from sklearn.preprocessing import MinMaxScaler as MMS, StandardScaler as SS
 

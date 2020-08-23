@@ -5,6 +5,7 @@ import numpy as np
 
 from utils.utils import myprint as print
 from utils.node import Node
+from utils.config import Config
 
 from sklearn import metrics
 

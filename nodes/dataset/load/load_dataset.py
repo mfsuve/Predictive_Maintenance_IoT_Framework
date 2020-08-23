@@ -3,6 +3,7 @@ import sys
 import json
 import numpy as np
 
+from utils.config import Config
 from utils.utils import myprint as print
 from utils.node import Node
 
@@ -46,8 +47,12 @@ class LoadDataset(Node):
         return X.reset_index(drop=True), y.to_numpy() if y is not None else None
 
 
+    def function(self, data, configPath, isFile, path, col, hasheader, removeAllnan, removeAllsame, hasTarget):
+        
+        print('LoadDataset | isFile:', isFile)
 
-    def function(self, data, path, col, hasheader, encode, fillConstant, fillSelect, removeAllnan, removeAllsame, onlyTest):
+        # Setting up Config Singleton class and getting the column names
+        column_names = Config(configPath).columns()
         
         if isFile:        
             # Reading the data

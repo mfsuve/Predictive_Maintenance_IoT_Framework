@@ -11,6 +11,7 @@ module.exports = function(RED) {
         node.config = {
             // Corresponding python class
             pynode: 'LoadDataset',
+            configPath: config.configPath,
             isFile: config.method == 'file',
             col: parseInt(config.col),
             hasheader: Boolean(config.hasheader),

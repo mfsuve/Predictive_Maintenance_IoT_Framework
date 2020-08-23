@@ -1,0 +1,97 @@
+{
+    "sensors": {
+        "CE": {
+            "type": "numeric",
+            "min": 17.0,
+            "max": 49.0
+        },
+        "CP": {
+            "type": "numeric",
+            "min": 1.0,
+            "max": 3.0
+        },
+        "EPS1": {
+            "type": "numeric",
+            "min": 2097.0,
+            "max": 2996.0
+        },
+        "FS1": {
+            "type": "numeric",
+            "min": 0.0,
+            "max": 21.0
+        },
+        "FS2": {
+            "type": "numeric",
+            "min": 8.0,
+            "max": 11.0
+        },
+        "PS1": {
+            "type": "numeric",
+            "min": 133.0,
+            "max": 192.0
+        },
+        "PS2": {
+            "type": "numeric",
+            "min": 0.0,
+            "max": 168.0
+        },
+        "PS3": {
+            "type": "numeric",
+            "min": 0.0,
+            "max": 19.0
+        },
+        "PS4": {
+            "type": "numeric",
+            "min": 0.0,
+            "max": 11.0
+        },
+        "PS5": {
+            "type": "numeric",
+            "min": 8.0,
+            "max": 11.0
+        },
+        "PS6": {
+            "type": "numeric",
+            "min": 8.0,
+            "max": 10.0
+        },
+        "SE": {
+            "type": "numeric",
+            "min": 0.0,
+            "max": 101.0
+        },
+        "TS1": {
+            "type": "numeric",
+            "min": 34.0,
+            "max": 59.0
+        },
+        "TS2": {
+            "type": "numeric",
+            "min": 40.0,
+            "max": 63.0
+        },
+        "TS3": {
+            "type": "numeric",
+            "min": 38.0,
+            "max": 60.0
+        },
+        "TS4": {
+            "type": "numeric",
+            "min": 30.0,
+            "max": 54.0
+        },
+        "VS1": {
+            "type": "numeric",
+            "min": 0.0,
+            "max": 3.0
+        }
+    },
+    "classes": [
+        0,
+        1
+    ],
+    "names": [
+        "Working",
+        "Failed"
+    ]
+}

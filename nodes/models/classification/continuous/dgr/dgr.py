@@ -10,6 +10,7 @@ from utils.node import Node
 from utils.net.classifier import Classifier
 from utils.net.vae import AutoEncoder
 from utils.net.utils import device, SimpleDataset
+from utils.config import Config
 
 import torch
 from torch.utils.data import DataLoader
