@@ -20,8 +20,7 @@ module.exports = function(RED) {
             // * Training and Data Parameters
             taskSize: Math.max(10, parseInt(config.taskSize)),
             epochs: Math.max(1, parseInt(config.epochs)),
-            batchSize: Math.max(1, parseInt(config.batchSize)),
-            classes: Math.max(2, parseInt(config.classes))
+            batchSize: Math.max(1, parseInt(config.batchSize))
         };
 
         // * Generator Parameters

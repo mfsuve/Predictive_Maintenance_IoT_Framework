@@ -26,23 +26,24 @@ class DeepGenerativeReplay(Node):
             os.remove('Loss_Hydraulic_Systems.txt')
 
 
-    def __init_data(self, data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr, classes):
-        self.taskSize = taskSize
-        self.classes = classes
+    def __init_data(self, data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr):
+        self.task_size = taskSize
+        config = Config()
+        num_classes = config.num_classes
+        num_features = len(config.columns())
                 
         X_in, y_in, onlyTest = data
-        self.feature_size = X_in.shape[1]
-        self.X = np.zeros((self.taskSize, self.feature_size))
-        self.y = np.zeros(self.taskSize)
+        self.X = np.zeros((self.task_size, num_features))
+        self.y = np.zeros(self.task_size)
 
         ## * Initializin models (Classifier and Generator)
         #  * Classifier
-        self.model = Classifier(input_size=self.feature_size, classes=classes, layers=CLayers, hid_size=CHidden,
-                                 hid_smooth=CHiddenSmooth).to(device)
+        self.model = Classifier(input_size=num_features, classes=num_classes, layers=CLayers, hid_size=CHidden,
+                                hid_smooth=CHiddenSmooth, name=self.name).to(device)
         self.model.optimizer = torch.optim.Adam(self.model.parameters(), lr=Clr) # Can reset the optimizer after each task?
         #  * Generator (z_dim is set to be square root of the feature size if not specified, can change later)
-        self.generator = AutoEncoder(input_size=self.feature_size, z_dim=int(np.sqrt(self.feature_size) if GZdim < 1 else GZdim),
-                                        layers=GLayers, hid_size=GHidden, hid_smooth=GHiddenSmooth).to(device)
+        self.generator = AutoEncoder(input_size=num_features, z_dim=int(np.sqrt(num_features) if GZdim < 1 else GZdim),
+                                     layers=GLayers, hid_size=GHidden, hid_smooth=GHiddenSmooth).to(device)
         self.generator.optimizer = torch.optim.Adam(self.generator.parameters(), lr=Glr) # Can reset the optimizer after each task?
         
         self.size = 0
@@ -64,18 +65,18 @@ class DeepGenerativeReplay(Node):
 
     def append(self, X_in, y_in):
         input_size = X_in.shape[0]
-        if self.size + input_size > self.taskSize:
-            self.X[self.size:] = X_in[:self.taskSize-self.size]
-            self.y[self.size:] = y_in[:self.taskSize-self.size]
-            self.remainder = X_in[self.taskSize-self.size:], y_in[self.taskSize-self.size:]
-            self.size = self.taskSize
+        if self.size + input_size > self.task_size:
+            self.X[self.size:] = X_in[:self.task_size-self.size]
+            self.y[self.size:] = y_in[:self.task_size-self.size]
+            self.remainder = X_in[self.task_size-self.size:], y_in[self.task_size-self.size:]
+            self.size = self.task_size
         else:
             self.X[self.size:self.size+input_size] = X_in
             self.y[self.size:self.size+input_size] = y_in
             self.size += input_size
-        print(f'DGR | input size: {input_size}', f'DGR | size: {self.size}', f'DGR | full: {self.size >= self.taskSize}', f'DGR | task size: {self.taskSize}')
-        self.status(f'{self.size}/{self.taskSize} | trained {self.task}')
-        return self.size >= self.taskSize
+        print(f'DGR | input size: {input_size}', f'DGR | size: {self.size}', f'DGR | full: {self.size >= self.task_size}', f'DGR | task size: {self.task_size}')
+        self.status(f'{self.size}/{self.task_size} | trained {self.task}')
+        return self.size >= self.task_size
                 
     
     # * Call only when full
@@ -90,7 +91,7 @@ class DeepGenerativeReplay(Node):
             remainder = self.remainder
             self.remainder = None
             return self.append(*remainder)
-        self.status(f'{self.size}/{self.taskSize} | trained {self.task}')
+        self.status(f'{self.size}/{self.task_size} | trained {self.task}')
         return False
             
             
@@ -127,8 +128,8 @@ class DeepGenerativeReplay(Node):
                 total_correct += correct
                 total_loss += loss
                 
-            total_correct /= self.taskSize
-            total_loss /= self.taskSize
+            total_correct /= self.task_size
+            total_loss /= self.task_size
             
             self.status(f'{self.task}. training | Loss: {total_loss}')
             
@@ -141,12 +142,7 @@ class DeepGenerativeReplay(Node):
             file.write(f'TASK {self.task} msg #1: {(self.y == 1).sum()} | #0: {(self.y == 0).sum()}\n')
             
     
-    def test(self, X_in, y_in):
-        y_pred = self.model.predict(X_in.to_numpy())
-        self.send_nodered(None, y_pred.tolist())
-
-
-    def function(self, data, taskSize, CLayers, CHidden, Clr, GZdim, GLayers, GHidden, Glr, epochs, batchSize, classes, CHiddenSmooth=None, GHiddenSmooth=None):
+    def function(self, data, taskSize, CLayers, CHidden, Clr, GZdim, GLayers, GHidden, Glr, epochs, batchSize, CHiddenSmooth=None, GHiddenSmooth=None):
         '''Aggregate streaming data, train when full and continue
 
         INPUT:  - [stream_data]     (tuple of 2x) <np.array> partial input data coming from node-red
@@ -164,9 +160,9 @@ class DeepGenerativeReplay(Node):
         print(f'DGR | Got data', 'Only for testing' if data[2] else 'For training and testing')
         
         if not self.initialized:
-            self.full = self.__init_data(data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr, classes)
+            self.full = self.__init_data(data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr)
         else:   
-            X_in, y_in, onlyTest = data # TODO: X_in hep DataFrame olmalı
+            X_in, y_in, onlyTest = data
             assert isinstance(X_in, pd.DataFrame), "DGR | X always needs to be a DataFrame!"
             
             self.test(X_in, y_in)
