@@ -1,11 +1,14 @@
 from utils.node import Node
 from glob import glob
+from utils.utils import myprint as print
 
-# Automatic importing the node classes for NodeFactory to recognize them
-for filename in glob('C:\\Users\\mus-k\\Desktop\\Üniversite\\Tez\\Node Red\\nodes2\\nodes\\**\\*.py', recursive=True):
-    filename = filename[filename.find('nodes\\'):]
-    filename = filename.replace('\\', '.')[:-3]
-    exec(f'import {filename}')
+with open('imported.txt', 'w') as file:
+    # Automatic importing the node classes for NodeFactory to recognize them
+    for filename in glob('C:\\Users\\mus-k\\Desktop\\Üniversite\\Tez\\Node Red\\nodes2\\nodes\\**\\*.py', recursive=True):
+        filename = filename[filename.find('nodes\\'):]
+        filename = filename.replace('\\', '.')[:-3]
+        exec(f'import {filename}')
+        file.write(f'import {filename}\n')
     
 class NodeFactory:
     nodes = None
