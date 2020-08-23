@@ -75,17 +75,10 @@ class Node(metaclass=ABCMeta):
 
     def _error(self, message=''):
         log.error(json.dumps({'nodeid': self.id, 'error': f'{message}'}))
-        self.running = False
-        
-        
-    # def _prev_error(self):
-    #     log.info(json.dumps({'nodeid': self.id, 'prev_error': True}))
-    #     self.running = False
     
     
     def done(self):
         log.info(json.dumps({'nodeid': self.id, 'done': True}))
-        self.running = False
         
     
     # TODO: Might save old status with a function like 'old_status'
