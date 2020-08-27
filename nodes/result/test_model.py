@@ -27,22 +27,22 @@ class TestModel(Node):
             self.status(f'Model: {self.model.name}')
         elif self.model is not None:
             X, y = data.output
-            if y is None:
-                raise ValueError("To test the model, input data has to have a target")
             print('Testing model', f'X.shape: {X.shape}', f'y_true.shape: {y.shape}')
             y_pred = self.model.predict(X.to_numpy())
             
             msg = {'predictions': self.config.names(y_pred),
                    'ground_truth': self.config.names(y),
                    'classes': self.names}
-            if accuracy:                                                # TODO: Burda datayı biraz biriktir et sonra tahmin yap, ne kadar birikeceğini de sor.
-                msg['accuracy'] = metrics.accuracy_score(y, y_pred)
-            if precision:
-                msg['precision'] = metrics.precision_score(y, y_pred, average=None)
-            if recall:
-                msg['recall'] = metrics.recall_score(y, y_pred, average=None)
-            if f1:
-                msg['f1_score'] = metrics.f1_score(y, y_pred, average=None)
+            
+            if y is not None:
+                if accuracy:                                                # TODO: Burda datayı biraz biriktir et sonra tahmin yap, ne kadar birikeceğini de sor.
+                    msg['accuracy'] = metrics.accuracy_score(y, y_pred)
+                if precision:
+                    msg['precision'] = metrics.precision_score(y, y_pred, average=None)
+                if recall:
+                    msg['recall'] = metrics.recall_score(y, y_pred, average=None)
+                if f1:
+                    msg['f1_score'] = metrics.f1_score(y, y_pred, average=None)
         
             self.send_nodered(msg)
         else:
