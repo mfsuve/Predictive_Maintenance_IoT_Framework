@@ -66,7 +66,7 @@ class Encoder(metaclass=ABCMeta):
     
     @abstractmethod
     def transform(self, X, y):
-        if not fitted:
+        if not self.fitted:
             raise ValueError("Encoders need to be fitted before transform")
         return self.class_encoder.transform(y)
     

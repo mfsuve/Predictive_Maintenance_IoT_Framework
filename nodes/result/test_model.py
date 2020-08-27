@@ -14,6 +14,7 @@ class TestModel(Node):
         super().__init__(*args)
         self.model = None
         self.config = Config()
+        self.names = self.config.all_names()
         
 
     def function(self, data, accuracy, precision, recall, f1):
@@ -32,7 +33,8 @@ class TestModel(Node):
             y_pred = self.model.predict(X.to_numpy())
             
             msg = {'predictions': self.config.names(y_pred),
-                   'ground_truth': self.config.names(y)}                # TODO: nodered'de dene hata var mı bak, ground truth'u göster dashboard'da.
+                   'ground_truth': self.config.names(y),
+                   'classes': self.names}
             if accuracy:                                                # TODO: Burda datayı biraz biriktir et sonra tahmin yap, ne kadar birikeceğini de sor.
                 msg['accuracy'] = metrics.accuracy_score(y, y_pred)
             if precision:

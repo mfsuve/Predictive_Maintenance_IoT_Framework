@@ -1,6 +1,6 @@
 import json
-# from singleton import SingletonMeta
 from utils.singleton import SingletonMeta
+from utils.utils import myprint as print
 
 
 class ConfigError(ValueError):
@@ -86,11 +86,19 @@ class Config(metaclass=SingletonMeta):
     def classes(self):
         return self.__config['classes']
     
+    def all_names(self):
+        return self.__config['names']
+    
     def names(self, labels):
+        print('Config | labels:', labels)
         classes = self.classes()
+        print('Config | Before inverse', 'classes:', classes, 'Type:', [type(c) for c in classes])
+        print('Config | self.inverse:', self.inverse)
         if self.inverse is not None:
             classes = self.inverse(classes)
-        names = dict(zip(classes, self.__config['names']))
+        print('Config | After inverse', 'classes:', classes, 'Type:', [type(c) for c in classes])
+        names = dict(zip(classes, self.all_names()))
+        print('Config | names:', names)
         return [names[label] for label in labels]
 
 
