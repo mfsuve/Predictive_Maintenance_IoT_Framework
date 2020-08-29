@@ -1,12 +1,17 @@
-from utils.utils import myprint as print
-from collections.abc import Iterable
+import enum
 from utils.timed_dict import TimedDict
 
 
+# * Defined to be able to differentiate multiple inputs
+class InputType(str, enum.Enum):
+    MODEL = 'MODEL'
+    DATA = 'DATA'
+    NODERED = 'NODERED'
+    # * Can add more Type's later
+
+
 class Input:
-    def __init__(self, _output, _type):
-        if _type is None:
-            ValueError('Each node type needs to be defined')
+    def __init__(self, _output, _type=InputType.NODERED):
         self.output = _output
         self.type = _type
         
@@ -18,7 +23,7 @@ class Output:
     def __init__(self, secs=None):
         self.results = TimedDict(secs)
         
-    def add(self, outputs, _type): # type(outputs) will always be tuple
+    def add(self, outputs, _type:InputType): # type(outputs) will always be tuple
         for out_port, output in enumerate(outputs):
             self.results[out_port] = Input(output, _type)
         return self

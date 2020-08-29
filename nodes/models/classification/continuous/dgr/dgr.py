@@ -22,7 +22,6 @@ class DeepGenerativeReplay(Model):
         super().__init__(*args)
         self.initialized = False
         self.full = False
-        self.type = Node.Type.MODEL
         
         if os.path.isfile('Loss_Hydraulic_Systems.txt'):
             os.remove('Loss_Hydraulic_Systems.txt')

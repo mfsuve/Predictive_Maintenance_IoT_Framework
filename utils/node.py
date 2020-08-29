@@ -1,33 +1,22 @@
 import json
 import logging
-import enum
 from abc import ABCMeta, abstractmethod
 from traceback import format_exc
 from queue import Queue
 
 from utils.utils import myprint as print, threaded, MyJSONEncoder
-from utils.io import Output, Input
+from utils.io import Output, Input, InputType
 
 log = logging.getLogger('nodered')
 
 # TODO: Weighted KNN for Continuous/Incremental/Online Learning (research)
 
-# TODO: Create Output class #
-
 # ** İlerde her node'u bir Process yapabilirsin
 class Node(metaclass=ABCMeta):
     
-    # * Defined to be able to differentiate multiple inputs
-    class Type(enum.Enum):
-        MODEL = 1
-        DATA = 2
-        NODERED = 3
-        # * Can add more Type's later
-    
     def __init__(self, id):
         self.id = id
-        self.type = None
-        # self._running = False
+        self.type = InputType.NODERED
         self.output = Output(secs=1)
         self.__input_queue = Queue()
         
@@ -39,7 +28,7 @@ class Node(metaclass=ABCMeta):
         if prev_node is None:
             print('prev_node is None')
             # Since the data is coming from nodered, I send the actual message
-            self.__input_queue.put((config, Input(msg, Node.Type.NODERED)))
+            self.__input_queue.put((config, Input(msg)))
         else:  # Data is coming from another pynode, therefore the actual message is irrelevant (it is something like 'this node is done')
             print('prev_node is not None')
             self.__input_queue.put((config, prev_node.output[prev_out]))
