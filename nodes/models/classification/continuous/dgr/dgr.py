@@ -137,12 +137,16 @@ class DeepGenerativeReplay(Model):
             # TODO: Can do something with this loss_values and accuracies (total_correct)
             loss_values.append(total_loss)
             
-        self.send_next_node(self.model)
+        self.send_next_node(self)
         
         with open('Loss_Hydraulic_Systems.txt', 'a') as file:
             for i in loss_values:
                 file.write(f'{i}\n')
             file.write(f'TASK {self.task} msg #1: {(self.y == 1).sum()} | #0: {(self.y == 0).sum()}\n')
+
+
+    def predict(self, X):
+        return self.model.predict(X)
 
 
     def function(self, data, taskSize, CLayers, CHidden, Clr, GZdim, GLayers, GHidden, Glr, epochs, batchSize, CHiddenSmooth=None, GHiddenSmooth=None):
