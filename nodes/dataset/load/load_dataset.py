@@ -2,6 +2,7 @@ import pandas as pd
 import sys
 import json
 import numpy as np
+from io import StringIO
 
 from utils.config import Config
 from utils.utils import myprint as print
@@ -67,13 +68,13 @@ class LoadDataset(Data):
             X, y = self.drop_unimportant(X, y, removeAllnan, removeAllsame)
 
         else:
-            # TODO: Handle the data coming from websockets
-            pass
+            # Reading the data from strings of data
+            if data.type != InputType.NODERED:
+                raise TypeError(f"Input needs to be string coming from node-red while reading from strings of data but got from a '{data.type.name.lower()}' node")
+            X, y = self.load(StringIO(data.output), hasheader, hasTarget, col, column_names)
+            print(f'Loaded dataset from incoming data', f'X.shape is {X.shape}', f'y is None' if y is None else f'y.shape is {y.shape}')
 
-        
-        # TODO: Son olarak y'nin None olabilme imkanını yaptın ve (onlyTest'i sildin, çünkü zaten ayrı bir test node'un var) -> Done
-        # TODO: bundan sonra diğer node'lar için de (onlyTest'i sil) -> Done  ve y=None olma ihtimalini handle et
-
+            
         self.send_next_node((X, y))
         self.done()
     
