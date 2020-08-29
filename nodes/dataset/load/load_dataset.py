@@ -26,6 +26,15 @@ class LoadDataset(Node):
             X = X.drop([X.columns[target_col]], axis=1)
         else:
             y = None
+
+        # Assuring that the columns are the same with the configuration file
+        if hasheader:
+            if set(X.columns) != set(column_names) or len(X.columns) != len(column_names):
+                # print(f'X.columns:', set(X.columns))
+                # print(f'column_names:', set(column_names))
+                raise ValueError('Column names of the input does not match with the config file.')
+        else: # * If there is no header, the columns should be in the same order defined in the config file
+            X.columns = column_names
             
         return X, y
 
@@ -63,14 +72,6 @@ class LoadDataset(Node):
             # Dropping all nan rows and cols, all same cols (in case they were wanted to be dropped)
             X, y = self.drop_unimportant(X, y, removeAllnan, removeAllsame)
 
-            # Assuring that the columns are the same with the configuration file
-            if hasheader:
-                if set(X.columns) != set(column_names) or len(X.columns) != len(column_names):
-                    # print(f'X.columns:', set(X.columns))
-                    # print(f'column_names:', set(column_names))
-                    raise ValueError('Column names of the input does not match with the config file.')
-            else: # * If there is not header, the columns should be in the same order defined in the config file
-                X.columns = column_names
         else:
             # TODO: Handle the data coming from websockets
             pass

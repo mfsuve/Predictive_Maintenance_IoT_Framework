@@ -6,18 +6,18 @@ RED.nodes.registerType('load dataset', {
         name: {value:""},
         configPath: {value:"", required:true},
         method: {value:"file"},
+        hasheader: {value:true},
+        hasTarget: {value:true},
         // csv file options
         foldername: {value:""},
         filename: {value:"data.csv"},
         col: {value:0, required:true, validate:RED.validators.number()},
-        hasheader: {value:true},
         payloadFilename: {value:false},
         // string input options
         // -> None
         // other options
         removeAllnan: {value:false},
-        removeAllsame: {value:false},
-        hasTarget: {value:true}
+        removeAllsame: {value:false}
     },
     inputs:1,
     outputs:1,
@@ -110,8 +110,13 @@ RED.nodes.registerType('load dataset', {
             <input type="number" id="node-input-col" value="0" style="width:70px;">
         </span>
     </div>
-    <hr align="middle"/>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-hasheader" style="width:20px; vertical-align:baseline; margin-right:5px;" checked>
+        <label for="node-input-hasheader" style="width:300px;"> Has header</label>
+    </div>
     <div id="csv_settings">
+        <hr align="middle"/>
         <h3>CSV Settings</h3>
         <div style="padding-left:20px;">
             <div class="form-row">
@@ -127,14 +132,20 @@ RED.nodes.registerType('load dataset', {
                 <label>&nbsp;</label>
                 <input type="text" id="node-input-filename" placeholder="File Name">
             </div>
-            <div class="form-row">
-                <label>&nbsp;</label>
-                <input type="checkbox" id="node-input-hasheader" style="width:20px; vertical-align:baseline; margin-right:5px;">
-                <label for="node-input-hasheader" style="width:300px;"> Has header</label>
-            </div>
+        </div>
+        <hr align="middle"/>
+        <h3>Preprocessing</h3>
+        <div class="form-row" style="padding-left:20px;">
+            <label style="width: 100%;"><i class="fa fa-eraser"></i> Remove Columns</label>
+            <label for="node-input-removeAllnan"></i>&nbsp;</label>
+            <input type="checkbox" id="node-input-removeAllnan" style="width:20px; vertical-align:baseline; margin-right:5px;"> Remove Columns with all N/A Values
+            <br>
+            <label for="node-input-removeAllsame"></i>&nbsp;</label>
+            <input type="checkbox" id="node-input-removeAllsame" style="width:20px; vertical-align:baseline; margin-right:5px;"> Remove Columns with all Same Values
         </div>
     </div>
     <div id="socket_settings">
+    <!--
         <h3>String Data Settings</h3>
         <div style="padding-left:20px;">
             <p style="border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9;">
@@ -142,16 +153,7 @@ RED.nodes.registerType('load dataset', {
                 This node now is expecting to get string of data.
             </p>
         </div>
-    </div>
-    <hr align="middle"/>
-    <h3>Preprocessing</h3>
-    <div class="form-row" style="padding-left:20px;">
-        <label style="width: 100%;"><i class="fa fa-eraser"></i> Remove Columns</label>
-        <label for="node-input-removeAllnan"></i>&nbsp;</label>
-        <input type="checkbox" id="node-input-removeAllnan" style="width:20px; vertical-align:baseline; margin-right:5px;"> Remove Columns with all N/A Values
-        <br>
-        <label for="node-input-removeAllsame"></i>&nbsp;</label>
-        <input type="checkbox" id="node-input-removeAllsame" style="width:20px; vertical-align:baseline; margin-right:5px;"> Remove Columns with all Same Values
+    -->
     </div>
 </script>
 
