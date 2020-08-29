@@ -101,4 +101,19 @@ class Node(metaclass=ABCMeta):
     @property
     def name(self):
         return self.__class__.__name__
+
+
+class Model(Node):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.type = InputType.MODEL
         
+    @abstractmethod
+    def predict(self, X):
+        raise NotImplementedError()
+
+
+class Data(Node):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.type = InputType.DATA

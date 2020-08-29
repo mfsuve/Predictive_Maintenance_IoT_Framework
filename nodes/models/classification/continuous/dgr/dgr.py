@@ -6,16 +6,18 @@ import copy
 import os
 
 from utils.utils import myprint as print
-from utils.node import Node
+from utils.node import Model
+from utils.config import Config
+from utils.io import InputType
+
 from utils.net.classifier import Classifier
 from utils.net.vae import AutoEncoder
 from utils.net.utils import device, SimpleDataset
-from utils.config import Config
 
 import torch
 from torch.utils.data import DataLoader
 
-class DeepGenerativeReplay(Node):
+class DeepGenerativeReplay(Model):
     def __init__(self, *args):
         super().__init__(*args)
         self.initialized = False
@@ -155,7 +157,7 @@ class DeepGenerativeReplay(Node):
                                       final hidden layer has [CHiddenSmooth] units (if only 1 hidden layer, it has [CHidden] units)
                 - []
                                       '''
-        if data.type != Node.Type.DATA:
+        if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         data = data.output
         

@@ -6,10 +6,12 @@ import numpy as np
 from utils.utils import myprint as print
 from utils.node import Node
 from utils.config import Config
+from utils.io import InputType
 
 from sklearn import metrics
 
 class TestModel(Node):
+    
     def __init__(self, *args):
         super().__init__(*args)
         self.model = None
@@ -19,10 +21,10 @@ class TestModel(Node):
 
     def function(self, data, accuracy, precision, recall, f1):
         
-        if data.type != Node.Type.DATA and data.type != Node.Type.MODEL:
+        if data.type != InputType.DATA and data.type != InputType.MODEL:
             raise ValueError(f"Input needs to be a 'data' or a 'model' bu got '{data.type.name.lower()}'")
         
-        if data.type == Node.Type.MODEL:
+        if data.type == InputType.MODEL:
             self.model = data.output
             self.status(f'Model: {self.model.name}')
         elif self.model is not None:

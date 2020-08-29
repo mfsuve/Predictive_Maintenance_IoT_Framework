@@ -4,19 +4,19 @@ import json
 import numpy as np
 
 from utils.utils import myprint as print
-from utils.node import Node
+from utils.node import Data
+from utils.io import InputType
 
-class FillMissing(Node):
+class FillMissing(Data):
     
     def __init__(self, *args):
         super().__init__(*args)
-        self.type = Node.Type.DATA
         self.val = 0
 
         
     def function(self, data, fillConstant, fillSelect):
         
-        if data.type != Node.Type.DATA:
+        if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         
         X, y = data.output

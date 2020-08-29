@@ -4,21 +4,20 @@ import json
 import numpy as np
 
 from utils.utils import myprint as print
-from utils.node import Node
+from utils.node import Data
+from utils.io import InputType
 
 from collections import deque
 
-class ReplayData(Node):
+class ReplayData(Data):
     
-    def __init__(self, *args):
-        super().__init__(*args)
-        # self.inputs.append(Data)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.q = deque()
-
 
     def function(self, data):
         # Currently just storing y
-        if data.type == Node.Type.NODERED: # Coming from nodered
+        if data.type == InputType.NODERED: # Coming from nodered
             try:
                 replayed = self.q.popleft()
                 self.send_nodered(replayed)
@@ -27,7 +26,7 @@ class ReplayData(Node):
                 # TODO: Fix this, what to do if there is no data to be replayed?
                 print('ReplayData | Tried to replay but there is no data', f'ReplayData | Current Lenght: {len(self.q)}')
         else:
-            if data.type != Node.Type.DATA:
+            if data.type != InputType.DATA:
                 raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
             _, y = data.output
             if y is not None:

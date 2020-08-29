@@ -5,28 +5,22 @@ import numpy as np
 from abc import ABCMeta, abstractmethod
 
 from utils.utils import myprint as print
-from utils.node import Node
+from utils.node import Data
 from utils.config import Config
+from utils.io import InputType
 
 from sklearn.preprocessing import LabelEncoder as LE
 from collections import defaultdict
 
-class Encoder(Node):
+class Encoder(Data):
     
     def __init__(self, *args):
         super().__init__(*args)
-        self.type = Node.Type.DATA
         self.encoder = None
 
 
-    # TODO: Sürekli gelen veride econding'lerin consistent olması lazım
-    # TODO: Bunun için bu enconding kısmı ayrı bir node olarak koyulabilir
-    # TODO: Node'a ister misin gibi configuration koymuyorum çünkü eğer ayrı node olarak yaparsam
-    # TODO: ilerde WebSocket'ten gelen verileri de direk ona sokabilirim.
-        # TODO: Yeni node olarak yapınca eskisini tutup sürekli update ederek mi
-        # TODO: yoksa her defasında yeniden mi fitle şeklinde opsiyon koayabilirim.
     def function(self, data, encode):
-        if data.type != Node.Type.DATA:
+        if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         X, y = data.output
         

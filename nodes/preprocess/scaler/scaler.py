@@ -2,20 +2,21 @@ import pandas as pd
 import sys
 
 from utils.utils import myprint as print
-from utils.node import Node
+from utils.node import Data
 from utils.config import Config
+from utils.io import InputType
 
 from sklearn.preprocessing import MinMaxScaler as MMS, StandardScaler as SS
 
-class MinMaxScaler(Node):
+class MinMaxScaler(Data):
+    
     def __init__(self, *args):
         super().__init__(*args)
-        self.type = Node.Type.DATA
         self.min = None
         self.range = None
 
     def function(self, data):
-        if data.type != Node.Type.DATA:
+        if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         print(f'MinMax Scaling...')
         
@@ -48,10 +49,10 @@ class MinMaxScaler(Node):
         self.done()
 
 
-class StandardScaler(Node):
+class StandardScaler(Data):
     def __init__(self, *args):
         super().__init__(*args)
-        self.type = Node.Type.DATA
+        self.type = InputType.DATA
 
     def function(self, X, y):
         print(f'Standard Scaling...')

@@ -5,16 +5,12 @@ import numpy as np
 
 from utils.config import Config
 from utils.utils import myprint as print
-from utils.node import Node
+from utils.node import Data
+from utils.io import InputType
 
-class LoadDataset(Node):
+class LoadDataset(Data):
     
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.type = Node.Type.DATA
-
-
-    def load(self, path, hasheader, hasTarget, target_col):
+    def load(self, path, hasheader, hasTarget, target_col, column_names):
         # * Add more na_values when encountered
         try:
             X = pd.read_csv(path, header=0 if hasheader else None, na_values=['na'], skipinitialspace=True, encoding='utf-8')
@@ -59,15 +55,13 @@ class LoadDataset(Node):
 
     def function(self, data, configPath, isFile, path, col, hasheader, removeAllnan, removeAllsame, hasTarget):
         
-        print('LoadDataset | isFile:', isFile)
-
         # Setting up Config Singleton class and getting the column names
         column_names = Config(configPath).columns()
         
-        if isFile:        
-            # Reading the data
-            X, y = self.load(path, hasheader, hasTarget, col)
-            print(f'Loaded dataset from {path}', f'X.shape is {X.shape}', f'y.shape is {y.shape}')
+        if isFile:
+            # Reading the data from file
+            X, y = self.load(path, hasheader, hasTarget, col, column_names)
+            print(f'Loaded dataset from {path}', f'X.shape is {X.shape}', f'y is None' if y is None else f'y.shape is {y.shape}')
 
             # Dropping all nan rows and cols, all same cols (in case they were wanted to be dropped)
             X, y = self.drop_unimportant(X, y, removeAllnan, removeAllsame)
