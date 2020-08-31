@@ -1,6 +1,7 @@
 module.exports = function(RED) {
     function DGRNode(config) {
 
+        const path = require('path');
         const utils = require('../../../../../utils/utils');
 
         var node = this;
@@ -20,7 +21,7 @@ module.exports = function(RED) {
             // * Training and Data Parameters
             taskSize: Math.max(10, parseInt(config.taskSize)),
             epochs: Math.max(1, parseInt(config.epochs)),
-            batchSize: Math.max(1, parseInt(config.batchSize))
+            batchSize: Math.max(1, parseInt(config.batchSize)),
         };
 
         // * Generator Parameters
@@ -37,6 +38,9 @@ module.exports = function(RED) {
             node.config.GHiddenSmooth = Boolean(config.GHasSmooth) ? parseInt(config.GHiddenSmooth) : undefined;
             node.config.Glr = parseFloat(config.Glr);
         }
+
+        if (config.loadModel && config.loadFile && config.loadFile.trim())
+            node.config.loadFrom = path.join(config.loadFolder.trim(), config.loadFile.trim());
 
         utils.run(RED, node, config);
 

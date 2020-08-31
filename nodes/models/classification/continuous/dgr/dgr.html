@@ -4,7 +4,10 @@ RED.nodes.registerType('dgr', {
     color: '#DAC4B4',
     defaults: {
         name: {value:""},
-
+        loadModel: {value:false},
+        loadFolder: {value:""},
+        loadFile: {value:""},
+        // Classifier Parameters
         CLayers: {value:3, required:true, validate:function(v) {
             return RED.validators.number()(v) && v > 0;
         }},
@@ -18,7 +21,7 @@ RED.nodes.registerType('dgr', {
         Clr: {value:0.01, required:true, validate:function(v) {
             return RED.validators.number()(v) && v > 0;
         }},
-
+        // Generator Parameters
         GLayers: {value:3, validate:function(v) {
             return RED.validators.number()(v) && v > 0;
         }},
@@ -36,7 +39,7 @@ RED.nodes.registerType('dgr', {
             return RED.validators.number()(v) && v > 0;
         }},
         autoGenParams: {value:false},
-
+        // Data and Train Parameters
         taskSize: {value:5000, required:true, validate:function(v) {
             return RED.validators.number()(v) && v >= 10;
         }},
@@ -103,6 +106,21 @@ RED.nodes.registerType('dgr', {
                 $("#infoAutoGen").show(200);
             }
         });
+
+        // Loading options
+        if (this.loadModel) {
+            $("#load").show();
+        } else {
+            $("#load").hide();
+        }
+        $("#node-input-loadModel").on("change", function() {
+            var v = $("#node-input-loadModel").prop('checked');
+            if (v) {
+                $("#load").show(200);
+            } else {
+                $("#load").hide(200);
+            }
+        });
     }
 });
 </script>
@@ -113,15 +131,36 @@ RED.nodes.registerType('dgr', {
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
+
+    <div class="form-row" style="height:34px;">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-loadModel" style="width:20px; vertical-align:baseline; margin-right:5px;">
+        <label for="node-input-loadModel" style="width:auto; padding-top:14px;"> Load model</label>
+    </div>
+    <div id="load">
+        <div class="form-row">
+            <label for="node-input-loadFolder"><i class="fa fa-folder"></i> Model Folder</label>
+            <input type="text" id="node-input-loadFolder" value="">
+        </div>
+        <div class="form-row">
+            <label for="node-input-loadFile"><i class="fa fa-file"></i> Model File</label>
+            <input type="text" id="node-input-loadFile" value="">
+        </div>
+    </div>
+
+    <hr align="middle"/>
+    <div class="form-row">
+        <span style="width:100%; font-size:120%; margin-bottom:20px;"><b>Train and Data Options</b></span>
+    </div>
     <div class="form-row">
         <label>&nbsp;</label>
-        <label for="node-input-taskSize" style="width:350px;">Maximum Accumulated Data Size Before Training</br>
+        <label for="node-input-taskSize" style="width:350px;">Maximum accumulated data size before training</br>
         <input type="number" id="node-input-taskSize" value="5000" style="width:80px; margin-top:10px;" min="10">
     </div>
     <div class="form-row">
         <span style="display:block;">
             <label>&nbsp;</label>
-            <label for="node-input-batchSize" style="width:80px; text-align:center; display:inline-block; vertical-align:middle;">Batch Size</label>
+            <label for="node-input-batchSize" style="width:80px; text-align:center; display:inline-block; vertical-align:middle;">Batch size</label>
             <label for="node-input-epochs" style="width:80px; text-align:center; display:inline-block; vertical-align:middle;">Epochs</label>
         </span>
         <span style="display:block;">
@@ -135,17 +174,17 @@ RED.nodes.registerType('dgr', {
         <span style="width:100%; font-size:120%; margin-bottom:20px;"><b>Classifier Options</b></span>
     </div>
     <div class="form-row" style="padding-left:20px;">
-        <label for="node-input-CLayers" style="width:150px;">Number of Layers</label>
+        <label for="node-input-CLayers" style="width:150px;">Number of layers</label>
         <input type="number" id="node-input-CLayers" value="3" style="width:80px;" min="1"></br>
 
-        <label for="node-input-CHidden" style="width:150px; margin-top:10px;">Hidden Layer Sizes</label>
+        <label for="node-input-CHidden" style="width:150px; margin-top:10px;">Hidden layer sizes</label>
         <input type="number" id="node-input-CHidden" value="256" style="width:80px;" min="1">
         
         <input style="width:20px; margin:0px;" type="checkbox" id="node-input-CHasSmooth">
         <label style="width:auto;" for="node-input-CHasSmooth"> Smooth</label>
         <input type="text" id="node-input-CHiddenSmooth" value="64" style="width:80px; margin-left:7px;" min="1"></br>
         
-        <label for="node-input-Clr" style="width:150px; margin-top:10px;">Learning Rate</label>
+        <label for="node-input-Clr" style="width:150px; margin-top:10px;">Learning rate</label>
         <input type="text" id="node-input-Clr" value="0.01" style="width:80px;" min="0">
     </div>
     <hr align="middle"/>
@@ -155,10 +194,10 @@ RED.nodes.registerType('dgr', {
         <label for="node-input-autoGenParams" style="width:auto;"><i class="fa fa-magic"></i>  Auto</label>
     </div>
     <div class="form-row" style="padding-left:20px;" id="genops">
-        <label for="node-input-GLayers" style="width:150px;">Number of Layers</label>
+        <label for="node-input-GLayers" style="width:150px;">Number of layers</label>
         <input type="number" id="node-input-GLayers" value="3" style="width:80px;" min="1"></br>
 
-        <label for="node-input-GHidden" style="width:150px; margin-top:10px;">Hidden Layer Sizes</label>
+        <label for="node-input-GHidden" style="width:150px; margin-top:10px;">Hidden layer sizes</label>
         <input type="number" id="node-input-GHidden" value="256" style="width:80px;" min="1">
         
         <input style="width:20px; margin:0px;" type="checkbox" id="node-input-GHasSmooth">
@@ -168,7 +207,7 @@ RED.nodes.registerType('dgr', {
         <label for="node-input-GZdim" style="width:150px; margin-top:10px;">Z-Dimension</label>
         <input type="number" id="node-input-GZdim" value="20" style="width:80px;" min="1"></br>
         
-        <label for="node-input-Glr" style="width:150px; margin-top:10px;">Learning Rate</label>
+        <label for="node-input-Glr" style="width:150px; margin-top:10px;">Learning rate</label>
         <input type="text" id="node-input-Glr" value="0.01" style="width:80px;" min="0">
     </div>
     <p style="border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9;" id="infoAutoGen">

@@ -36,6 +36,10 @@ class DeepGenerativeReplay(Model):
         # Getting num_feature from X_in since it might have been onehot encoded
         num_features = X_in.shape[1]
         
+        # Storing these variables to make sure a proper model is loaded when loading from disk
+        self.num_features = num_features
+        self.num_classes = num_classes
+        
         if y_in is None:
             raise ValueError("Input data needs to have target values for training")
         self.X = np.zeros((self.task_size, num_features))
@@ -147,9 +151,31 @@ class DeepGenerativeReplay(Model):
 
     def predict(self, X):
         return self.model.predict(X)
+    
+    
+    def save(self, folder, prefix, timestamp, obj=None):
+        obj = dict(
+            generator = self.generator,
+            model = self.model,
+            prev_generator = self.prev_generator,
+            prev_model = self.prev_model,
+            num_classes = self.num_classes,     # To check if proper model
+            num_features = self.num_features,   # To check if proper model
+        )   
+        super().save(folder, prefix, timestamp, obj)
+        
+        
+    # TODO: Bazı parametreler match ediyor mu bak, özellikle config'den gelen parametreler
+    def load(self, path):
+        check = [('num_classes', 'number of classes'),
+                 ('num_features', 'number of features')]
+        obj = super().load(path, check)
+        # Updating the dict
+        self.__dict__.update(obj)
+        self.send_next_node(self)
+        
 
-
-    def function(self, data, taskSize, CLayers, CHidden, Clr, GZdim, GLayers, GHidden, Glr, epochs, batchSize, CHiddenSmooth=None, GHiddenSmooth=None):
+    def function(self, data, taskSize, CLayers, CHidden, Clr, GZdim, GLayers, GHidden, Glr, epochs, batchSize, CHiddenSmooth=None, GHiddenSmooth=None, loadFrom=None):
         '''Aggregate streaming data, train when full and continue
 
         INPUT:  - [stream_data]     (tuple of 2x) <np.array> partial input data coming from node-red
@@ -166,6 +192,12 @@ class DeepGenerativeReplay(Model):
         
         if not self.initialized:
             self.full = self.__init_data(data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr)
+            # Loading old model if it is asked
+            if loadFrom is not None:
+                self.load(loadFrom)
+                print(f'DGR | Successfully loaded from {loadFrom}')
+            else:
+                print(f'DGR | Not loading from any model')
         else:   
             X_in, y_in = data
             if y_in is None:
