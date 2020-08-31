@@ -53,8 +53,19 @@ class Config(metaclass=SingletonMeta):
         if self.num_classes != len(self.__config['names']):
             raise ConfigError("Number of names and classes should be the same in the config file.")
         
-        self.inverse = None
+        self.class_name_dict = dict(zip(self.classes(), self.names()))
+        
+        # Defined for encoder node
+        self.__inverse = None
             
+    @property
+    def inverse(self):
+        return self.__inverse
+    
+    @inverse.setter
+    def inverse(self, __inverse):
+        self.__inverse = __inverse
+        self.class_name_dict = dict(zip(self.inverse(self.classes()), self.names()))
             
     def __getitem__(self, key):
         return self.__config[key]
@@ -84,22 +95,31 @@ class Config(metaclass=SingletonMeta):
         return self['sensors'][sensor]['categories']
         
     def classes(self):
+        '''
+        Returns all classes that any initial data directly read from the load_data node can have at their target columns.        
+         * It is in the same order as `names()`.
+         * Used in the `encoder` node.
+        '''
         return self.__config['classes']
     
-    def all_names(self):
+    def names(self):
+        '''
+        Returns all possible names that any class can represent.
+         * It is in the same order as `classes()`.
+         * Used in the `test_model` node for the dashboard to be able to display all names.
+        '''
         return self.__config['names']
     
-    def names(self, labels):
-        print('Config | labels:', labels)
-        classes = self.classes()
-        print('Config | Before inverse', 'classes:', classes, 'Type:', [type(c) for c in classes])
-        print('Config | self.inverse:', self.inverse)
-        if self.inverse is not None:
-            classes = self.inverse(classes)
-        print('Config | After inverse', 'classes:', classes, 'Type:', [type(c) for c in classes])
-        names = dict(zip(classes, self.all_names()))
-        print('Config | names:', names)
-        return [names[label] for label in labels]
+    def predictions(self):
+        '''
+        Returns all predictions that any model can make with or without encoded class labels.
+         * It is in the same order as `classes()` and `names()`.
+         * Used in the `test_model` node for all metrics returning multiple values (e.g. precision, recall, etc.)
+        '''
+        return list(self.class_name_dict.keys())
+    
+    def convert_to_names(self, labels):
+        return [self.class_name_dict[label] for label in labels]
 
 
 if __name__ == "__main__":
