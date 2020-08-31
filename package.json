@@ -27,6 +27,7 @@
             "fill missing": "nodes/preprocess/fill_missing/fill_missing.js",
             "train test split": "nodes/model_selection/train_test_split/train_test_split.js",
             "svm": "nodes/models/classification/svm/svm.js",
+            "save model": "nodes/models/io/save/save.js",
             "test model": "nodes/result/test_model.js",
             "dgr": "nodes/models/classification/continuous/dgr/dgr.js"
         }
