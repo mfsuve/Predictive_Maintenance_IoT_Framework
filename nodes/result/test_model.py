@@ -16,7 +16,8 @@ class TestModel(Node):
         super().__init__(*args)
         self.model = None
         self.config = Config()
-        self.names = self.config.all_names()
+        self.all_possible_names = self.config.names()
+        self.all_possible_predictions = self.config.predictions()
         
 
     def function(self, data, accuracy, precision, recall, f1):
@@ -32,19 +33,23 @@ class TestModel(Node):
             print('Testing model', f'X.shape: {X.shape}', f'y_true.shape: {y.shape}')
             y_pred = self.model.predict(X.to_numpy())
             
-            msg = {'predictions': self.config.names(y_pred),
-                   'ground_truth': self.config.names(y),
-                   'classes': self.names}
+            msg = {'predictions': self.config.convert_to_names(y_pred),
+                   'ground_truth': self.config.convert_to_names(y),
+                   'classes': self.all_possible_names}
             
+            # ? Burda datayı biraz biriktir sonra tahmin yap, ne kadar birikeceğini de sor.
             if y is not None:
-                if accuracy:                                                # TODO: Burda datayı biraz biriktir et sonra tahmin yap, ne kadar birikeceğini de sor.
+                if accuracy:
                     msg['accuracy'] = metrics.accuracy_score(y, y_pred)
                 if precision:
-                    msg['precision'] = metrics.precision_score(y, y_pred, average=None)
+                    precision_score = metrics.precision_score(y, y_pred, average=None, labels=self.all_possible_predictions)
+                    msg['precision'] = dict(zip(self.all_possible_names, precision_score))
                 if recall:
-                    msg['recall'] = metrics.recall_score(y, y_pred, average=None)
+                    recall_score = metrics.recall_score(y, y_pred, average=None, labels=self.all_possible_predictions)
+                    msg['recall'] = dict(zip(self.all_possible_names, recall_score))
                 if f1:
-                    msg['f1_score'] = metrics.f1_score(y, y_pred, average=None)
+                    f1_score = metrics.f1_score(y, y_pred, average=None, labels=self.all_possible_predictions)
+                    msg['f1_score'] = dict(zip(self.all_possible_names, f1_score))
         
             self.send_nodered(msg)
         else:
