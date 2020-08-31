@@ -14,7 +14,7 @@ module.exports = function(RED) {
             configPath: config.configPath,
             isFile: config.method == 'file',
             col: parseInt(config.col),
-            hasheader: Boolean(config.hasheader),
+            hasheader: config.hasheader,
             removeAllnan: config.removeAllnan,
             removeAllsame: config.removeAllsame,
             hasTarget: config.hasTarget,

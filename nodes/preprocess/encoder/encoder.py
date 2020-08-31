@@ -45,7 +45,7 @@ class Encoder(Data):
         self.done()
 
     
-class Encoder(metaclass=ABCMeta):
+class BaseEncoder(metaclass=ABCMeta):
     
     def __init__(self):
         self.config = Config()
@@ -68,7 +68,7 @@ class Encoder(metaclass=ABCMeta):
         return self.fit(X, y).transform(X, y)
 
 
-class SimpleEncoder(Encoder):
+class SimpleEncoder(BaseEncoder):
     
     def __init__(self):
         super().__init__()
@@ -88,7 +88,7 @@ class SimpleEncoder(Encoder):
         return X, super().transform(X, y)
     
 
-class OneHotEncoder(Encoder):
+class OneHotEncoder(BaseEncoder):
     
     def __init__(self):
         super().__init__()
