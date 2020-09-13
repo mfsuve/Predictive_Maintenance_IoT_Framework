@@ -42,13 +42,13 @@ class TestModel(Node):
                 if accuracy:
                     msg['accuracy'] = metrics.accuracy_score(y, y_pred)
                 if precision:
-                    precision_score = metrics.precision_score(y, y_pred, average=None, labels=self.all_possible_predictions)
+                    precision_score = metrics.precision_score(y, y_pred, average=None, labels=self.all_possible_predictions, zero_division=0)
                     msg['precision'] = dict(zip(self.all_possible_names, precision_score))
                 if recall:
-                    recall_score = metrics.recall_score(y, y_pred, average=None, labels=self.all_possible_predictions)
+                    recall_score = metrics.recall_score(y, y_pred, average=None, labels=self.all_possible_predictions, zero_division=0)
                     msg['recall'] = dict(zip(self.all_possible_names, recall_score))
                 if f1:
-                    f1_score = metrics.f1_score(y, y_pred, average=None, labels=self.all_possible_predictions)
+                    f1_score = metrics.f1_score(y, y_pred, average=None, labels=self.all_possible_predictions, zero_division=0)
                     msg['f1_score'] = dict(zip(self.all_possible_names, f1_score))
         
             self.send_nodered(msg)
