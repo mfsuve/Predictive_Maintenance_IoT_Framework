@@ -138,7 +138,8 @@ class DeepGenerativeReplay(Model):
             
             self.status(f'{self.task}. training | Loss: {total_loss}')
             
-            # TODO: Can do something with this loss_values and accuracies (total_correct)
+            self.send_nodered(None, {'loss': total_loss, 'accuracy': total_correct, 'train_count': self.task})
+            
             loss_values.append(total_loss)
             
         self.send_next_node(self)
