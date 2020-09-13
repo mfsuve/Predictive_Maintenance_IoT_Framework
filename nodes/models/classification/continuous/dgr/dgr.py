@@ -142,7 +142,7 @@ class DeepGenerativeReplay(Model):
             
             loss_values.append(total_loss)
             
-        self.send_next_node(self)
+        self.send_next_node((self, False))
         
         with open('Loss_Hydraulic_Systems.txt', 'a') as file:
             for i in loss_values:
@@ -173,7 +173,9 @@ class DeepGenerativeReplay(Model):
         obj = super().load(path, check)
         # Updating the dict
         self.__dict__.update(obj)
-        self.send_next_node(self)
+        # True for loaded, I am doing this to notify the save node to not save it again
+        # I am sending this loaded model for the test node
+        self.send_next_node((self, True))
         
 
     def function(self, data, taskSize, CLayers, CHidden, Clr, GZdim, GLayers, GHidden, Glr, epochs, batchSize, CHiddenSmooth=None, GHiddenSmooth=None, loadFrom=None):

@@ -26,7 +26,7 @@ class TestModel(Node):
             raise ValueError(f"Input needs to be a 'data' or a 'model' bu got '{data.type.name.lower()}'")
         
         if data.type == InputType.MODEL:
-            self.model = data.output
+            self.model, _ = data.output
             self.status(f'Model: {self.model.name}')
         elif self.model is not None:
             X, y = data.output
