@@ -39,6 +39,10 @@ const initProc = (env) => {
                     // Set status as 'DONE'
                     node.status(status.DONE);
                     return;
+                } else if (_data.none) {
+                    // Set status as 'NONE' (clear status)
+                    node.status(status.NONE);
+                    return;
                 } else if (_data.message) {
                     // Send message to nodered to print it in debug node
                     message = Array(node.wires.length);

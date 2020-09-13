@@ -74,6 +74,10 @@ class Node(metaclass=ABCMeta):
     # TODO: Might save old status with a function like 'old_status'
     def status(self, message):
         log.info(json.dumps({'nodeid': self.id, 'status': f'{message}'}))
+        
+    
+    def clear_status(self):
+        log.info(json.dumps({'nodeid': self.id, 'none': True}))
     
     
     # TODO: Implement 'warning' function
@@ -110,6 +114,7 @@ class Model(Node):
         make_sure_folder_exists(folder)
         with open(get_path(folder, prefix, self.name, timestamp), 'wb') as file:
             pickle.dump(obj, file, protocol=pickle.HIGHEST_PROTOCOL)
+        # TODO: FutureWarning: pickle support for Storage will be removed in 1.5. Use `torch.save` instead
     
     @abstractmethod
     def load(self, path, check):
