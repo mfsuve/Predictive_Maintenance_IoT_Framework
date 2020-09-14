@@ -7,12 +7,12 @@ module.exports = function(RED) {
         var node = this;
 
         node.topic = 'DGR'; // TODO: topic'leri düzenle
+        // Corresponding python class
+        node.pynode = 'DeepGenerativeReplay';
 
         node.hideProcessing = true;
 
         node.config = {
-            // * Corresponding python class
-            pynode: 'DeepGenerativeReplay',
             // * Classifier Parameters
             CLayers: parseInt(config.CLayers),
             CHidden: parseInt(config.CHidden),

@@ -6,12 +6,12 @@ module.exports = function(RED) {
         var node = this;
 
         node.topic = 'Test';
+        // Corresponding python class
+        node.pynode = 'TestModel';
 
         node.hideProcessing = true;
 
         node.config = {
-            // Corresponding python class
-            pynode: 'TestModel',
             accuracy: config.accuracy,
             precision: config.precision,
             recall: config.recall,

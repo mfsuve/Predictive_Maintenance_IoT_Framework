@@ -7,13 +7,10 @@ module.exports = function(RED) {
         var node = this;
 
         node.topic = 'data';
+        // Corresponding python class
+        node.pynode = 'ReplayData';
 
         node.hideProcessing = true;
-
-        node.config = {
-            // Corresponding python class
-            pynode: 'ReplayData',
-        };
 
         utils.run(RED, node, config);
 

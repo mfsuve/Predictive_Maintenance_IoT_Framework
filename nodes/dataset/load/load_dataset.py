@@ -71,7 +71,7 @@ class LoadDataset(Data):
             # Reading the data from strings of data
             if data.type != InputType.NODERED:
                 raise TypeError(f"Input needs to be string coming from node-red while reading from strings of data but got from a '{data.type.name.lower()}' node")
-            X, y = self.load(StringIO(data.output), hasheader, hasTarget, col, column_names)
+            X, y = self.load(StringIO(data.get()), hasheader, hasTarget, col, column_names)
             print(f'Loaded dataset from incoming data', f'X.shape is {X.shape}', f'y is None' if y is None else f'y.shape is {y.shape}')
 
             

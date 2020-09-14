@@ -7,10 +7,10 @@ module.exports = function(RED) {
         var node = this;
 
         node.topic = 'model';
+        // Corresponding python class
+        node.pynode = 'SaveModel';
 
         node.config = {
-            // Corresponding python class
-            pynode: 'SaveModel',
             folder: config.foldername.trim(),
             prefix: config.prefix.trim(),
             timestamp: config.timestamp

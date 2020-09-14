@@ -28,14 +28,10 @@ class ReplayData(Data):
         else:
             if data.type != InputType.DATA:
                 raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
-            _, y = data.output
+            _, y = data.get()
             if y is not None:
                 self.q.extend(y)
                 print('ReplayData | Stored data', f'ReplayData | Current Lenght: {len(self.q)}')
                 
-                print('ReplayData | Number of data: ', len(self.q))
-                print('ReplayData | Number of 1s: ', (np.array(self.q) == 1).sum())
-                print('ReplayData | Number of 0s: ', (np.array(self.q) == 0).sum())
-        
         self.status(f'data size: {len(self.q)}')
     

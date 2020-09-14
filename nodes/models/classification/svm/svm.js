@@ -7,10 +7,10 @@ module.exports = function(RED) {
         var node = this;
 
         node.topic = 'model';
+        // Corresponding python class
+        node.pynode = 'SVM';
 
         node.config = {
-            // Corresponding python class
-            pynode: 'SVM',
             kernel: config.kernel,
             degree: Math.max(1, parseInt(config.degree)),
             C: Math.max(0.000001, parseFloat(config.C)),

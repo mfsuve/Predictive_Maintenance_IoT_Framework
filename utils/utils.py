@@ -49,6 +49,21 @@ def threaded(func):
     return wrapper
 
 
+def after(first):
+    def wrapper(second):
+        temp = None
+        def sub(*args, **kwargs):
+            nonlocal temp
+            first(*args, **kwargs)
+            second(*args, **kwargs)
+            temp = second
+        def func(*args, **kwargs):
+            temp(*args, **kwargs)
+        temp = sub
+        return func
+    return wrapper
+
+
 def myprint(*args, end='', sep='\n'):
     final_string = '\n'
     for s in args:

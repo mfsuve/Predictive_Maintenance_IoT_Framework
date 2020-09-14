@@ -1,5 +1,4 @@
 import enum
-from utils.timed_dict import TimedDict
 
 
 # * Defined to be able to differentiate multiple inputs
@@ -11,22 +10,13 @@ class InputType(str, enum.Enum):
 
 
 class Input:
-    def __init__(self, _output, _type=InputType.NODERED):
-        self.output = _output
+    def __init__(self, _data, _type=InputType.NODERED):
+        self.__data = _data
         self.type = _type
         
     def __repr__(self):
-        return f'type: {self.type}\n{self.output}'
-        
-
-class Output:
-    def __init__(self, secs=None):
-        self.results = TimedDict(secs)
-        
-    def add(self, outputs, _type:InputType): # type(outputs) will always be tuple
-        for out_port, output in enumerate(outputs):
-            self.results[out_port] = Input(output, _type)
-        return self
+        return f'type: {self.type}\n{self.__data}'
     
-    def __getitem__(self, out_port):
-        return self.results[out_port]
+    def get(self):
+        return self.__data
+        

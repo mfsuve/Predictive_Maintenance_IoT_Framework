@@ -14,7 +14,7 @@ class SaveModel(Node):
         if data.type != InputType.MODEL:
             raise TypeError(f"Input needs to be a model coming from a model node but got '{data.type.name.lower()}'")
         
-        model, just_loaded = data.output
+        model, just_loaded = data.get()
         
         if not just_loaded:
             model.save(folder, prefix, timestamp)

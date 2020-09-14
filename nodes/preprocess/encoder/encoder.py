@@ -22,7 +22,7 @@ class Encoder(Data):
     def function(self, data, encode):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
-        X, y = data.output
+        X, y = data.get()
         
         # print(f'Before Encoding: {y}', f'#1: {(y == 1).sum()}', f'#0: {(y == 0).sum()}')
         # before_ones = (y == 1).sum()

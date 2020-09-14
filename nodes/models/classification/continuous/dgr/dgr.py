@@ -29,8 +29,7 @@ class DeepGenerativeReplay(Model):
 
     def __init_data(self, data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr):
         self.task_size = taskSize
-        config = Config()
-        num_classes = config.num_classes
+        num_classes = Config().num_classes
                 
         X_in, y_in = data
         # Getting num_feature from X_in since it might have been onehot encoded
@@ -166,7 +165,6 @@ class DeepGenerativeReplay(Model):
         super().save(folder, prefix, timestamp, obj)
         
         
-    # TODO: Bazı parametreler match ediyor mu bak, özellikle config'den gelen parametreler
     def load(self, path):
         check = [('num_classes', 'number of classes'),
                  ('num_features', 'number of features')]
@@ -191,7 +189,7 @@ class DeepGenerativeReplay(Model):
                                       '''
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
-        data = data.output
+        data = data.get()
         
         if not self.initialized:
             self.full = self.__init_data(data, taskSize, CLayers, CHidden, CHiddenSmooth, Clr, GZdim, GLayers, GHidden, GHiddenSmooth, Glr)

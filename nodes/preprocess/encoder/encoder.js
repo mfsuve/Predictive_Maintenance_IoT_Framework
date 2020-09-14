@@ -7,12 +7,11 @@ module.exports = function(RED) {
         var node = this;
 
         node.topic = 'data';
+        // Corresponding python class
+        node.pynode = 'Encoder';
 
         node.config = {
-            // Corresponding python class
-            pynode: 'Encoder',
             encode: config.encode,
-            // persist: config.persist
         };
 
         utils.run(RED, node, config);

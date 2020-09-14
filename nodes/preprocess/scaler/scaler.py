@@ -20,7 +20,7 @@ class MinMaxScaler(Data):
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         print(f'MinMax Scaling...')
         
-        X, y = data.output
+        X, y = data.get()
         if self.min is None:
             print('Scaler | self.min is None!')
             config = Config()

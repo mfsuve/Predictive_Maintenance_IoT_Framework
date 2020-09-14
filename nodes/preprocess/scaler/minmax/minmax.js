@@ -6,11 +6,8 @@ module.exports = function(RED) {
         var node = this;
 
         node.topic = 'data';
-
-        node.config = {
-            // Corresponding python class
-            pynode: 'MinMaxScaler'
-        };
+        // Corresponding python class
+        node.pynode = 'MinMaxScaler';
 
         utils.run(RED, node, config);
     }

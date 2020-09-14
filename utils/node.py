@@ -6,7 +6,8 @@ from queue import Queue
 import pickle
 
 from utils.utils import myprint as print, threaded, MyJSONEncoder, get_path, make_sure_folder_exists
-from utils.io import Output, Input, InputType
+# from utils.io import Output, Input, InputType
+from utils.io import Input, InputType
 
 log = logging.getLogger('nodered')
 
@@ -15,35 +16,28 @@ log = logging.getLogger('nodered')
 # ** İlerde her node'u bir Process yapabilirsin
 class Node(metaclass=ABCMeta):
     
-    def __init__(self, id):
+    def __init__(self, id, config):
         self.id = id
+        self.config = config
         self.type = InputType.NODERED
-        self.output = Output(secs=1)
         self.__input_queue = Queue()
+        self.next_nodes = []
+        self.__run()
         
-        self.__wrap_function()
+        
+    def add_next_nodes(self, nodeids):
+        self.next_nodes.append(nodeids)
         
         
-    def run(self, config, prev_node=None, prev_out=None):
-        msg = config.pop('msg')
-        if prev_node is None:
-            print('prev_node is None')
-            # Since the data is coming from nodered, I send the actual message
-            self.__input_queue.put((config, Input(msg)))
-        else:  # Data is coming from another pynode, therefore the actual message is irrelevant (it is something like 'this node is done')
-            print('prev_node is not None')
-            self.__input_queue.put((config, prev_node.output[prev_out]))
-
-
     @threaded
-    def __wrap_function(self):
-        for config, data in self.inputs():
+    def __run(self):
+        for data, config in iter(self.__input_queue.get, None):
             print(self.name, '** config **:', config, '** data **:', data)
             try:
                 self.function(data, **config)
-                print(f'self.function is done!')
+                print(f'{self.name}.function is done!')
             except Exception as e: # In case of an exception
-                self._error(repr(e) + '\n' + format_exc())
+                self.__error(repr(e) + '\n' + format_exc())
 
 
     @abstractmethod
@@ -51,19 +45,14 @@ class Node(metaclass=ABCMeta):
         raise NotImplementedError()
     
     
-    def inputs(self, times=None):
-        if times is None:
-            for data in iter(self.__input_queue.get, None):
-                yield data
+    def input(self, _input, config=None):
+        if config is None:
+            self.__input_queue.put((_input, self.config))
         else:
-            for i, data in enumerate(iter(self.__input_queue.get, None)):
-                if i < times:
-                    yield data
-                else:
-                    break
+            self.__input_queue.put((_input, config))
     
 
-    def _error(self, message=''):
+    def __error(self, message=''):
         log.error(json.dumps({'nodeid': self.id, 'error': f'{message}'}))
     
     
@@ -84,8 +73,9 @@ class Node(metaclass=ABCMeta):
         
     
     def send_next_node(self, *outputs):
-        self.output.add(outputs, self.type)
-        log.info(json.dumps({'nodeid': self.id}))
+        for nodes_on_out, output in zip(self.next_nodes, outputs):
+            for next_node in nodes_on_out:
+                next_node.input(Input(output, self.type))
         
     
     def send_nodered(self, *outputs):
@@ -95,7 +85,7 @@ class Node(metaclass=ABCMeta):
     @property
     def name(self):
         return self.__class__.__name__
-
+    
 
 class Model(Node):
     def __init__(self, *args, **kwargs):

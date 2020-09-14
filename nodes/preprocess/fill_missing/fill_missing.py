@@ -19,7 +19,7 @@ class FillMissing(Data):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         
-        X, y = data.output
+        X, y = data.get()
         
         # TODO: Öncesinde ilk zamanlarda yaptığım gibi doldurulmaya çalışılabilir (githubdaki gibi, o ffill, quadratic ve cubic falan olandan).
         # TODO: Eğer o şekilde yapıldıktan sonra sonunda NaN kaldıysa aşağıdaki yöntemlerle devam edilebilir.

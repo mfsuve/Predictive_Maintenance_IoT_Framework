@@ -7,10 +7,10 @@ module.exports = function(RED) {
         var node = this;
 
         node.topic = 'data';
+        // Corresponding python class
+        node.pynode = 'FillMissing';
 
         node.config = {
-            // Corresponding python class
-            pynode: 'FillMissing',
             fillConstant: config.fillConstant,
             fillSelect: config.fillSelect,
         };
