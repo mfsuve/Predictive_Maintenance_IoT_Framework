@@ -61,6 +61,9 @@ class LoadDataset(Data):
         # Setting up Config Singleton class and getting the column names
         column_names = Config(configPath).columns()
         
+        if not path.endswith('.csv'):
+            raise ValueError(f"The file to be loaded needs to be a csv file but got {path}")
+        
         if isFile:
             # Reading the data from file
             X, y = self.load(path, hasheader, hasTarget, col, column_names)
