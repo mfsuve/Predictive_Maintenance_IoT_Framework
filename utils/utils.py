@@ -7,7 +7,6 @@ from functools import wraps
 import logging
 from threading import Thread, currentThread
 import os
-from datetime import datetime
 
 log = logging.getLogger('nodered')
 
@@ -79,25 +78,5 @@ def make_sure_folder_exists(pathname):
     if not os.path.isdir(pathname):
         os.makedirs(pathname)
         myprint(f' * {pathname} folder is created.')
+    return pathname
    
-
-def get_path(folder, prefix:str, file, timestamp, default_extension='.pkl'):
-    if not default_extension.startswith('.'):
-        default_extension = '.' + default_extension
-    prefix = prefix.replace(' ', '_')
-    if prefix.endswith('_'):
-        file = f'{prefix}{file}'
-    else:
-        file = f'{prefix}_{file}'
-    # myprint('*' * 300)
-    # myprint('folder:', folder, 'timestamp:', timestamp)
-    path = os.path.join(folder, file)
-    # myprint('path:', path)
-    if timestamp:
-        no_ext, ext = os.path.splitext(path)
-        ext = ext.strip()
-        no_ext = no_ext.strip()
-        # myprint('no_ext:', no_ext, 'ext:', ext)
-        path = f'{no_ext}_{datetime.now().strftime("%d-%m-%Y_%H-%M-%S")}{ext if len(ext) > 1 else ".pkl"}'
-        # myprint('final path:', path)
-    return path

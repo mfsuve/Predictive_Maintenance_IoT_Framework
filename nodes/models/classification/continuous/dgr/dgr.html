@@ -6,7 +6,6 @@ RED.nodes.registerType('dgr', {
         name: {value:""},
         loadModel: {value:false},
         loadFolder: {value:""},
-        loadFile: {value:""},
         // Classifier Parameters
         CLayers: {value:3, required:true, validate:function(v) {
             return RED.validators.number()(v) && v > 0;
@@ -141,10 +140,6 @@ RED.nodes.registerType('dgr', {
         <div class="form-row">
             <label for="node-input-loadFolder"><i class="fa fa-folder"></i> Model Folder</label>
             <input type="text" id="node-input-loadFolder" value="">
-        </div>
-        <div class="form-row">
-            <label for="node-input-loadFile"><i class="fa fa-file"></i> Model File</label>
-            <input type="text" id="node-input-loadFile" value="">
         </div>
     </div>
 

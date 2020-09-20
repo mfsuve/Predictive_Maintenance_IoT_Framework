@@ -39,8 +39,8 @@ module.exports = function(RED) {
             node.config.Glr = parseFloat(config.Glr);
         }
 
-        if (config.loadModel && config.loadFile && config.loadFile.trim())
-            node.config.loadFrom = path.join(config.loadFolder.trim(), config.loadFile.trim());
+        if (config.loadModel)
+            node.config.loadFrom = config.loadFolder.trim();
 
         utils.run(RED, node, config);
 

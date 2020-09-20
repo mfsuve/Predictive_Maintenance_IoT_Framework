@@ -22,7 +22,7 @@ const initProc = (env) => {
         //handle results
         proc.stdout.on('data', (data) => {
 
-            console.log("Outgoing data: " + data.toString());
+            // console.log("Outgoing data: " + data.toString());
 
             // for all nodes (sometimes, due to threading in python, multiple inputs come seperated by '\n')
             data.toString().trim().split('\n').forEach((_data) => {

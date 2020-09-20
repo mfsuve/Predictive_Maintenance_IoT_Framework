@@ -12,8 +12,7 @@ module.exports = function(RED) {
 
         node.config = {
             folder: config.foldername.trim(),
-            prefix: config.prefix.trim(),
-            timestamp: config.timestamp
+            prefix: config.prefix.trim()
         };
 
         utils.run(RED, node, config);

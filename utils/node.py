@@ -5,7 +5,8 @@ from traceback import format_exc
 from queue import Queue
 import pickle
 
-from utils.utils import myprint as print, threaded, MyJSONEncoder, get_path, make_sure_folder_exists
+from utils.utils import myprint as print, threaded, MyJSONEncoder
+from utils.save_load_utils import get_path_to_model, add_prefix, get_file_to_load
 # from utils.io import Output, Input, InputType
 from utils.io import Input, InputType
 
@@ -97,17 +98,18 @@ class Model(Node):
         raise NotImplementedError()
     
     @abstractmethod
-    def save(self, folder, prefix, timestamp, obj=None):
+    def save(self, folder, prefix, obj=None):
         if obj is None:
             raise ValueError("Object to save can't be None")
         obj['name'] = self.name
-        make_sure_folder_exists(folder)
-        with open(get_path(folder, prefix, self.name, timestamp), 'wb') as file:
+        path = get_path_to_model(folder, self.name)
+        with open(add_prefix(prefix, 'model.pkl', path), 'wb') as file:
             pickle.dump(obj, file, protocol=pickle.HIGHEST_PROTOCOL)
+        return path
         # TODO: FutureWarning: pickle support for Storage will be removed in 1.5. Use `torch.save` instead
     
     @abstractmethod
-    def load(self, path, check):
+    def load(self, path, check=None):
         '''
         Arguments
         ===
@@ -123,6 +125,7 @@ class Model(Node):
             `check = [('num_classes', 'number of classes'), ('num_features', 'number of features')]`
         '''
         # Loading and assuring that the correct model is loaded (same type, correct format, etc.)
+        path = get_file_to_load(path, 'model.pkl')
         try:
             with open(path, 'rb') as file:
                 obj = pickle.load(file)
@@ -135,10 +138,11 @@ class Model(Node):
         except FileNotFoundError:
             raise FileNotFoundError(f"No such file or directory to load a model: '{path}'")
         # Checking necessary parameters, if they are equal
-        for key, name in check:
-            var = getattr(self, key)
-            if obj[key] != var:
-                raise ValueError(f"{name.capitalize()} of loaded model should be the same with {name} of this model. Expected {var}, Got {obj[key]}")
+        if check is not None:
+            for key, name in check:
+                var = getattr(self, key)
+                if obj[key] != var:
+                    raise ValueError(f"{name.capitalize()} of loaded model should be the same with {name} of this model. Expected {var}, Got {obj[key]}")
         return obj
 
 class Data(Node):

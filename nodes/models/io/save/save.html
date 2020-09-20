@@ -5,8 +5,7 @@ RED.nodes.registerType('save', {
     defaults: {
         name: {value:""},
         foldername: {value:""},
-        prefix: {value:""},
-        timestamp: {value:true}
+        prefix: {value:""}
     },
     inputs:1,
     outputs:1,
@@ -33,11 +32,6 @@ RED.nodes.registerType('save', {
     <div class="form-row">
         <label for="node-input-prefix"><i class="fa fa-angle-right"></i>  Prefix</label>
         <input type="text" id="node-input-prefix" placeholder="Prefix">
-    </div>
-    <div class="form-row">
-        <label>&nbsp;</label>
-        <input type="checkbox" id="node-input-timestamp" style="width:20px; vertical-align:baseline; margin-right:5px;">
-        <label for="node-input-timestamp" style="width:200px;"> Add Timestamp to File Name</label>
     </div>
 </script>
 

@@ -6,6 +6,7 @@ import copy
 import os
 
 from utils.utils import myprint as print
+from utils.save_load_utils import add_prefix, get_file_to_load
 from utils.node import Model
 from utils.config import Config
 from utils.io import InputType
@@ -153,16 +154,15 @@ class DeepGenerativeReplay(Model):
         return self.model.predict(X)
     
     
-    def save(self, folder, prefix, timestamp, obj=None):
+    def save(self, folder, prefix, obj=None):
         obj = dict(
-            generator = self.generator,
-            model = self.model,
-            prev_generator = self.prev_generator,
-            prev_model = self.prev_model,
             num_classes = self.num_classes,     # To check if proper model
             num_features = self.num_features,   # To check if proper model
         )   
-        super().save(folder, prefix, timestamp, obj)
+        path = super().save(folder, prefix, obj)
+        # Saving pytorch models separately to use torch.save instead of pickle
+        torch.save(self.generator.state_dict(), add_prefix(prefix, 'generator.pt', path))
+        torch.save(self.model.state_dict(), add_prefix(prefix, 'classifier.pt', path))
         
         
     def load(self, path):
@@ -171,8 +171,12 @@ class DeepGenerativeReplay(Model):
         obj = super().load(path, check)
         # Updating the dict
         self.__dict__.update(obj)
-        # True for loaded, I am doing this to notify the save node to not save it again
-        # I am sending this loaded model for the test node
+        # * Saving pytorch models separately to use torch.save instead of pickle
+        self.generator.load_state_dict(torch.load(get_file_to_load(path, 'generator.pt')))
+        self.model.load_state_dict(torch.load(get_file_to_load(path, 'classifier.pt')))
+        # The second parameter True is to indicate loaded,
+        # I am doing this to notify the save node to not save it again
+        # I am sending this loaded model only for the test node
         self.send_next_node((self, True))
         
 
