@@ -80,6 +80,7 @@ class LoadDataset(Data):
 
         if X.empty:
             self.clear_status()
+            self.warning('Since loaded data was either empty or consisted of all NaN values, it is not transmitted to the next node.')
         else:
             self.send_next_node((X, y))
             self.done()
