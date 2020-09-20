@@ -29,29 +29,37 @@ class Config(metaclass=SingletonMeta):
     
 
     def __init__(self, configPath=None):
-        with open(configPath, 'r', encoding='utf-8') as file:
-            self.__config = json.load(file)
+        if configPath is None or configPath.strip() == '':
+            raise ValueError('At least one of the Dataset Loading nodes should set the data configuration file path')
+        try:
+            with open(configPath.strip(), 'r', encoding='utf-8') as file:
+                self.__config = json.load(file)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Can't find {configPath} file for data configuration")
         
         # Reading the categoric and numeric columns
         self.categoric_columns = []
         self.numeric_columns = []
         for sensor, params in self.__config['sensors'].items():
-            if params['type'] == 'categoric':
-                if 'categories' in params:
-                    self.categoric_columns.append(sensor)
+            if 'type' in params:
+                if params['type'] == 'categoric':
+                    if 'categories' in params:
+                        self.categoric_columns.append(sensor)
+                    else:
+                        raise ConfigError("Categoric sensors should define its categories in the data configuration file")
                 else:
-                    raise ConfigError("Categoric sensors should define its categories in the config file")
+                    if 'min' in params and 'max' in params:
+                        self.numeric_columns.append(sensor)
+                    else:
+                        raise ConfigError("Numeric sensors should define its min and max values in the data configuration file")
             else:
-                if 'min' in params and 'max' in params:
-                    self.numeric_columns.append(sensor)
-                else:
-                    raise ConfigError("Numeric sensors should define its min and max values in the config file")
+                raise ConfigError(f"Every sensor must define its type in the data configuration file")
         
         if not (isinstance(self.__config['classes'], list) and isinstance(self.__config['names'], list)):
-            raise ConfigError("'classes' and 'names' should be defined as lists in the config file")
+            raise ConfigError("'classes' and 'names' should be defined as lists in the data configuration file")
         self.num_classes = len(self.__config['classes'])
         if self.num_classes != len(self.__config['names']):
-            raise ConfigError("Number of names and classes should be the same in the config file.")
+            raise ConfigError("Number of names and classes should be the same in the data configuration file.")
         
         self.class_name_dict = dict(zip(self.classes(), self.names()))
         
