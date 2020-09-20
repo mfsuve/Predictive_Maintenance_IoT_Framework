@@ -13,6 +13,8 @@ class LoadDataset(Data):
     
     def load(self, path, hasheader, hasTarget, target_col, column_names):
         # * Add more na_values when encountered
+        if not path.endswith('.csv'):
+            path += '.csv'
         try:
             X = pd.read_csv(path, header=0 if hasheader else None, na_values=['na'], skipinitialspace=True, encoding='utf-8')
         except FileNotFoundError:
