@@ -30,9 +30,9 @@ class FillMissing(Data):
         # TODO: In case it is, handle it here
         
         if fillSelect == 'constant':
-            X.fillna(fillConstant, inplace=True)
+            X = X.fillna(fillConstant)
         else:
-            X.fillna(self.val, inplace=True)
+            X = X.fillna(self.val)
             if fillSelect == 'mean':
                 self.val = X.mean()
             elif fillSelect == 'median':
