@@ -40,6 +40,9 @@ const initProc = (env) => {
                 } else if (_data.none) {
                     // Set status as 'NONE' (clear status)
                     node.status(status.NONE);
+                } else if (_data.warning) {
+                    // Display warning message
+                    node.warn(_data.warning);
                 } else {
                     // Send message to nodered to print it in debug node
                     message = Array(node.wires.length);

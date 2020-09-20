@@ -61,7 +61,6 @@ class Node(metaclass=ABCMeta):
         log.info(json.dumps({'nodeid': self.id, 'done': True}))
         
     
-    # TODO: Might save old status with a function like 'old_status'
     def status(self, message):
         log.info(json.dumps({'nodeid': self.id, 'status': f'{message}'}))
         
@@ -70,7 +69,8 @@ class Node(metaclass=ABCMeta):
         log.info(json.dumps({'nodeid': self.id, 'none': True}))
     
     
-    # TODO: Implement 'warning' function
+    def warning(self, *warnings, sep='\n'):
+        log.info(json.dumps({'nodeid': self.id, 'warning': sep.join(warnings)}))
         
     
     def send_next_node(self, *outputs):
