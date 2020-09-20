@@ -40,10 +40,10 @@ class LoadDataset(Data):
 
     def drop_unimportant(self, X:pd.DataFrame, y, removeAllnan:bool, removeAllsame:bool):
         # remove 'all nan' rows
-        not_nan_idices = X.notna().any(axis=1)
-        X = X.loc[not_nan_idices]
+        not_nan_indices = X.notna().any(axis=1)
+        X = X.loc[not_nan_indices]
         if y is not None:
-            y = y[not_nan_idices]
+            y = y[not_nan_indices]
         
         # remove 'all nan' columns
         if removeAllnan:
@@ -75,8 +75,12 @@ class LoadDataset(Data):
                 raise TypeError(f"Input needs to be string coming from node-red while reading from strings of data but got from a '{data.type.name.lower()}' node")
             X, y = self.load(StringIO(data.get()), hasheader, hasTarget, col, column_names)
             print(f'Loaded dataset from incoming data', f'X.shape is {X.shape}', f'y is None' if y is None else f'y.shape is {y.shape}')
+            # Dropping all nan rows and cols, all same cols (in case they were wanted to be dropped)
+            X, y = self.drop_unimportant(X, y, False, False)
 
-            
-        self.send_next_node((X, y))
-        self.done()
+        if X.empty:
+            self.clear_status()
+        else:
+            self.send_next_node((X, y))
+            self.done()
     
