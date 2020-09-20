@@ -25,6 +25,9 @@ class LoadDataset(Data):
             X = X.drop([X.columns[target_col]], axis=1)
         else:
             y = None
+        
+        if y.isna().all():
+            y = None
 
         # Assuring that the columns are the same with the configuration file
         if hasheader:
