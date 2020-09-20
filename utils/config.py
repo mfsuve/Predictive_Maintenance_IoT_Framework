@@ -8,6 +8,8 @@ class ConfigError(ValueError):
 
 
 class Config(metaclass=SingletonMeta):
+    # Since all nodes are initialized at the beginning, I can't cache config at init method
+    # Because LoadDataset node wouldn't have initialized it
     """
     ### Numeric Sensor Attributes
     

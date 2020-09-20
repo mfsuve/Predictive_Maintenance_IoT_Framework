@@ -23,11 +23,11 @@ class LoadDataset(Data):
         if hasTarget:
             y = X.iloc[:, target_col]
             X = X.drop([X.columns[target_col]], axis=1)
+            if y.isna().all():
+                y = None
         else:
             y = None
         
-        if y.isna().all():
-            y = None
 
         # Assuring that the columns are the same with the configuration file
         if hasheader:
