@@ -22,6 +22,7 @@
         "nodes": {
             "load dataset": "nodes/dataset/load/load_dataset.js",
             "replay data": "nodes/dataset/replay/replay_data.js",
+            "store dataset": "nodes/dataset/store/store_data.js",
             "minmax scaler": "nodes/preprocess/scaler/minmax/minmax.js",
             "encoder": "nodes/preprocess/encoder/encoder.js",
             "fill missing": "nodes/preprocess/fill_missing/fill_missing.js",

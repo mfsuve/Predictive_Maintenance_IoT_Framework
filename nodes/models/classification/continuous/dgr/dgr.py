@@ -161,8 +161,8 @@ class DeepGenerativeReplay(Model):
         )   
         path = super().save(folder, prefix, obj)
         # Saving pytorch models separately to use torch.save instead of pickle
-        torch.save(self.generator.state_dict(), add_prefix(prefix, 'generator.pt', path))
-        torch.save(self.model.state_dict(), add_prefix(prefix, 'classifier.pt', path))
+        torch.save(self.generator.state_dict(), add_prefix('generator.pt', prefix, path))
+        torch.save(self.model.state_dict(), add_prefix('classifier.pt', prefix, path))
         
         
     def load(self, path):

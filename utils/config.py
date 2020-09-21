@@ -81,7 +81,7 @@ class Config(metaclass=SingletonMeta):
         return self.__config[key]
     
     def columns(self):
-        return self['sensors'].keys()
+        return list(self['sensors'].keys())
     
     def is_categoric(self, sensor):
         try:

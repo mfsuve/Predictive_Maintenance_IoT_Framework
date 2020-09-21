@@ -1,0 +1,98 @@
+<script type="text/javascript">
+RED.nodes.registerType('store data', {
+    category: 'ML Dataset',
+    color: '#E2D96E',
+    defaults: {
+        name: {value:""},
+        numrows: {value:100, required:true, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }},
+        foldername: {value:""},
+        filename: {value:"data.csv", required:true}
+    },
+    inputs:1,
+    outputs:1,
+    icon: "font-awesome/fa-archive",
+    label: function() {
+        return this.name.trim() || this.filename.trim();
+    },
+    labelStyle: function() {
+        return this.name ? "node_label_italic" : "";
+    }
+});
+</script>
+
+
+<script type="text/x-red" data-template-name="store data">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <label for="node-input-numrows" style="width:auto;">Accumulate </label>
+        <input type="number" id="node-input-numrows" value="100" min="1" style="width:70px;">
+        <label for="node-input-numrows" style="width:auto;"> rows before saving </label>
+    </div>
+    <div class="form-row">
+        <label for="node-input-foldername"><i class="fa fa-folder"></i> Folder Name</label>
+        <input type="text" id="node-input-foldername" placeholder="Folder Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-filename"><i class="fa fa-file"></i> File Name</label>
+        <input type="text" id="node-input-filename" placeholder="File Name">
+    </div>
+    <p style="border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9; width:404px;">
+        <i class="fa fa-info" style="font-size:80%; margin-left:10px;"></i>
+        Datetime string will be added to the filename before saving.
+    </p>
+</script>
+
+
+<script type="text/x-red" data-help-name="store data">
+    <p>Loads the dataset from a csv file.</p>
+
+    <h3>Inputs</h3>
+	<dl class="message-properties">
+		<dd>
+			anything that triggers the operation.
+		</dd>
+	</dl>
+
+	<h3>Outputs</h3>
+	<ol class="node-ports">
+		<li>Standard output
+			<dl class="message-properties">
+				<dt>payload.data <span class="property-type">2D array</span></dt>
+				<dd>the loaded dataset without it's target.</dd>
+			</dl>
+			<dl class="message-properties">
+				<dt>payload.target <span class="property-type">array</span></dt>
+				<dd>the loaded target extracted from the dataset.</dd>
+			</dl>
+			<dl class="message-properties">
+				<dt>payload.columns <span class="property-type">array</span></dt>
+				<dd>the column names extracted from the dataset.</dd>
+			</dl>
+		</li>
+		<li>Standard error
+			<dl class="message-properties">
+				<dt>payload <span class="property-type">string</span></dt>
+				<dd>the standard error of the command.</dd>
+			</dl>
+		</li>
+	</ol>
+
+    <h3>Details</h3>
+    <p>Once triggered, this node loads the dataset from <code>filename</code> under <code>foldername</code>
+    which needs to be a <code>csv</code> file.</p>
+    <p>Target Column Number</p>
+    <p><code>col</code> parameter indicates which column should be treated as target column. 0 value means
+    the first column. This value can be negative. If so, the new value for this parameter will be
+    <code>#columns-col</code></p>
+    <p>Has Header</p>
+    <p><code>hasheader</code> parameter tells if the dataset has headers.
+    <p>It has 2 outputs. The first one is an object having 2D dataset without the target column as
+    <code>payload.data</code> and the target column as <code>payload.target</code>. The second one is the error.</p>
+
+</script>

@@ -103,7 +103,7 @@ class Model(Node):
             raise ValueError("Object to save can't be None")
         obj['name'] = self.name
         path = get_path_to_model(folder, self.name)
-        with open(add_prefix(prefix, 'model.pkl', path), 'wb') as file:
+        with open(add_prefix('model.pkl', prefix, path), 'wb') as file:
             pickle.dump(obj, file, protocol=pickle.HIGHEST_PROTOCOL)
         return path
         # TODO: FutureWarning: pickle support for Storage will be removed in 1.5. Use `torch.save` instead
