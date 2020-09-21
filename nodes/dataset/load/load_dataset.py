@@ -32,9 +32,9 @@ class LoadDataset(Data):
         # Assuring that the columns are the same with the configuration file
         if hasheader:
             if set(X.columns) != set(column_names) or len(X.columns) != len(column_names):
-                # print(f'X.columns:', set(X.columns))
-                # print(f'column_names:', set(column_names))
                 raise ValueError('Column names of the input does not match with the config file.')
+            if not (X.columns == column_names).all():   # If columns are the same, it takes x4 time for (1M, 100) shaped data
+                X.reindex(column_names)                 # Making sure that the columns are in the same order (for DGR and Store nodes)
         else: # * If there is no header, the columns should be in the same order defined in the config file
             X.columns = column_names
             
