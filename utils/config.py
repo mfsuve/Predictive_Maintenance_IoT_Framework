@@ -57,8 +57,15 @@ class Config(metaclass=SingletonMeta):
             else:
                 raise ConfigError(f"Every sensor must define its type in the data configuration file")
         
-        if not (isinstance(self.__config['classes'], list) and isinstance(self.__config['names'], list)):
-            raise ConfigError("'classes' and 'names' should be defined as lists in the data configuration file")
+        if not isinstance(self.__config['classes'], list):
+            raise ConfigError("'classes' should be defined as list in the data configuration file")
+        
+        if 'names' in self.__config:
+            if not isinstance(self.__config['names'], list):
+                raise ConfigError("'names' should be defined as list in the data configuration file")
+        else:
+            self.__config['names'] = list(map(str, self.__config['classes']))
+            
         self.num_classes = len(self.__config['classes'])
         if self.num_classes != len(self.__config['names']):
             raise ConfigError("Number of names and classes should be the same in the data configuration file.")
