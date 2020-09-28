@@ -22,10 +22,17 @@ const initProc = (env) => {
         //handle results
         proc.stdout.on('data', (data) => {
 
-            // console.log("Outgoing data: " + data.toString());
+            console.log("===============");
+            console.log("Outgoing data: " + data.toString());
+            console.log("===============");
 
             // for all nodes (sometimes, due to threading in python, multiple inputs come seperated by '\n')
             data.toString().trim().split('\n').forEach((_data) => {
+
+                console.log("Splitted data:");
+                console.log("===============");
+                console.log(_data);
+                console.log("===============");
 
                 _data = JSON.parse(_data.trim());
                 nodeid = _data.nodeid;
@@ -105,6 +112,8 @@ const initProc = (env) => {
 //send config as json to python process
 const python = (config) => {
     // initProc('pdm');
+    console.log("config: ");
+    console.log(config);
     console.log("*********************** proc.stdin.destroyed: " + proc.stdin.destroyed);
     console.log("*********************** proc.stdin.writable: " + proc.stdin.writable);
     proc.stdin.write(JSON.stringify(config) + '\n');

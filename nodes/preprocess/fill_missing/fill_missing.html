@@ -4,45 +4,45 @@ RED.nodes.registerType('fill missing', {
     color: '#D8BFD8',
     defaults: {
         name: {value:""},
-        fillConstant: {value:0},
-        fillSelect: {value:"constant"}
+        preFillConstant: {value:0},
+        preFillSelect: {value:"none", required:true},
+        postFillConstant: {value:0},
+        postFillSelect: {value:"none", required:true}
     },
     inputs:1,
     outputs:1,
     icon: 'font-awesome/fa-paint-brush',
     label: function() {
-        get_label = (type) => {
-            switch (type) {
-                case 'constant':
-                    return `Fill ${this.fillConstant}`;
-                case 'mean':
-                    return 'Fill Last Mean';
-                case 'median':
-                    return 'Fill Last Median';
-                case 'last':
-                    return 'Fill Last Data';
-                default:
-                    return 'Fill Missing';
-            }
-        }
-        return this.name || get_label(this.fillSelect);
+        return this.name || 'Fill Missing';
     },
     labelStyle: function() {
         return this.name ? "node_label_italic" : "";
     },
     oneditprepare: function() {
-        if (this.fillSelect === "constant") {
-            $("#node-input-fillConstant").show();
+        if (this.preFillSelect === "constant") {
+            $("#node-input-preFillConstant").show();
         } else {
-            $("#node-input-fillConstant").hide();
+            $("#node-input-preFillConstant").hide();
         }
-        $("#node-input-fillSelect").on("change", function() {
-            var v = $("#node-input-fillSelect").val();
-            
+        $("#node-input-preFillSelect").on("change", function() {
+            var v = $("#node-input-preFillSelect").val();
             if (v === "constant") {
-                $("#node-input-fillConstant").show(200).focus();
+                $("#node-input-preFillConstant").show(200).focus();
             } else {
-                $("#node-input-fillConstant").hide(200);
+                $("#node-input-preFillConstant").hide(200);
+            }
+        });
+        if (this.postFillSelect === "constant") {
+            $("#node-input-postFillConstant").show();
+        } else {
+            $("#node-input-postFillConstant").hide();
+        }
+        $("#node-input-postFillSelect").on("change", function() {
+            var v = $("#node-input-postFillSelect").val();
+            if (v === "constant") {
+                $("#node-input-postFillConstant").show(200).focus();
+            } else {
+                $("#node-input-postFillConstant").hide(200);
             }
         });
     }
@@ -56,14 +56,40 @@ RED.nodes.registerType('fill missing', {
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-fillSelect"><i class="fa fa-pencil-square-o"></i> Fill Method</label>
-        <select id="node-input-fillSelect" style="width:200px;">
-            <option value="constant" selected>Constant</option>
-            <option value="mean">Mean of previous data</option>
-            <option value="median">Median of previous data</option>
-            <option value="last">Last seen data</option>
-        </select>
-        <input type="number" id="node-input-fillConstant" value="0" style="width:70px;">
+        <div>
+            <label>&nbsp;</label>
+            <label for="node-input-preFillSelect" style="width:auto;">First, try to fill NaN values with</label>
+        </div>
+        <div>
+            <label>&nbsp;</label>
+            <select id="node-input-preFillSelect" style="width:190px; margin-left:20px;">
+                <option value="none" selected>None</option>
+                <option value="nearest">Nearest</option>
+                <option value="mean">Mean</option>
+                <option value="median">Median</option>
+                <option value="most">Most occurring</option>
+                <option value="constant">Constant</option>
+                <option value="linear">Linear interpolation</option>
+                <option value="quadratic">Quadratic interpolation</option>
+                <option value="cubic">Cubic interpolation</option>
+            </select>
+            <input type="number" id="node-input-preFillConstant" value="0" style="width:70px;" placeholder="0">
+        </div>
+        <div style="margin-top:10px;">
+            <label>&nbsp;</label>
+            <label for="node-input-postFillSelect" style="width:auto;">then, fill the remaining NaN values using</label>
+        </div>
+        <div>
+            <label>&nbsp;</label>
+            <select id="node-input-postFillSelect" style="width:190px; margin-left:20px;">
+                <option value="none" selected>None</option>
+                <option value="constant">Constant</option>
+                <option value="mean">Mean of previous data</option>
+                <option value="median">Median of previous data</option>
+                <option value="last">Last seen data</option>
+            </select>
+            <input type="number" id="node-input-postFillConstant" value="0" style="width:70px;" placeholder="0">
+        </div>
     </div>
 </script>
 
