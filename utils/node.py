@@ -15,42 +15,53 @@ log = logging.getLogger('nodered')
 # TODO: Weighted KNN for Continuous/Incremental/Online Learning (research)
 
 # ** İlerde her node'u bir Process yapabilirsin
-class Node(metaclass=ABCMeta):
+class Node:
     
-    def __init__(self, id, config):
+    def __init__(self, id, node_config):
         self.id = id
-        self.config = config
+        self.node_config = node_config
         self.type = InputType.NODERED
         self.__input_queue = Queue()
         self.next_nodes = []
         self.__run()
         
+        self.__function = self.__first_called
+        
         
     def add_next_nodes(self, nodeids):
         self.next_nodes.append(nodeids)
         
+    
+    def first_called(self, *args, **kwargs):
+        pass
+    
+    
+    def __first_called(self, *args, **kwargs):
+        self.first_called(*args, **kwargs)
+        self.function(*args, **kwargs)
+        self.__function = self.function
         
+    
+    def function(self, *args, **kwargs):
+        raise NotImplementedError
+    
+    
     @threaded
     def __run(self):
-        for data, config in iter(self.__input_queue.get, None):
-            print(self.name, '** config **:', config, '** data **:', data)
+        for data, node_config in iter(self.__input_queue.get, None):
+            print(self.name, '** node_config **:', node_config, '** data **:', data)
             try:
-                self.function(data, **config)
+                self.__function(data, **node_config)
                 print(f'{self.name}.function is done!')
             except Exception as e: # In case of an exception
                 self.__error(repr(e) + '\n' + format_exc())
 
-
-    @abstractmethod
-    def function(self, **kwargs):
-        raise NotImplementedError()
     
-    
-    def input(self, _input, config=None):
-        if config is None:
-            self.__input_queue.put((_input, self.config))
+    def input(self, _input, node_config=None):
+        if node_config is None:
+            self.__input_queue.put((_input, self.node_config))
         else:
-            self.__input_queue.put((_input, config))
+            self.__input_queue.put((_input, node_config))
     
 
     def __error(self, message=''):
