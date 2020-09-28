@@ -7,7 +7,7 @@ from itertools import count
 from io import StringIO
 
 from utils.config import Config
-from utils.utils import myprint as print
+from utils.utils import myprint as print, combine_data
 from utils.node import Data
 from utils.io import InputType
 from utils.save_load_utils import add_prefix
@@ -22,29 +22,27 @@ class StoreDataset(Data):
         self.index = 0
         self.remainder = None
         self.path = None
+    
+    
+    def first_called(self, data, path, numrows):
+        print('Store | init', 'numrows', numrows)
+        self.X = pd.DataFrame(index=range(numrows), columns=Config().columns() + ['target'])
         
-        def init(X, numrows):
-            print('Store | init', 'numrows', numrows)
-            self.X = pd.DataFrame(index=range(numrows), columns=Config().columns() + ['target'])
-        
-        @after(init)
-        def _append(X, numrows):
-            print('Store | append', 'X', X)
-            next_index = self.index + X.shape[0]
-            if next_index > numrows:
-                remaining_size = numrows - self.index
-                self.X[self.index:] = X[: remaining_size]
-                self.remainder = X[remaining_size:]
-                self.index = numrows
-                # self.X.to_csv(self.path, header=True, index=False)
-            else:
-                self.X[self.index: next_index] = X
-                self.index = next_index
-                self.remainder = None
-            self.status(f'data size: {self.index}/{numrows}')
-            return self.index >= numrows
 
-        self.append = _append
+    def append(self, X, numrows):
+        print('Store | append', 'X', X)
+        next_index = self.index + X.shape[0]
+        if next_index > numrows:
+            remaining_size = numrows - self.index
+            self.X[self.index:] = X[: remaining_size]
+            self.remainder = X[remaining_size:]
+            self.index = numrows
+        else:
+            self.X[self.index: next_index] = X
+            self.index = next_index
+            self.remainder = None
+        self.status(f'data size: {self.index}/{numrows}')
+        return self.index >= numrows
         
     
     def get_path(self, path):
@@ -58,9 +56,9 @@ class StoreDataset(Data):
 
 
     def save_and_reset(self, numrows, path):
-        print('Store | save and reset', 'path:', path)
         self.index = 0
         next_path = next(path)
+        print('Store | save and reset', 'path:', next_path)
         self.X.to_csv(next_path, header=True, index=False)
         self.send_nodered(next_path)
         if self.remainder is not None:
@@ -74,16 +72,10 @@ class StoreDataset(Data):
             raise TypeError(f"Input needs to be data coming from a data node but got from a '{data.type.name.lower()}' node")
         
         # TODO: Data combine node
-        # TODO: Scaler'daki "TODO"
         
         path = self.get_path(path)
-        # Getting and combining data and target
-        _X, _y = data.get()
-        X = np.zeros((_X.shape[0], _X.shape[1] + 1))
-        X[:, -1] = _y
-        X[:, :-1] = _X
         
-        full = self.append(X, numrows)
+        full = self.append(combine_data(*data.get()), numrows)
         print('Store | 1. full', full)
         while full:
             full = self.save_and_reset(numrows, path)
