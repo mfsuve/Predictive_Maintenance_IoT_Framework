@@ -115,6 +115,7 @@ class DeepGenerativeReplay(Model):
         scores = None
         
         loss_values = []
+        acc_values = []
         
         print(f'DGR | Number of 1 class: {(self.y == 1).sum()}', f'DGR | Number of 0 class: {(self.y == 0).sum()}')
         print(f'epochs: {epochs}', f'batch size: {batchSize}')
@@ -138,10 +139,11 @@ class DeepGenerativeReplay(Model):
             
             self.status(f'{self.task}. training | Loss: {total_loss}')
             
-            self.send_nodered(None, {'loss': total_loss, 'accuracy': total_correct, 'train_count': self.task})
-            
             loss_values.append(total_loss)
-            
+            acc_values.append(total_correct)
+        
+        # TODO: train_count might not be necessary
+        self.send_nodered(None, {'loss': loss_values, 'accuracy': acc_values, 'train_count': self.task})
         self.send_next_node((self, False))
         
         with open('Loss_Hydraulic_Systems.txt', 'a') as file:
