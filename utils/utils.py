@@ -54,9 +54,8 @@ def after(first):
         def sub(*args, **kwargs):
             nonlocal temp
             first(*args, **kwargs)
-            # second(*args, **kwargs)
             temp = second
-            func(*args, **kwargs)
+            return func(*args, **kwargs)
         def func(*args, **kwargs):
             return temp(*args, **kwargs)
         temp = sub
