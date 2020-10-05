@@ -17,6 +17,7 @@ class TestModel(Node):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.status('Model: None')
+        self.total_tested = 0
         
     
     def first_called(self, data, accuracy, precision, recall, f1):
@@ -52,6 +53,7 @@ class TestModel(Node):
             # Resetting all the metrics since a new version of the model has come
             for metric in self.metrics:
                 metric.reset()
+            self.total_tested = 0
             # self.send_nodered({metric.name: [] for metric in self.metrics}) # To reset the training plots
             self.send_nodered({'reset': True}) # To reset the training plots
         elif self.model is not None:
@@ -65,9 +67,12 @@ class TestModel(Node):
             
             if y is not None:
                 msg['ground_truth'] = self.config.convert_to_names(y)
+                self.total_tested += y.size
                 for metric in self.metrics:
                     msg[metric.name] = metric.formatted_score(y, y_pred)
-        
+
+            msg['total_tested'] = self.total_tested
+
             self.send_nodered(msg)
         else:
             self.status('Model: None')
