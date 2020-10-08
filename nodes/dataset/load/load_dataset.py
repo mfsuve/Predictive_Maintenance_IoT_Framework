@@ -31,11 +31,15 @@ class LoadDataset(Data):
 
         # Assuring that the columns are the same with the configuration file
         if hasheader:
+            # Assuring that they contain the same column names (no more, no less) regardless of the ordering
             if set(X.columns) != set(column_names) or len(X.columns) != len(column_names):
                 raise ValueError('Column names of the input does not match with the config file.')
-            if not (X.columns == column_names).all():   # If columns are the same, it takes x4 time for (1M, 100) shaped data
-                X.reindex(column_names)                 # Making sure that the columns are in the same order (for DGR and Store nodes)
-        else: # * If there is no header, the columns should be in the same order defined in the config file
+            # If columns are the same, it takes x4 time for (1M, 100) shaped data,
+            # even it is not necessary to reindex since they are already the same
+            if not (X.columns == column_names).all():
+                # Making sure that the columns are in the same order (for DGR and Store nodes)
+                X.reindex(column_names)
+        else: # * If there is no header, the columns are expected to be in the same order defined in the config file
             X.columns = column_names
             
         return X, y
@@ -56,7 +60,7 @@ class LoadDataset(Data):
         if removeAllsame and X.shape[0] > 1:
             X = X.loc[:, X.nunique() > 1]
         
-        return X.reset_index(drop=True), y.to_numpy() if y is not None else None
+        return X.reset_index(drop=True), y if y is not None else None
 
 
     def function(self, data, configPath, isFile, path, col, hasheader, removeAllnan, removeAllsame, hasTarget):
