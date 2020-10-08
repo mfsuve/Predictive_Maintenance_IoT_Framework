@@ -8,14 +8,14 @@ from io import StringIO
 
 from utils.config import Config
 from utils.utils import myprint as print, combine_data
-from utils.node import Data
+from utils.node import Node
 from utils.io import InputType
 from utils.save_load_utils import add_prefix
 
 from utils.utils import after
 
 
-class StoreDataset(Data):
+class StoreDataset(Node):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -61,6 +61,7 @@ class StoreDataset(Data):
         print('Store | save and reset', 'path:', next_path)
         self.X.to_csv(next_path, header=True, index=False)
         self.send_nodered(next_path)
+        self.done()
         if self.remainder is not None:
             return self.append(self.remainder, numrows)
         return False

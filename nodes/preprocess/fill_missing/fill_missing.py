@@ -23,10 +23,10 @@ class FillMissing(Data):
         
         X, y = data.get()
         
-        # !!! Değiştirmeden önce eskilerini pushla !!! #
+        # * Assuming y will never be NaN
+        # TODO: In case it is, handle it here
         
-        
-        # Filling missing values
+        # Filling missing values using its own stats
         if preFillSelect == 'constant':
             X.fillna(preFillConstant, inplace=True)
         elif preFillSelect == 'mean':
@@ -39,23 +39,15 @@ class FillMissing(Data):
             X.interpolate(method='nearest', inplace=True)
             X.fillna(method='ffill', inplace=True)
             X.fillna(method='bfill', inplace=True)
-        elif preFillSelect in interpolation_methods:
-            order = interpolation_methods.index(preFillSelect) + 1
+        elif preFillSelect in FillMissing.interpolation_methods:
+            order = FillMissing.interpolation_methods.index(preFillSelect) + 1
             try:
                 X.interpolate(method=preFillSelect, limit_area='inside', inplace=True)
                 X.interpolate(method='spline', order=order, limit_direction='both', inplace=True)
             except ValueError:
                 self.warning(f"Can't use {preFillSelect} interpolation for the first fill on this data, skipping...")
         
-        
-        # TODO: Öncesinde ilk zamanlarda yaptığım gibi doldurulmaya çalışılabilir (githubdaki gibi, o ffill, quadratic ve cubic falan olandan).
-        # TODO: Eğer o şekilde yapıldıktan sonra sonunda NaN kaldıysa aşağıdaki yöntemlerle devam edilebilir.
-        # TODO: Bunu da eğer gelen data birden fazla satır içeriyorsa diye düşündüm.
-        # TODO: Ama bu kısımı yapmak için nodered'den eskisi gibi config almam lazım
-        
-        # * Assuming y will never be NaN
-        # TODO: In case it is, handle it here
-        
+        # Filling the remaining missing values using the stats of old data
         if postFillSelect != 'none':
             if postFillSelect == 'constant':
                 X = X.fillna(postFillConstant)
