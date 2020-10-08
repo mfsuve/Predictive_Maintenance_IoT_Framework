@@ -75,7 +75,7 @@ class TestModel(Node):
 
             self.send_nodered(msg)
         else:
-            self.status('Model: None')
+            self.warning('There is no model to test')
 
 
 class RunningAccuracy:
