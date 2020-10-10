@@ -1,20 +1,18 @@
 <script type="text/javascript">
-RED.nodes.registerType('split data', {
+RED.nodes.registerType('combine data', {
     category: 'ML Dataset',
     color: '#E2D96E',
     defaults: {
         name: {value:""},
-        splitPercentage: {value:33, required:true, validate:function(v) {
-            return RED.validators.number()(v) && v < 100 && v > 0;
-        }},
-        shuffle: {value: false}
+        numData: {value:2, required:true, validate:function(v) {
+            return RED.validators.number()(v) && v > 1;
+        }}
     },
     inputs:1,
-    outputs:2,
-    outputLabels: ["Splitted", "Remaining"],
-    icon: "font-awesome/fa-cut",
+    outputs:1,
+    icon: "font-awesome/fa-plus",
     label: function() {
-        return this.name || (`${this.splitPercentage}% Split`);
+        return this.name || (`Combine ${this.numData} Data`);
     },
     labelStyle: function() {
         return this.name ? "node_label_italic" : "";
@@ -23,24 +21,20 @@ RED.nodes.registerType('split data', {
 </script>
 
 
-<script type="text/x-red" data-template-name="split data">
+<script type="text/x-red" data-template-name="combine data">
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-splitPercentage"><i class="fa fa-percentage"></i> Split</label>
-        <input type="number" id="node-input-splitPercentage" value="33" min="1" max="99" style="width:100px"> %
-    </div>
-    <div class="form-row">
-        <label>&nbsp;</label>
-        <input type="checkbox" id="node-input-shuffle" style="width:20px; vertical-align:baseline; margin-right:5px;">
-        <label for="node-input-shuffle" style="width:auto; padding-top:14px;"> Shuffle</label>
+        <label for="node-input-numData">Combine</label>
+        <input type="number" id="node-input-numData" value="2" min="2" style="width:100px"> 
+        <label for="node-input-numData">input data into one</label>
     </div>
 </script>
 
 
-<script type="text/x-red" data-help-name="split data">
+<script type="text/x-red" data-help-name="combine data">
     <p>Splits the data into train and test parts.</p>
 
     <h3>Inputs</h3>

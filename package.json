@@ -27,6 +27,7 @@
             "encoder": "nodes/preprocess/encoder/encoder.js",
             "fill missing": "nodes/preprocess/fill_missing/fill_missing.js",
             "split data": "nodes/dataset/sequence/split/split_data.js",
+            "combine data": "nodes/dataset/sequence/combine/combine_data.js",
             "svm": "nodes/models/classification/svm/svm.js",
             "save model": "nodes/models/io/save/save.js",
             "test model": "nodes/result/test_model.js",
