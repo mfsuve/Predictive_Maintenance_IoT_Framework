@@ -13,7 +13,8 @@ class FillMissing(Data):
     
     def __init__(self, *args):
         super().__init__(*args)
-        self.val = 0
+        self.valX = 0
+        self.valy = 0
 
         
     def function(self, data, preFillConstant, postFillConstant, preFillSelect, postFillSelect):
@@ -23,45 +24,69 @@ class FillMissing(Data):
         
         X, y = data.get()
         
-        # * Assuming y will never be NaN
-        # TODO: In case it is, handle it here
         
         # Filling missing values using its own stats
         if preFillSelect == 'constant':
-            X.fillna(preFillConstant, inplace=True)
+            X = X.fillna(preFillConstant)
+            if y is not None:
+                y = y.fillna(preFillConstant)
         elif preFillSelect == 'mean':
-            X.fillna(X.mean(), inplace=True)
+            X = X.fillna(X.mean())
+            if y is not None:
+                y = y.fillna(y.mean())
         elif preFillSelect == 'median':
-            X.fillna(X.median(), inplace=True)
+            X = X.fillna(X.median())
+            if y is not None:
+                y = y.fillna(y.median())
         elif preFillSelect == 'most':
-            X.fillna(X.mode().iloc[0], inplace=True)
+            X = X.fillna(X.mode().iloc[0])
+            if y is not None:
+                y = y.fillna(y.mode().iloc[0])
         elif preFillSelect == 'nearest':
-            X.interpolate(method='nearest', inplace=True)
-            X.fillna(method='ffill', inplace=True)
-            X.fillna(method='bfill', inplace=True)
+            X = X.interpolate(method='nearest')
+            X = X.fillna(method='ffill')
+            X = X.fillna(method='bfill')
+            if y is not None:
+                y = y.interpolate(method='nearest')
+                y = y.fillna(method='ffill')
+                y = y.fillna(method='bfill')
         elif preFillSelect in FillMissing.interpolation_methods:
             order = FillMissing.interpolation_methods.index(preFillSelect) + 1
             try:
-                X.interpolate(method=preFillSelect, limit_area='inside', inplace=True)
-                X.interpolate(method='spline', order=order, limit_direction='both', inplace=True)
+                newX = X.interpolate(method=preFillSelect, limit_area='inside')
+                newX = newX.interpolate(method='spline', order=order, limit_direction='both')
+                if y is not None:
+                    newy = y.interpolate(method=preFillSelect, limit_area='inside')
+                    newy = newy.interpolate(method='spline', order=order, limit_direction='both')
+                else:
+                    newy = y
             except ValueError:
                 self.warning(f"Can't use {preFillSelect} interpolation for the first fill on this data, skipping...")
+            else: # Defined newX and newy not to change them if ValueError happens
+                X, y = newX, newy
         
         # Filling the remaining missing values using the stats of old data
         if postFillSelect != 'none':
             if postFillSelect == 'constant':
                 X = X.fillna(postFillConstant)
+                if y is not None:
+                    y = y.fillna(postFillConstant)
             else:
-                X = X.fillna(self.val)
+                X = X.fillna(self.valX)
+                if y is not None:
+                    y = y.fillna(self.valy)
                 if postFillSelect == 'mean':
-                    self.val = X.mean()
+                    self.valX = X.mean()
+                    if y is not None:
+                        self.valy = y.mean()
                 elif postFillSelect == 'median':
-                    self.val = X.median()
+                    self.valX = X.median()
+                    if y is not None:
+                        self.valy = y.median()
                 elif postFillSelect == 'last':
-                    self.val = X.iloc[-1]
-        
-            assert isinstance(X, pd.DataFrame)
-            assert not X.isna().any().any()
+                    self.valX = X.iloc[-1]
+                    if y is not None:
+                        self.valy = y.iloc[-1]
         
         self.send_next_node((X, y))
         self.done()

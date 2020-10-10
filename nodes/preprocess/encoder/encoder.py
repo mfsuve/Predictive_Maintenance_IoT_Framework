@@ -24,22 +24,10 @@ class Encoder(Data):
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         X, y = data.get()
         
-        # print(f'Before Encoding: {y}', f'#1: {(y == 1).sum()}', f'#0: {(y == 0).sum()}')
-        # before_ones = (y == 1).sum()
-        # before_zeros = (y == 0).sum()
-        
         # Encoding
         if self.encoder is None:
             self.encoder = SimpleEncoder().fit(X) if encode == 'S' else OneHotEncoder().fit(X)
-        # elif not persist: # If I need to re-fit the encoder
-            # self.encoder.fit(X, y)
         X, y = self.encoder.transform(X, y)
-        
-        # print(f'After Encoding: {y}', f'#1: {(y == 1).sum()}', f'#0: {(y == 0).sum()}')
-        # after_ones = (y == 1).sum()
-        # after_zeros = (y == 0).sum()
-        
-        # print('They are equal' if (after_ones == before_ones and after_zeros == before_zeros) else 'They are different')
         
         self.send_next_node((X, y))
         self.done()
@@ -62,7 +50,7 @@ class BaseEncoder(metaclass=ABCMeta):
     def transform(self, X, y):
         if not self.fitted:
             raise ValueError("Encoders need to be fitted before transform")
-        return self.class_encoder.transform(y)
+        return pd.Series(self.class_encoder.transform(y))
     
     def fit_transform(self, X, y):
         return self.fit(X, y).transform(X, y)
@@ -76,13 +64,11 @@ class SimpleEncoder(BaseEncoder):
     
     def fit(self, X):
         # * I am getting categorical columns from the config file
-        # cat_cols = X.columns[X.dtypes == 'object'].tolist()
         cat_cols = self.config.categoric_columns
         X[cat_cols].apply(lambda col: self.encoders[col.name].fit(self.config.categories(col.name)))
         return super().fit(X)
     
     def transform(self, X, y):
-        # cat_cols = X.columns[X.dtypes == 'object'].tolist()
         cat_cols = self.config.categoric_columns
         X[cat_cols] = X[cat_cols].apply(lambda col: self.encoders[col.name].transform(col))
         return X, super().transform(X, y)
