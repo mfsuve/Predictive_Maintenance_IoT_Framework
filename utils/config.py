@@ -49,11 +49,13 @@ class Config(metaclass=SingletonMeta):
                         self.categoric_columns.append(column)
                     else:
                         raise ConfigError("Categoric columns should define its categories in the data configuration file")
-                else:
+                elif params['type'] == 'numeric':
                     if 'min' in params and 'max' in params:
                         self.numeric_columns.append(column)
                     else:
                         raise ConfigError("Numeric columns should define its min and max values in the data configuration file")
+                else:
+                    raise ConfigError(f"Type of a column can be either 'numeric' or 'categoric'")
             else:
                 raise ConfigError(f"Every column must define its type in the data configuration file")
         
