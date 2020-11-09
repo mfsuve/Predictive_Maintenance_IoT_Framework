@@ -11,21 +11,21 @@ class Config(metaclass=SingletonMeta):
     # Since all nodes are initialized at the beginning, I can't cache config at init method
     # Because LoadDataset node wouldn't have initialized it
     """
-    ### Numeric Sensor Attributes
+    ### Numeric Column Attributes
     
     - min : `int`
     
-    &emsp;&emsp;Minimum possible value of that sensor
+    &emsp;&emsp;Minimum possible value of that column
     
     - max : `int`
     
-    &emsp;&emsp;Maximum possible value of that sensor
+    &emsp;&emsp;Maximum possible value of that column
     
-    ### Categoric Sensor Attributes
+    ### Categoric Column Attributes
     
     - categories : `list<str>`
     
-    &emsp;&emsp;All possible categories of that sensor
+    &emsp;&emsp;All possible categories of that column
 
     """
     
@@ -42,20 +42,20 @@ class Config(metaclass=SingletonMeta):
         # Reading the categoric and numeric columns
         self.categoric_columns = []
         self.numeric_columns = []
-        for sensor, params in self.__config['sensors'].items():
+        for column, params in self.__config['columns'].items():
             if 'type' in params:
                 if params['type'] == 'categoric':
                     if 'categories' in params:
-                        self.categoric_columns.append(sensor)
+                        self.categoric_columns.append(column)
                     else:
-                        raise ConfigError("Categoric sensors should define its categories in the data configuration file")
+                        raise ConfigError("Categoric columns should define its categories in the data configuration file")
                 else:
                     if 'min' in params and 'max' in params:
-                        self.numeric_columns.append(sensor)
+                        self.numeric_columns.append(column)
                     else:
-                        raise ConfigError("Numeric sensors should define its min and max values in the data configuration file")
+                        raise ConfigError("Numeric columns should define its min and max values in the data configuration file")
             else:
-                raise ConfigError(f"Every sensor must define its type in the data configuration file")
+                raise ConfigError(f"Every column must define its type in the data configuration file")
         
         if not isinstance(self.__config['classes'], list):
             raise ConfigError("'classes' should be defined as list in the data configuration file")
@@ -88,28 +88,28 @@ class Config(metaclass=SingletonMeta):
         return self.__config[key]
     
     def columns(self):
-        return list(self['sensors'].keys())
+        return list(self['columns'].keys())
     
-    def is_categoric(self, sensor):
+    def is_categoric(self, column):
         try:
-            return self['sensors'][sensor]['type'] == 'categoric'
+            return self['columns'][column]['type'] == 'categoric'
         except KeyError:
             return False
     
-    def min(self, sensor):
+    def min(self, column):
         try:
-            return self['sensors'][sensor]['min']
+            return self['columns'][column]['min']
         except KeyError:
-            return 0 # If the sensor is not found, then it is categorical (Because I make sure all sensors are there when loading)
+            return 0 # If the column is not found, then it is categorical (Because I make sure all columns are there when loading)
         
-    def max(self, sensor):
+    def max(self, column):
         try:
-            return self['sensors'][sensor]['max']
+            return self['columns'][column]['max']
         except KeyError:
-            return 1 # If the sensor is not found, then it is categorical (Because I make sure all sensors are there when loading)
+            return 1 # If the column is not found, then it is categorical (Because I make sure all columns are there when loading)
     
-    def categories(self, sensor):
-        return self['sensors'][sensor]['categories']
+    def categories(self, column):
+        return self['columns'][column]['categories']
         
     def classes(self):
         '''
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     config = Config('data_config.json')
     
     columns = []
-    for col, attr in config['sensors'].items():
+    for col, attr in config['columns'].items():
         if config.is_numeric(col):
             columns.append(col)
         else:
