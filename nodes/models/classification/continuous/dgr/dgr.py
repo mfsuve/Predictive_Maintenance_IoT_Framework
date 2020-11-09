@@ -24,6 +24,9 @@ class DeepGenerativeReplay(Model):
         self.initialized = False
         self.full = False
         
+        # TODO: Burda node create edilir edilmez load yapılacaksa yap
+        # TODO: self.node_config ile config'i alabilirsin
+        
         if os.path.isfile('Loss_Hydraulic_Systems.txt'):
             os.remove('Loss_Hydraulic_Systems.txt')
 
@@ -153,6 +156,7 @@ class DeepGenerativeReplay(Model):
 
 
     def predict(self, X):
+        self.model.eval()
         return self.model.predict(X)
     
     
