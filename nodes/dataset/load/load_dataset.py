@@ -6,7 +6,7 @@ from io import StringIO
 
 from utils.config import Config
 from utils.utils import myprint as print
-from utils.node import Data
+from utils.node import Data, Node
 from utils.io import InputType
 
 class LoadDataset(Data):
@@ -33,6 +33,7 @@ class LoadDataset(Data):
         if hasheader:
             # Assuring that they contain the same column names (no more, no less) regardless of the ordering
             if set(X.columns) != set(column_names) or len(X.columns) != len(column_names):
+                print('X.columns:', X.columns, '\ncolumn_names:', column_names)
                 raise ValueError('Column names of the input does not match with the config file.')
             # If columns are the same, it takes x4 time for (1M, 100) shaped data,
             # even it is not necessary to reindex since they are already the same
@@ -51,7 +52,13 @@ class LoadDataset(Data):
         X = X.loc[not_nan_indices]
         if y is not None:
             y = y[not_nan_indices]
-        
+            
+        # remove duplicated rows
+        non_duplicate_indices = ~X.duplicated()
+        X = X[non_duplicate_indices]
+        if y is not None:
+            y = y[non_duplicate_indices]
+            
         # remove 'all nan' columns
         if removeAllnan:
             X.dropna(axis='columns', how='all', inplace=True)
@@ -60,7 +67,7 @@ class LoadDataset(Data):
         if removeAllsame and X.shape[0] > 1:
             X = X.loc[:, X.nunique() > 1]
         
-        return X.reset_index(drop=True), y if y is not None else None
+        return X.reset_index(drop=True), y
 
 
     def function(self, data, configPath, isFile, path, col, hasheader, removeAllnan, removeAllsame, hasTarget):
