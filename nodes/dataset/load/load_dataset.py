@@ -16,7 +16,7 @@ class LoadDataset(Data):
         if not path.endswith('.csv'):
             path += '.csv'
         try:
-            X = pd.read_csv(path, header=0 if hasheader else None, na_values=['na'], skipinitialspace=True, encoding='utf-8')
+            X = pd.read_csv(path, header=0 if hasheader else None, na_values=['na', '?'], skipinitialspace=True, encoding='utf-8')
         except FileNotFoundError:
             raise FileNotFoundError(f"No such file or directory: '{path}'")
 
