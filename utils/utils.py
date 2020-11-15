@@ -80,11 +80,7 @@ def make_sure_folder_exists(pathname):
         myprint(f' * {pathname} folder is created.')
     return pathname
    
-
-def combine_data(_X, _y):
-    '''Combines X and y into a numpy array'''
-    X = np.zeros((_X.shape[0], _X.shape[1] + 1))
-    X[:, -1] = _y
-    X[:, :-1] = _X
-    return X
+def combine_data(X:pd.DataFrame, y:pd.Series) -> pd.DataFrame:
+    '''Combines X and y'''
+    return X.assign(target=y)
     

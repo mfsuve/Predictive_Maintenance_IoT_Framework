@@ -4,7 +4,6 @@ import json
 import numpy as np
 import os
 from itertools import count
-from io import StringIO
 
 from utils.config import Config
 from utils.utils import myprint as print, combine_data
@@ -76,7 +75,7 @@ class StoreDataset(Node):
         
         path = self.get_path(path)
         
-        full = self.append(combine_data(*data.get()), numrows)
+        full = self.append(combine_data(*data.get()).to_numpy(), numrows)
         print('Store | 1. full', full)
         while full:
             full = self.save_and_reset(numrows, path)
