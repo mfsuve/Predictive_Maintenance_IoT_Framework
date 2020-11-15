@@ -6,6 +6,7 @@ from traceback import format_exc
 from functools import wraps
 import logging
 from threading import Thread, currentThread
+import pandas as pd
 import os
 
 log = logging.getLogger('nodered')
@@ -20,6 +21,8 @@ class MyJSONEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, pd.Series):
+            return obj.to_dict()
         else:
             return super().default(obj)
         
