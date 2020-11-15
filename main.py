@@ -1,7 +1,8 @@
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 import os
 import json
-from time import sleep
-from pprint import pformat
 from traceback import format_exc
 # from multiprocessing import Pool # TODO: Use processes instead of threads
 
@@ -14,7 +15,7 @@ from utils.io import Input
 # * Logging:
 # * * warning -> only pythonlog.log
 # * * info    -> output for node in node-red
-# *              (should be 'nodeid' to indicate which node has this output)
+# *              (should contain 'nodeid' to indicate which node has this output)
 
 nodes = {}
 wires_dict = {}
@@ -26,7 +27,7 @@ def init(config):
     for nodeid, node_wires in wires_dict.items():
         node = nodes[nodeid]
         for node_wires_from_out in node_wires:
-            node.add_next_nodes([nodes[nodeid] for nodeid in (all_nodeids & set(node_wires_from_out))])
+            node.add_next_nodes([nodes[_nodeid] for _nodeid in (all_nodeids & set(node_wires_from_out))])
     del wires_dict
     
 
@@ -60,11 +61,13 @@ if __name__ == '__main__':
                 create_node(config)
             else:
                 call_node(config)
-        except json.decoder.JSONDecodeError:
-            print('Encountered a JSONDecodeError, Exitting...')
+        except json.decoder.JSONDecodeError as e:
+            print('Encountered a JSONDecodeError, Exitting...', format_exc())
+            print(e)
             break
-        except BaseException:
+        except BaseException as e:
             print('Encountered something, Exitting...', format_exc())
+            print(e)
             raise
             
     print(f'End of the python process, PID: {os.getpid()}')
