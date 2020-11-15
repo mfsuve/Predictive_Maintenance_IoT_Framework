@@ -14,6 +14,7 @@ class ReplayData(Data):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.q = deque()
+        self.status(f'data size: 0')
 
     def function(self, data):
         if data.type != InputType.DATA and data.type != InputType.NODERED:
@@ -23,12 +24,13 @@ class ReplayData(Data):
             try:
                 replayed = self.q.popleft()
                 self.send_nodered(replayed)
-                print('ReplayData | Replayed data', f'ReplayData | Current Lenght: {len(self.q)}')
+                print('ReplayData | Replayed data:', replayed, f'ReplayData | Current Lenght: {len(self.q)}')
             except IndexError:
                 self.warning('There is no data to be replayed')
                 print('ReplayData | Tried to replay but there is no data', f'ReplayData | Current Lenght: {len(self.q)}')
         else:
-            self.q.extend(combine_data(*data.get()))
+            combined = combine_data(*data.get())
+            self.q.extend([e[1] for e in combined.iterrows()])
             print('ReplayData | Stored data', f'ReplayData | Current Lenght: {len(self.q)}')
                 
         self.status(f'data size: {len(self.q)}')
