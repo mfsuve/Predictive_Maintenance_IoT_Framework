@@ -21,6 +21,10 @@ class MinMaxScaler(Data):
         print(f'MinMax Scaling...')
         
         X, y = data.get()
+        
+        if (X.dtypes == 'object').any() or y.dtype == 'object':
+            raise ValueError(f"Data needs to contain only numerical values in order to be scaled, but there are non numeric values in the data.")
+        
         if self.min is None:
             print('Scaler | self.min is None!')
             config = Config()
@@ -42,7 +46,6 @@ class MinMaxScaler(Data):
         
         # TODO: Might delete this later for performance
         # * Assure that all the values are in [0, 1]
-        # !! Burası datayı spamlayınca hata atıyor !!
         assert ((0 <= X[self.min.keys()]) & (X[self.min.keys()] <= 1)).all().all()
         
         self.send_next_node((X, y))
