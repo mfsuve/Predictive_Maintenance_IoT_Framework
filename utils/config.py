@@ -74,17 +74,9 @@ class Config(metaclass=SingletonMeta):
         
         self.class_name_dict = dict(zip(self.classes(), self.names()))
         
-        # Defined for encoder node
-        self.__inverse = None
             
-    @property
-    def inverse(self):
-        return self.__inverse
-    
-    @inverse.setter
-    def inverse(self, __inverse):
-        self.__inverse = __inverse
-        self.class_name_dict = dict(zip(self.inverse(self.classes()), self.names()))
+    def transform_label(self, transform):
+        self.class_name_dict = dict(zip(transform(self.classes()), self.names()))
             
     def __getitem__(self, key):
         return self.__config[key]

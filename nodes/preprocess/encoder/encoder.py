@@ -42,7 +42,7 @@ class BaseEncoder(metaclass=ABCMeta):
     def fit(self, X):
         self.class_encoder = LE()
         self.class_encoder.fit(self.config.classes())
-        self.config.inverse = self.class_encoder.inverse_transform
+        self.config.transform_label(self.class_encoder.transform)
         self.fitted = True
         return self
     
@@ -87,6 +87,7 @@ class OneHotEncoder(BaseEncoder):
                     self.columns.append(f'{col}_{cat}')
     
     def transform(self, X, y):
-        X = pd.get_dummies(X, drop_first=True)
+        # X = pd.get_dummies(X, drop_first=True)
+        X = pd.get_dummies(X)
         X = X.reindex(columns=self.columns, fill_value=0)
         return X, super().transform(X, y)
