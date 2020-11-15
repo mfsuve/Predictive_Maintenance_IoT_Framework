@@ -79,7 +79,7 @@ class OneHotEncoder(BaseEncoder):
     def __init__(self):
         super().__init__()
         self.columns = []
-        for col, attr in self.config['sensors'].items():
+        for col, attr in self.config['columns'].items():
             if not self.config.is_categoric(col):
                 self.columns.append(col)
             else:
