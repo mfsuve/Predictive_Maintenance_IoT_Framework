@@ -33,6 +33,6 @@ class Split(Data):
             y1 = y.loc[indices1]
             y2 = y.loc[indices2]
         
-        self.send_next_node((X1, y1), (X2, y2))
+        self.send_next_node((X1.reset_index(drop=True), y1.reset_index(drop=True)), (X2.reset_index(drop=True), y2.reset_index(drop=True)))
         self.done()
     
