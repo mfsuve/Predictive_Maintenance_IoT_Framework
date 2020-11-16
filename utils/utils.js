@@ -4,19 +4,20 @@
  * and I expanded on it.
  */
 
-const status = require('./status.js')
-const { exec } = require('child_process')
+const status = require('./status.js');
+const { spawn } = require('child_process');
+// var fs = require('fs');
 
 var proc = null;
 var nodes = {};
 
-//initialize child process
-// TODO: her node için ayrı bir process aç
-// TODO: ** Bunu python'da açmam lazım, çünkü nodered üzerinden python'daki data paylaşımını yapamıyorum
+// initialize child process
 const initProc = (env) => {
-    // console.trace("init proc");
     if (proc == null) {
-        proc = exec(`conda activate ${env} && python "${__dirname}/../main.py" && conda deactivate`, ['pipe', 'pipe', 'pipe']);
+        proc = spawn(`conda activate ${env} && python "${__dirname}/../main.py"`, {
+            stdio: 'pipe',
+            shell: true
+        });
         console.log("**************** Created python process ********************");
 
         //handle results
@@ -66,19 +67,12 @@ const initProc = (env) => {
                     message.forEach((m) => {
                         console.log(m);
                     });
-                    // console.log('**************************************************************');
-                    // console.log('Node: ' + node.config.pynode);
-                    // console.log('node.hideProcessing: ' + node.hideProcessing);
-                    // console.log('!node.hideProcessing: ' + !node.hideProcessing);
-                    // console.log('**************************************************************');
-                    // if (!node.hideProcessing)
-                    //     node.status(status.PROCESSING);
                     node.send(message);
                 }
             });
         });
 
-        //handle errors
+        // handle errors
         proc.stderr.on('data', (data) => {
 
             console.log("\n\nNode error:");
@@ -90,6 +84,7 @@ const initProc = (env) => {
                 console.log(JSON.parse(data.toString()));
             } catch (err) {
                 console.log("stderr in catch");
+                console.log("Error is:\n", err);
                 console.log(data.toString());
             }
             console.log("============================");
@@ -109,13 +104,10 @@ const initProc = (env) => {
     }
 };
 
-//send config as json to python process
+// send config as json to python process
 const python = (config) => {
-    // initProc('pdm');
-    console.log("config: ");
+    console.log("config:");
     console.log(config);
-    console.log("*********************** proc.stdin.destroyed: " + proc.stdin.destroyed);
-    console.log("*********************** proc.stdin.writable: " + proc.stdin.writable);
     proc.stdin.write(JSON.stringify(config) + '\n');
 };
 
@@ -144,7 +136,7 @@ module.exports = {
             create: true
         });
 
-        //handle input
+        // handle input
         node.on('input', (msg) => {
             console.log("Input msg:");
             console.log(msg);
@@ -160,7 +152,7 @@ module.exports = {
             // Send the actual message to the node as well
             node.config.msg = msg.payload;
 
-            // send to python process
+            // Send to python process
             console.log("node:");
             console.log(node);
             python(node.config);
