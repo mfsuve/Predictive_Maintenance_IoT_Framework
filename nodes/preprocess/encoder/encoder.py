@@ -68,9 +68,18 @@ class SimpleEncoder(BaseEncoder):
         X[cat_cols].apply(lambda col: self.encoders[col.name].fit(self.config.categories(col.name)))
         return super().fit(X)
     
+    # Ignoring nan
+    def __transform(self, col):
+        nan_indices = col.isna()
+        col[nan_indices] = self.config.categories(col.name)[0]
+        col = self.encoders[col.name].transform(col).astype(float)
+        col[nan_indices] = np.nan
+        return col
+    
     def transform(self, X, y):
         cat_cols = self.config.categoric_columns
-        X[cat_cols] = X[cat_cols].apply(lambda col: self.encoders[col.name].transform(col))
+        # X[cat_cols] = X[cat_cols].apply(lambda col: self.encoders[col.name].transform(col))
+        X[cat_cols] = X[cat_cols].apply(self.__transform)
         return X, super().transform(X, y)
     
 
