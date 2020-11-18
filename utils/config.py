@@ -51,6 +51,8 @@ class Config(metaclass=SingletonMeta):
                         raise ConfigError("Categoric columns should define its categories in the data configuration file")
                 elif params['type'] == 'numeric':
                     if 'min' in params and 'max' in params:
+                        if params['min'] > params['min']:
+                            raise ConfigError(f"'min' value should not be greater than 'max' value for {column}")
                         self.numeric_columns.append(column)
                     else:
                         raise ConfigError("Numeric columns should define its min and max values in the data configuration file")
