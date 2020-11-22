@@ -24,15 +24,15 @@ class Split(Data):
         indices1 = shuffled_indices[:split_size]
         indices2 = shuffled_indices[split_size:]
         
-        X1 = X.loc[indices1]
-        X2 = X.loc[indices2]
+        X1 = X.loc[indices1].reset_index(drop=True)
+        X2 = X.loc[indices2].reset_index(drop=True)
         
         if y is None:
             y1, y2 = None, None
         else:
-            y1 = y.loc[indices1]
-            y2 = y.loc[indices2]
+            y1 = y.reindex(indices1).reset_index(drop=True)
+            y2 = y.reindex(indices2).reset_index(drop=True)
         
-        self.send_next_node((X1.reset_index(drop=True), y1.reset_index(drop=True)), (X2.reset_index(drop=True), y2.reset_index(drop=True)))
+        self.send_next_node((X1, y1), (X2, y2))
         self.done()
     
