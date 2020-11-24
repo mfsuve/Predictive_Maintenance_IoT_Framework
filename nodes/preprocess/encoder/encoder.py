@@ -90,15 +90,17 @@ class OneHotEncoder(BaseEncoder):
     def __init__(self):
         super().__init__()
         self.columns = []
+        self.categorical_columns = []
         for col, attr in self.config['columns'].items():
-            if not self.config.is_categoric(col):
+            if self.config.is_numeric(col):
                 self.columns.append(col)
             else:
+                self.categorical_columns.append(col)
                 for cat in set(attr['categories']):
                     self.columns.append(f'{col}_{cat}')
     
     def transform(self, X, y):
         # X = pd.get_dummies(X, drop_first=True)
-        X = pd.get_dummies(X)
+        X = pd.get_dummies(X, columns=self.categorical_columns)
         X = X.reindex(columns=self.columns, fill_value=0)
         return X, super().transform(X, y)
