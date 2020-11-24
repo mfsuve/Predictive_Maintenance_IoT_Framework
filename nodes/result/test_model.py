@@ -58,6 +58,8 @@ class TestModel(Node):
                 self.send_nodered({'reset': True}) # To reset the training plots
         elif self.model is not None:
             X, y = data.get()
+            assert isinstance(X, pd.DataFrame) and isinstance(y, pd.Series)
+            
             print('Testing model', f'X.shape: {X.shape}', f'y_true.shape: {y.shape if y is not None else "None"}')
             y_pred = self.model.predict(X)
             
