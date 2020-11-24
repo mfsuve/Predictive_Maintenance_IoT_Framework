@@ -31,7 +31,9 @@
             "combine data": "nodes/dataset/sequence/combine/combine_data.js",
             "save model": "nodes/models/io/save/save.js",
             "test model": "nodes/result/test_model.js",
-            "dgr": "nodes/models/classification/dgr/dgr.js"
+            "dgr": "nodes/models/classification/dgr/dgr.js",
+            "logistic_regression": "nodes/models/classification/creme/logistic_regression/logistic_regression.js",
+            "random_forest": "nodes/models/classification/creme/random_forest/random_forest.js"
         }
     }
 }

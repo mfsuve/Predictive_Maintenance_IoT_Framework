@@ -1,0 +1,106 @@
+<script type="text/javascript">
+RED.nodes.registerType('logistic_regression', {
+    category: 'ML Model',
+    color: '#DAC4B4',
+    defaults: {
+        name: {value:""},
+        loadModel: {value:false},
+        loadFolder: {value:""}
+    },
+    inputs:1,
+    outputs:2,
+    outputLabels: ["Model", "Train Results"],
+    icon: "font-awesome/fa-level-up",
+    label: function() {
+        return this.name || "Logistic Regression";
+    },
+    labelStyle: function() {
+        return this.name ? "node_label_italic" : "";
+    },
+    oneditprepare: function() {
+        // Loading options
+        if (this.loadModel) {
+            $("#load").show();
+        } else {
+            $("#load").hide();
+        }
+        $("#node-input-loadModel").on("change", function() {
+            var v = $("#node-input-loadModel").prop('checked');
+            if (v) {
+                $("#load").show(200);
+            } else {
+                $("#load").hide(200);
+            }
+        });
+    }
+});
+</script>
+
+
+<script type="text/x-red" data-template-name="logistic_regression">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+
+    <div class="form-row" style="height:34px;">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-loadModel" style="width:20px; vertical-align:baseline; margin-right:5px;">
+        <label for="node-input-loadModel" style="width:auto; padding-top:14px;"> Load model</label>
+    </div>
+    <div id="load">
+        <div class="form-row">
+            <label for="node-input-loadFolder"><i class="fa fa-folder"></i> Model Folder</label>
+            <input type="text" id="node-input-loadFolder" value="">
+        </div>
+    </div>
+</script>
+
+
+<script type="text/x-red" data-help-name="logistic_regression">
+    <p>Loads the dataset from a csv file.</p>
+
+    <h3>Inputs</h3>
+	<dl class="message-properties">
+		<dd>
+			anything that triggers the operation.
+		</dd>
+	</dl>
+
+	<h3>Outputs</h3>
+	<ol class="node-ports">
+		<li>Standard output
+			<dl class="message-properties">
+				<dt>payload.data <span class="property-type">2D array</span></dt>
+				<dd>the loaded dataset without it's target.</dd>
+			</dl>
+			<dl class="message-properties">
+				<dt>payload.target <span class="property-type">array</span></dt>
+				<dd>the loaded target extracted from the dataset.</dd>
+			</dl>
+			<dl class="message-properties">
+				<dt>payload.columns <span class="property-type">array</span></dt>
+				<dd>the column names extracted from the dataset.</dd>
+			</dl>
+		</li>
+		<li>Standard error
+			<dl class="message-properties">
+				<dt>payload <span class="property-type">string</span></dt>
+				<dd>the standard error of the command.</dd>
+			</dl>
+		</li>
+	</ol>
+
+    <h3>Details</h3>
+    <p>Once triggered, this node loads the dataset from <code>filename</code> under <code>foldername</code>
+    which needs to be a <code>csv</code> file.</p>
+    <p>Target Column Number</p>
+    <p><code>col</code> parameter indicates which column should be treated as target column. 0 value means
+    the first column. This value can be negative. If so, the new value for this parameter will be
+    <code>#columns-col</code></p>
+    <p>Has Header</p>
+    <p><code>hasheader</code> parameter tells if the dataset has headers.
+    <p>It has 2 outputs. The first one is an object having 2D dataset without the target column as
+    <code>payload.data</code> and the target column as <code>payload.target</code>. The second one is the error.</p>
+
+</script>
