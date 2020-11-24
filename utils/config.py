@@ -92,6 +92,9 @@ class Config(metaclass=SingletonMeta):
             return self['columns'][column]['type'] == 'categoric'
         except KeyError:
             return False
+        
+    def is_numeric(self, column):
+        return not self.is_categoric(column)
     
     def min(self, column):
         if column in self.categoric_columns:
