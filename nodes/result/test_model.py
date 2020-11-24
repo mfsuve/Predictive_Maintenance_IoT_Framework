@@ -20,7 +20,7 @@ class TestModel(Node):
         self.total_tested = 0
         
     
-    def first_called(self, data, accuracy, precision, recall, f1):
+    def first_called(self, data, accuracy, precision, recall, f1, resetAfterTraining):
         self.config = Config()
         self.model = None
         predictions = self.config.predictions()
@@ -42,7 +42,7 @@ class TestModel(Node):
             self.metrics.append(F)
     
     
-    def function(self, data, accuracy, precision, recall, f1):
+    def function(self, data, accuracy, precision, recall, f1, resetAfterTraining):
         
         if data.type != InputType.DATA and data.type != InputType.MODEL:
             raise ValueError(f"Input needs to be a 'data' or a 'model' but got '{data.type.name.lower()}'")
@@ -51,15 +51,17 @@ class TestModel(Node):
             self.model, _ = data.get()
             self.status(f'Model: {self.model.name}')
             # Resetting all the metrics since a new version of the model has come
-            for metric in self.metrics:
-                metric.reset()
-            self.total_tested = 0
-            # self.send_nodered({metric.name: [] for metric in self.metrics}) # To reset the training plots
-            self.send_nodered({'reset': True}) # To reset the training plots
+            if resetAfterTraining:
+                for metric in self.metrics:
+                    metric.reset()
+                self.total_tested = 0
+                self.send_nodered({'reset': True}) # To reset the training plots
         elif self.model is not None:
             X, y = data.get()
+            assert isinstance(X, pd.DataFrame) and isinstance(y, pd.Series)
+            
             print('Testing model', f'X.shape: {X.shape}', f'y_true.shape: {y.shape if y is not None else "None"}')
-            y_pred = self.model.predict(X.to_numpy())
+            y_pred = self.model.predict(X)
             
             msg = {'predictions': self.config.convert_to_names(y_pred),
                    'classes': self.config.names(),

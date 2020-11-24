@@ -1,0 +1,114 @@
+<script type="text/javascript">
+RED.nodes.registerType('balance_data', {
+    category: 'ML Preprocess',
+    color: '#D8BFD8',
+    defaults: {
+        name: {value:""},
+        balanceData: {value:"combine SMOTEENN"}
+    },
+    inputs:1,
+    outputs:1,
+    icon: "font-awesome/fa-balance-scale",
+    label: function() {
+        return this.name || "Balance Data";
+    },
+    labelStyle: function() {
+        return this.name ? "node_label_italic" : "";
+    }
+});
+</script>
+
+
+<script type="text/x-red" data-template-name="balance_data">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-balanceData"><i class="fa fa-angle-double-right"></i> Balance Method </label>
+        <select id="node-input-balanceData" style="width:232px;">
+            <option value="combine SMOTEENN" selected>SMOTEENN</option>
+            <option value="combine SMOTETomek">SMOTETomek</option>
+            <option value="over_sampling ADASYN">ADASYN</option>
+            <option value="over_sampling BorderlineSMOTE">BorderlineSMOTE</option>
+            <!--
+            <option value="over_sampling KMeansSMOTE">KMeansSMOTE</option>
+            -->
+            <option value="over_sampling RandomOverSampler">RandomOverSampler</option>
+            <option value="over_sampling SMOTE">SMOTE</option>
+            <!--
+            <option value="over_sampling SMOTENC">SMOTENC</option>
+            -->
+            <option value="over_sampling SVMSMOTE">SVMSMOTE</option>
+            <!--
+            <option value="under_sampling ClusterCentroids">ClusterCentroids</option>
+            <option value="under_sampling CondensedNearestNeighbour">CondensedNearestNeighbour</option>
+            -->
+            <option value="under_sampling EditedNearestNeighbours">EditedNearestNeighbours</option>
+            <option value="under_sampling RepeatedEditedNearestNeighbours">RepeatedEditedNearestNeighbours</option>
+            <option value="under_sampling AllKNN">AllKNN</option>
+            <option value="under_sampling InstanceHardnessThreshold">InstanceHardnessThreshold</option>
+            <option value="under_sampling NearMiss">NearMiss</option>
+            <option value="under_sampling NeighbourhoodCleaningRule">NeighbourhoodCleaningRule</option>
+            <option value="under_sampling OneSidedSelection">OneSidedSelection</option>
+            <option value="under_sampling RandomUnderSampler">RandomUnderSampler</option>
+            <option value="under_sampling TomekLinks">TomekLinks</option>
+        </select>
+    </div>
+    <div style="padding-left:20px;">
+        <p style="border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9;">
+            <i class="fa fa-circle" style="font-size:80%; margin-left:10px;"></i>   
+            All methods ar from <a href="https://imbalanced-learn.org/stable/api.html">imblearn</a> library.
+        </p>
+    </div>
+    </div>
+</script>
+
+
+<script type="text/x-red" data-help-name="balance_data">
+    <p>Loads the dataset from a csv file.</p>
+
+    <h3>Inputs</h3>
+	<dl class="message-properties">
+		<dd>
+			anything that triggers the operation.
+		</dd>
+	</dl>
+
+	<h3>Outputs</h3>
+	<ol class="node-ports">
+		<li>Standard output
+			<dl class="message-properties">
+				<dt>payload.data <span class="property-type">2D array</span></dt>
+				<dd>the loaded dataset without it's target.</dd>
+			</dl>
+			<dl class="message-properties">
+				<dt>payload.target <span class="property-type">array</span></dt>
+				<dd>the loaded target extracted from the dataset.</dd>
+			</dl>
+			<dl class="message-properties">
+				<dt>payload.columns <span class="property-type">array</span></dt>
+				<dd>the column names extracted from the dataset.</dd>
+			</dl>
+		</li>
+		<li>Standard error
+			<dl class="message-properties">
+				<dt>payload <span class="property-type">string</span></dt>
+				<dd>the standard error of the command.</dd>
+			</dl>
+		</li>
+	</ol>
+
+    <h3>Details</h3>
+    <p>Once triggered, this node loads the dataset from <code>filename</code> under <code>foldername</code>
+    which needs to be a <code>csv</code> file.</p>
+    <p>Target Column Number</p>
+    <p><code>col</code> parameter indicates which column should be treated as target column. 0 value means
+    the first column. This value can be negative. If so, the new value for this parameter will be
+    <code>#columns-col</code></p>
+    <p>Has Header</p>
+    <p><code>hasheader</code> parameter tells if the dataset has headers.
+    <p>It has 2 outputs. The first one is an object having 2D dataset without the target column as
+    <code>payload.data</code> and the target column as <code>payload.target</code>. The second one is the error.</p>
+
+</script>

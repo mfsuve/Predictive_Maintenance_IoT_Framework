@@ -120,7 +120,7 @@ class Model(Node):
         # TODO: FutureWarning: pickle support for Storage will be removed in 1.5. Use `torch.save` instead
     
     @abstractmethod
-    def load(self, path, check=None):
+    def load(self, path, check=None, force=False):
         '''
         Arguments
         ===
@@ -153,7 +153,10 @@ class Model(Node):
             for key, name in check:
                 var = getattr(self, key)
                 if obj[key] != var:
-                    raise ValueError(f"{name.capitalize()} of loaded model should be the same with {name} of this model. Expected {var}, Got {obj[key]}")
+                    if force:
+                        raise ValueError(f"{name.capitalize()} value of loaded model should be the same with {name} of this model. Expected {var}, Got {obj[key]}.")
+                    else:
+                        self.warning(f"{name.capitalize()} value of the loaded model is different than this model. Will use {name} vaule of the loaded model as {obj[key]}.")
         return obj
 
 class Data(Node):

@@ -1,64 +1,64 @@
 <script type="text/javascript">
-RED.nodes.registerType('test model', {
-    category: 'ML Test',
-    color: '#E6E0F8',
+RED.nodes.registerType('random_forest', {
+    category: 'ML Model',
+    color: '#DAC4B4',
     defaults: {
         name: {value:""},
-        accuracy: {value:true},
-        precision: {value:false},
-        recall: {value:false},
-        f1: {value:false},
-        resetAfterTraining: {value:false}
+        loadModel: {value:false},
+        loadFolder: {value:""}
     },
     inputs:1,
-    outputs:1,
-    icon: "font-awesome/fa-question-circle-o",
+    outputs:2,
+    outputLabels: ["Model", "Train Results"],
+    icon: "font-awesome/fa-level-up",
     label: function() {
-        return this.name || "Test Model";
+        return this.name || "Random Forest";
     },
     labelStyle: function() {
         return this.name ? "node_label_italic" : "";
+    },
+    oneditprepare: function() {
+        // Loading options
+        if (this.loadModel) {
+            $("#load").show();
+        } else {
+            $("#load").hide();
+        }
+        $("#node-input-loadModel").on("change", function() {
+            var v = $("#node-input-loadModel").prop('checked');
+            if (v) {
+                $("#load").show(200);
+            } else {
+                $("#load").hide(200);
+            }
+        });
     }
 });
 </script>
 
 
-<script type="text/x-red" data-template-name="test model">
+<script type="text/x-red" data-template-name="random_forest">
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-    <div class="form-row">
-        <div style="margin-left:100px; margin-bottom:5px;">
-            <input type="checkbox" id="node-input-resetAfterTraining" style="width:20px; margin: 4px 4px 2px 0px; vertical-align:top;" checked>
-            <label for="node-input-resetAfterTraining" style="width:300px;">Set <code>msg.payload.reset=True</code> after a new model arrives</label>
-        </div>
+
+    <div class="form-row" style="height:34px;">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-loadModel" style="width:20px; vertical-align:baseline; margin-right:5px;">
+        <label for="node-input-loadModel" style="width:auto; padding-top:14px;"> Load model</label>
     </div>
-    <hr align="middle"/>
-    <div class="form-row">
-        <label style="width:100%;"><i class="fa fa-tag"></i> Metrics</label>
-        <div style="margin-left:100px; margin-bottom:5px;">
-            <input type="checkbox" id="node-input-accuracy" style="width:20px; margin: 0px 4px 2px 0px;" checked>
-            <label for="node-input-accuracy">Accuracy</label>
-        </div>
-        <div style="margin-left:100px; margin-bottom:5px;">
-            <input type="checkbox" id="node-input-precision" style="width:20px; margin: 0px 4px 2px 0px;">
-            <label for="node-input-precision">Precision</label>
-        </div>
-        <div style="margin-left:100px; margin-bottom:5px;">
-            <input type="checkbox" id="node-input-recall" style="width:20px; margin: 0px 4px 2px 0px;">
-            <label for="node-input-recall">Recall</label>
-        </div>
-        <div style="margin-left:100px; margin-bottom:5px;">
-            <input type="checkbox" id="node-input-f1" style="width:20px; margin: 0px 4px 2px 0px;">
-            <label for="node-input-f1">F1 Score</label>
+    <div id="load">
+        <div class="form-row">
+            <label for="node-input-loadFolder"><i class="fa fa-folder"></i> Model Folder</label>
+            <input type="text" id="node-input-loadFolder" value="">
         </div>
     </div>
 </script>
 
 
-<script type="text/x-red" data-help-name="test model">
-    <p>Tests the incoming model with an incoming input.</p>
+<script type="text/x-red" data-help-name="random_forest">
+    <p>Loads the dataset from a csv file.</p>
 
     <h3>Inputs</h3>
 	<dl class="message-properties">
