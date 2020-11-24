@@ -75,31 +75,35 @@ const initProc = (env) => {
         // handle errors
         proc.stderr.on('data', (data) => {
 
-            console.log("\n\nNode error:");
-            console.log("============================");
-            try {
-                console.log("stderr in try");
-                console.log(JSON.parse(data.toString()).error);
-                console.log("============================");
-                console.log(JSON.parse(data.toString()));
-            } catch (err) {
-                console.log("stderr in catch");
-                console.log("Error is:\n", err);
-                console.log(data.toString());
-            }
-            console.log("============================");
-            console.log("\n\n");
+            // for all nodes (sometimes, due to threading in python, multiple inputs come seperated by '\n')
+            data.toString().trim().split('\n').forEach((_data) => {
 
-            try {
-                data = JSON.parse(data.toString());
-                node = nodes[data.nodeid];
-                node.status(status.ERROR)
-                node.error(data.error);
-            } catch (err) {
-                console.log("In stderr of process | Catched error:");
-                console.log("err: " + err);
-                console.log(data.toString());
-            }
+                console.log("\n\nNode error:");
+                console.log("============================");
+                try {
+                    console.log("stderr in try");
+                    console.log(JSON.parse(_data.toString()).error);
+                    console.log("============================");
+                    console.log(JSON.parse(_data.toString()));
+                } catch (err) {
+                    console.log("stderr in catch");
+                    console.log("Error is:\n", err);
+                    console.log(_data.toString());
+                }
+                console.log("============================");
+                console.log("\n\n");
+
+                try {
+                    _data = JSON.parse(_data.toString());
+                    node = nodes[_data.nodeid];
+                    node.status(status.ERROR)
+                    node.error(_data.error);
+                } catch (err) {
+                    console.log("In stderr of process | Catched error:");
+                    console.log("err: " + err);
+                    console.log(_data.toString());
+                }
+            });
         });
     }
 };
