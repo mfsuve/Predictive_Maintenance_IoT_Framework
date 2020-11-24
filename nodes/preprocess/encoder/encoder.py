@@ -46,11 +46,19 @@ class BaseEncoder(metaclass=ABCMeta):
         self.fitted = True
         return self
     
+    # Ignoring nan
+    def transform_ignore_nan(self, col:pd.Series, val, enc):
+        nan_indices = col.isna()
+        col[nan_indices] = val
+        col = enc.transform(col).astype(float)
+        col[nan_indices] = np.nan
+        return col
+    
     @abstractmethod
     def transform(self, X, y):
         if not self.fitted:
             raise ValueError("Encoders need to be fitted before transform")
-        return pd.Series(self.class_encoder.transform(y))
+        return pd.Series(self.transform_ignore_nan(y, y.iloc[0], self.class_encoder))
     
     def fit_transform(self, X, y):
         return self.fit(X, y).transform(X, y)
@@ -68,18 +76,12 @@ class SimpleEncoder(BaseEncoder):
         X[cat_cols].apply(lambda col: self.encoders[col.name].fit(self.config.categories(col.name)))
         return super().fit(X)
     
-    # Ignoring nan
-    def __transform(self, col):
-        nan_indices = col.isna()
-        col[nan_indices] = self.config.categories(col.name)[0]
-        col = self.encoders[col.name].transform(col).astype(float)
-        col[nan_indices] = np.nan
-        return col
-    
     def transform(self, X, y):
         cat_cols = self.config.categoric_columns
         # X[cat_cols] = X[cat_cols].apply(lambda col: self.encoders[col.name].transform(col))
-        X[cat_cols] = X[cat_cols].apply(self.__transform)
+        X[cat_cols] = X[cat_cols].apply(
+            lambda col: self.transform_ignore_nan(col, self.config.categories(col.name)[0], self.encoders[col.name])
+        )
         return X, super().transform(X, y)
     
 
