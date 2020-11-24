@@ -78,6 +78,7 @@ class Config(metaclass=SingletonMeta):
         
             
     def transform_label(self, transform):
+        # This is called if the fit function of any encoder is called (OneHotEncoder or SimpleEncoder)
         self.class_name_dict = dict(zip(transform(self.classes()), self.names()))
             
     def __getitem__(self, key):
@@ -93,16 +94,28 @@ class Config(metaclass=SingletonMeta):
             return False
     
     def min(self, column):
-        try:
+        if column in self.categoric_columns:
+            # If column categorical, then it must be SimpleEncoded
+            return 0
+        elif column in self.numeric_columns:
+            # If column is numeric take the min of it
             return self['columns'][column]['min']
-        except KeyError:
-            return 0 # If the column is not found, then it is categorical (Because I make sure all columns are there when loading)
+        else:
+            # If the column is not found, then it is categorical (Because I make sure all columns are there when loading)
+            # OneHotEncoded max is 1
+            return 0
         
     def max(self, column):
-        try:
+        if column in self.categoric_columns:
+            # If column categorical, then it must be SimpleEncoded
+            return len(self.categories(column)) - 1
+        elif column in self.numeric_columns:
+            # If column is numeric take the min of it
             return self['columns'][column]['max']
-        except KeyError:
-            return 1 # If the column is not found, then it is categorical (Because I make sure all columns are there when loading)
+        else:
+            # If the column is not found, then it is categorical (Because I make sure all columns are there when loading)
+            # OneHotEncoded min is 0
+            return 1
     
     def categories(self, column):
         return self['columns'][column]['categories']
@@ -113,7 +126,7 @@ class Config(metaclass=SingletonMeta):
          * It is in the same order as `names()`.
          * Used in the `encoder` node.
         '''
-        return self.__config['classes']
+        return self['classes']
     
     def names(self):
         '''
@@ -121,7 +134,7 @@ class Config(metaclass=SingletonMeta):
          * It is in the same order as `classes()`.
          * Used in the `test_model` node for the dashboard to be able to display all names.
         '''
-        return self.__config['names']
+        return self['names']
     
     def predictions(self):
         '''
