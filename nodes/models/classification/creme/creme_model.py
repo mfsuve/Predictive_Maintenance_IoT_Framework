@@ -55,8 +55,7 @@ class CremeModel(Model):
     
     def save(self, folder, prefix, obj=None):
         obj = {
-            'model': self.model
-            # 'hard_sample': self.hard_sample # TODO: After pypi release of river (aka. creme)
+            'model': deepcopy(self.model)
         }
         super().save(folder, prefix, obj)
         
