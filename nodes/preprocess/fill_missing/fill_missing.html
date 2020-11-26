@@ -4,10 +4,18 @@ RED.nodes.registerType('fill missing', {
     color: '#D8BFD8',
     defaults: {
         name: {value:""},
-        preFillConstant: {value:0},
-        preFillSelect: {value:"none", required:true},
-        postFillConstant: {value:0},
-        postFillSelect: {value:"none", required:true}
+        // For X
+        preFillConstantX: {value:0},
+        preFillSelectX: {value:"none", required:true},
+        postFillConstantX: {value:0},
+        postFillSelectX: {value:"none", required:true},
+        // For y
+        preFillConstantY: {value:0},
+        preFillSelectY: {value:"none", required:true},
+        postFillConstantY: {value:0},
+        postFillSelectY: {value:"none", required:true},
+        // For fillY checkbox
+        fillY: {value:true}
     },
     inputs:1,
     outputs:1,
@@ -19,30 +27,76 @@ RED.nodes.registerType('fill missing', {
         return this.name ? "node_label_italic" : "";
     },
     oneditprepare: function() {
-        if (this.preFillSelect === "constant") {
-            $("#node-input-preFillConstant").show();
+        // For X
+        if (this.preFillSelectX === "constant") {
+            $("#node-input-preFillConstantX").show();
         } else {
-            $("#node-input-preFillConstant").hide();
+            $("#node-input-preFillConstantX").hide();
         }
-        $("#node-input-preFillSelect").on("change", function() {
-            var v = $("#node-input-preFillSelect").val();
+        $("#node-input-preFillSelectX").on("change", function() {
+            var v = $("#node-input-preFillSelectX").val();
             if (v === "constant") {
-                $("#node-input-preFillConstant").show(200).focus();
+                $("#node-input-preFillConstantX").show(200).focus();
             } else {
-                $("#node-input-preFillConstant").hide(200);
+                $("#node-input-preFillConstantX").hide(200);
             }
         });
-        if (this.postFillSelect === "constant") {
-            $("#node-input-postFillConstant").show();
+        if (this.postFillSelectX === "constant") {
+            $("#node-input-postFillConstantX").show();
         } else {
-            $("#node-input-postFillConstant").hide();
+            $("#node-input-postFillConstantX").hide();
         }
-        $("#node-input-postFillSelect").on("change", function() {
-            var v = $("#node-input-postFillSelect").val();
+        $("#node-input-postFillSelectX").on("change", function() {
+            var v = $("#node-input-postFillSelectX").val();
             if (v === "constant") {
-                $("#node-input-postFillConstant").show(200).focus();
+                $("#node-input-postFillConstantX").show(200).focus();
             } else {
-                $("#node-input-postFillConstant").hide(200);
+                $("#node-input-postFillConstantX").hide(200);
+            }
+        });
+        // for fillY checkbox
+        if (this.fillY) {
+            $("#fillY").show();
+            $("#infoFillY").hide();
+        } else {
+            $("#fillY").hide();
+            $("#infoFillY").show();
+        }
+        $("#node-input-fillY").on("change", function() {
+            var v = $("#node-input-fillY").prop('checked');
+            if (v) {
+                $("#fillY").show(200).focus();
+                $("#infoFillY").hide(200);
+            } else {
+                $("#fillY").hide(200);
+                $("#infoFillY").show(200).focus();
+            }
+        });
+        // For y
+        if (this.preFillSelectY === "constant") {
+            $("#node-input-preFillConstantY").show();
+        } else {
+            $("#node-input-preFillConstantY").hide();
+        }
+        $("#node-input-preFillSelectY").on("change", function() {
+            var v = $("#node-input-preFillSelectY").val();
+            if (v === "constant") {
+                $("#node-input-preFillConstantY").show(200).focus();
+            } else {
+                $("#node-input-preFillConstantY").hide(200);
+            }
+        });
+        if (this.postFillSelectY === "constant") {
+            $("#node-input-postFillConstantY").show();
+        } else {
+            $("#node-input-postFillConstantY").hide();
+        }
+        $("#node-input-postFillSelectY").on("change", function() {
+            var v = $("#node-input-postFillSelectY").val();
+            if (v === "constant") {
+                $("#node-input-postFillConstantY").show(200).focus();
+            } else {
+                $("#node-input-postFillConstantY").hide(200);
             }
         });
     }
@@ -56,14 +110,19 @@ RED.nodes.registerType('fill missing', {
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
+        <h4>Fill feature values (X)</h4>
+    </div>
+    <div class="form-row">
         <div>
             <label>&nbsp;</label>
-            <label for="node-input-preFillSelect" style="width:auto;">First, try to fill NaN values with</label>
+            <label for="node-input-preFillSelectX" style="width:auto;">First, try to fill NaN values with</label>
         </div>
         <div>
             <label>&nbsp;</label>
-            <select id="node-input-preFillSelect" style="width:190px; margin-left:20px;">
+            <select id="node-input-preFillSelectX" style="width:190px; margin-left:20px;">
                 <option value="none" selected>None</option>
+                <option value="min">Minimum from configuration</option>
+                <option value="max">Maximum from configuration</option>
                 <option value="nearest">Nearest</option>
                 <option value="mean">Mean</option>
                 <option value="median">Median</option>
@@ -73,22 +132,78 @@ RED.nodes.registerType('fill missing', {
                 <option value="quadratic">Quadratic interpolation</option>
                 <option value="cubic">Cubic interpolation</option>
             </select>
-            <input type="number" id="node-input-preFillConstant" value="0" style="width:70px;" placeholder="0">
+            <input type="number" id="node-input-preFillConstantX" value="0" style="width:70px;" placeholder="0">
         </div>
         <div style="margin-top:10px;">
             <label>&nbsp;</label>
-            <label for="node-input-postFillSelect" style="width:auto;">then, fill the remaining NaN values using</label>
+            <label for="node-input-postFillSelectX" style="width:auto;">then, fill the remaining NaN values using</label>
         </div>
         <div>
             <label>&nbsp;</label>
-            <select id="node-input-postFillSelect" style="width:190px; margin-left:20px;">
+            <select id="node-input-postFillSelectX" style="width:190px; margin-left:20px;">
                 <option value="none" selected>None</option>
+                <option value="min">Minimum from configuration</option>
+                <option value="max">Maximum from configuration</option>
                 <option value="constant">Constant</option>
                 <option value="mean">Mean of previous data</option>
                 <option value="median">Median of previous data</option>
                 <option value="last">Last seen data</option>
             </select>
-            <input type="number" id="node-input-postFillConstant" value="0" style="width:70px;" placeholder="0">
+            <input type="number" id="node-input-postFillConstantX" value="0" style="width:70px;" placeholder="0">
+        </div>
+    </div>
+    <hr>
+    <div class="form-row">
+        <label for="node-input-fillY" style="width:auto;">
+            <h4>Fill target values (y)</h4>
+        </label>
+        <input type="checkbox" id="node-input-fillY" style="width:20px; vertical-align:baseline; margin-right:5px;" checked>
+        <!--
+        <label for="node-input-fillY" style="width:auto; padding-top:14px;"> Fill Target</label>
+        -->
+    </div>
+    <p style="border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9;" id="infoFillY">
+        Target values will not be filled.
+    </p>
+    </div>
+    <div class="form-row" id="fillY">
+        <div>
+            <label>&nbsp;</label>
+            <label for="node-input-preFillSelectY" style="width:auto;">First, try to fill NaN values with</label>
+        </div>
+        <div>
+            <label>&nbsp;</label>
+            <select id="node-input-preFillSelectY" style="width:190px; margin-left:20px;">
+                <option value="none" selected>None</option>
+                <option value="min">Minimum from configuration</option>
+                <option value="max">Maximum from configuration</option>
+                <option value="nearest">Nearest</option>
+                <option value="mean">Mean</option>
+                <option value="median">Median</option>
+                <option value="most">Most occurring</option>
+                <option value="constant">Constant</option>
+                <option value="linear">Linear interpolation</option>
+                <option value="quadratic">Quadratic interpolation</option>
+                <option value="cubic">Cubic interpolation</option>
+            </select>
+            <input type="number" id="node-input-preFillConstantY" value="0" style="width:70px;" placeholder="0">
+        </div>
+        <div style="margin-top:10px;">
+            <label>&nbsp;</label>
+            <label for="node-input-postFillSelectY" style="width:auto;">then, fill the remaining NaN values using</label>
+        </div>
+        <div>
+            <label>&nbsp;</label>
+            <select id="node-input-postFillSelectY" style="width:190px; margin-left:20px;">
+                <option value="none" selected>None</option>
+                <option value="min">Minimum from configuration</option>
+                <option value="max">Maximum from configuration</option>
+                <option value="constant">Constant</option>
+                <option value="mean">Mean of previous data</option>
+                <option value="median">Median of previous data</option>
+                <option value="last">Last seen data</option>
+            </select>
+            <input type="number" id="node-input-postFillConstantY" value="0" style="width:70px;" placeholder="0">
         </div>
     </div>
 </script>

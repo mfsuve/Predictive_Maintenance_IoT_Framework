@@ -11,10 +11,16 @@ module.exports = function(RED) {
         node.pynode = 'FillMissing';
 
         node.config = {
-            preFillConstant: parseFloat(config.preFillConstant) || 0,
-            preFillSelect: config.preFillSelect,
-            postFillConstant: parseFloat(config.postFillConstant) || 0,
-            postFillSelect: config.postFillSelect
+            // For X
+            preFillConstantX: parseFloat(config.preFillConstantX) || 0,
+            preFillSelectX: config.preFillSelectX || 'constant',
+            postFillConstantX: parseFloat(config.postFillConstantX) || 0,
+            postFillSelectX: config.postFillSelectX || 'constant',
+            // For Y
+            preFillConstantY: parseFloat(config.preFillConstantY) || 0,
+            preFillSelectY: config.fillY ? (config.preFillSelectY || 'constant') : 'constant',
+            postFillConstantY: parseFloat(config.postFillConstantY) || 0,
+            postFillSelectY: config.fillY ? (config.postFillSelectY || 'constant') : 'constant'
         };
 
         utils.run(RED, node, config);
