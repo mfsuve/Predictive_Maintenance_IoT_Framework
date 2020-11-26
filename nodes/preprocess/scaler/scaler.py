@@ -47,7 +47,7 @@ class MinMaxScaler(Data):
         # * Assure that all the values are in [0, 1] (ignoring NaN values)
         _X = X[self.columns]
         # assert (((_X >= 0) & (_X <= 1)) | _X.isna()).all().all()
-        if (((_X >= 0) & (_X <= 1)) | _X.isna()).all().all() and self.warn:
+        if not (((_X >= 0) & (_X <= 1)) | _X.isna()).all().all() and self.warn:
             self.warning(f"There are some numeric columns detected having values outside of the range of min and max values of corresponding column.")
             self.warn = False
         
