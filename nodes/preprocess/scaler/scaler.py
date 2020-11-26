@@ -16,11 +16,16 @@ class MinMaxScaler(Data):
         self.scaler = MMS()
         config = Config()
         X, _ = data.get()
-        ranges = pd.DataFrame(index=range(2), columns=X.columns)
-        for col in ranges.columns:
-            ranges.loc[0, col] = config.min(col)
-            ranges.loc[1, col] = config.max(col)
+        ranges = pd.DataFrame()
+        warn = True
+        for col in X.columns:
+            if pd.api.types.is_numeric_dtype(X[col].dtype):
+                ranges[col] = [config.min(col), config.max(col)]
+            elif warn:
+                self.warning(f"There are categorical values in the data, they will not be scaled.")
+                warn = False
         self.scaler.fit(ranges)
+        self.columns = list(ranges.columns)
 
     def function(self, data):
         if data.type != InputType.DATA:
@@ -29,10 +34,7 @@ class MinMaxScaler(Data):
         
         X, y = data.get()
         
-        if not all(map(pd.api.types.is_numeric_dtype, X.dtypes)) or not pd.api.types.is_numeric_dtype(y.dtype):
-            raise ValueError(f"Data needs to contain only numerical values in order to be scaled, but there are non numeric values in the data.")
-        
-        X[:] = self.scaler.transform(X)
+        X[self.columns] = self.scaler.transform(X[self.columns])
         
         # print('Scaled min:', X.min())
         # print('Scaled max:', X.max())
@@ -42,7 +44,8 @@ class MinMaxScaler(Data):
         
         # TODO: Might delete this later for performance
         # * Assure that all the values are in [0, 1] (ignoring NaN values)
-        assert (((X >= 0) & (X <= 1)) | X.isna()).all().all()
+        _X = X[self.columns]
+        assert (((_X >= 0) & (_X <= 1)) | _X.isna()).all().all()
         
         self.send_next_node((X, y))
         self.done()
