@@ -125,37 +125,11 @@ class FillMissing(Data):
         
         X, y = data.get()
         
-        X = self.pre_fill_X(X, preFillSelectX) # Median
-        self.warning(f"pre_fill_X")
-        for col in X.columns:
-            if X[col].isna().any():
-                self.warning(f"{col} has None\ndtype: {X[col].dtype}")
-        if y.isna().any():
-            self.warning(f"y has None")
+        X = self.pre_fill_X(X, preFillSelectX)
+        X = self.post_fill_X(X, postFillSelectX)
         
-        X = self.post_fill_X(X, postFillSelectX) # Median
-        self.warning(f"post_fill_X")
-        for col in X.columns:
-            if X[col].isna().any():
-                self.warning(f"{col} has None\ndtype: {X[col].dtype}")
-        if y.isna().any():
-            self.warning(f"y has None")
-        
-        y = self.pre_fill_y(y, preFillSelectY) # Mean
-        self.warning(f"pre_fill_y")
-        for col in X.columns:
-            if X[col].isna().any():
-                self.warning(f"{col} has None\ndtype: {X[col].dtype}")
-        if y.isna().any():
-            self.warning(f"y has None")
-        
-        y = self.post_fill_y(y, postFillSelectY) # Min
-        self.warning(f"post_fill_y")
-        for col in X.columns:
-            if X[col].isna().any():
-                self.warning(f"{col} has None\ndtype: {X[col].dtype}")
-        if y.isna().any():
-            self.warning(f"y has None")
+        y = self.pre_fill_y(y, preFillSelectY)
+        y = self.post_fill_y(y, postFillSelectY)
         
         assert not (X.isna().any().any() or y.isna().any())
         
@@ -184,7 +158,7 @@ class FillMissing(Data):
                 newX = newX.interpolate(method='spline', order=order, limit_direction='both')
             except ValueError:
                 self.warning(f"Can't use {preFillSelectX} interpolation for the first fill on this data, it will be filled on the second fill.")
-            else: # Defined newX and newy not to change them if ValueError happens
+            else: # Defined newX not to change them if ValueError happens
                 X = newX
         return X
     
@@ -196,21 +170,12 @@ class FillMissing(Data):
                 X = X.fillna(self.postFillConstantX)
             else:
                 X = X.fillna(self.valX)
-                for col in X.columns:
-                    if X[col].isna().any():
-                        self.warning(f"After filling in postfillX:\n{col} has None\ndtype: {X[col].dtype}")
-                self.warning(f"X.columns:\n{X.columns}")
-                self.warning(f"valX.columns:\n{self.valX.index}")
                 if postFillSelectX == 'mean':
-                    self.warning(f"Filling with mean")
                     self.valX = X.mean()
                 elif postFillSelectX == 'median':
-                    self.warning(f"Filling with median")
                     self.valX = X.median()
                 elif postFillSelectX == 'last':
-                    self.warning(f"Filling with last")
                     self.valX = X.iloc[-1]
-                self.warning(f"new valX nan indices: {self.valX.isna().to_numpy().nonzero()[0]}")
                 self.valX = self.valX.reindex(X.columns).fillna(self.postFillConstantX)
         return X
 
