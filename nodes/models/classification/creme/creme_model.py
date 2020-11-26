@@ -2,29 +2,27 @@ from utils.utils import myprint as print
 from utils.node import Model
 from river import metrics
 from river import stream
-# from river import imblearn # TODO: After pypi release of river (aka. creme)
 from utils.io import InputType
 from utils.config import Config
 import numpy as np
 import pandas as pd
+from copy import deepcopy
 
 class CremeModel(Model):
     
     def __init__(self, *args, model):
         super().__init__(*args)
-        # self.hard_sample = self.node_config['hardSample'] # TODO: After pypi release of river (aka. creme)
+        # TODO: Model loading'i test et
         if 'loadFrom' in self.node_config:
             self.load(self.node_config['loadFrom'])
         else:
             self.model = model
-            # if self.hard_sample: # TODO: After pypi release of river (aka. creme)
-                # TODO: DO Hard Sampling here
         self.metric = metrics.Accuracy()
         self.count = 0
         self.status(f'Trained with {self.count} data')
+        self.next_propagate = 1
         
-    # def function(self, data, hardSample, loadFrom=None): # TODO: After pypi release of river (aka. creme)
-    def function(self, data, loadFrom=None):
+    def function(self, data, propagateMode, propagateAfter, loadFrom=None):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         
@@ -43,7 +41,9 @@ class CremeModel(Model):
         self.count += X.shape[0]
         
         self.send_nodered(None, {'accuracy': acc_values, 'num_data': self.count})
-        self.send_next_node((self, False))
+        if propagateMode == 'always' or self.count // propagateAfter >= self.next_propagate:
+            self.send_next_node((self, False))
+            self.next_propagate = (self.count // propagateAfter) + 1
         self.status(f'Trained with {self.count} data')
         
     def predict(self, X):
@@ -60,11 +60,6 @@ class CremeModel(Model):
         super().save(folder, prefix, obj)
         
     def load(self, path):
-        # check = {
-        #     'hard_sample': 'hard sampling'
-        # } # TODO: After pypi release of river (aka. creme)
-        # obj = super().load(path, check) # TODO: After pypi release of river (aka. creme)
         obj = super().load(path)
         self.model = obj['model']
-        # self.hard_sample = obj['hard_sample'] # TODO: After pypi release of river (aka. creme)
         self.send_next_node((self, True))

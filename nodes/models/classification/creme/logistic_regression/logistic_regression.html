@@ -5,7 +5,11 @@ RED.nodes.registerType('logistic_regression', {
     defaults: {
         name: {value:""},
         loadModel: {value:false},
-        loadFolder: {value:""}
+        loadFolder: {value:""},
+        propagateMode: {value:"after"},
+        propagateAfter: {value:1000, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }}
     },
     inputs:1,
     outputs:2,
@@ -32,6 +36,28 @@ RED.nodes.registerType('logistic_regression', {
                 $("#load").hide(200);
             }
         });
+
+        if (this.propagateMode == "after") {
+            $("#propagateAfter").show();
+            $("#after-message").show();
+            $("#always-message").hide();
+        } else {
+            $("#propagateAfter").hide();
+            $("#always-message").show();
+            $("#after-message").hide();
+        }
+        $("#node-input-propagateMode").on("change", function() {
+            var v = $("#node-input-propagateMode").val();
+            if (v == "after") {
+                $("#propagateAfter").show(200);
+                $("#after-message").show(200);
+                $("#always-message").hide(200);
+            } else {
+                $("#propagateAfter").hide(200);
+                $("#always-message").show(200);
+                $("#after-message").hide(200);
+            }
+        });
     }
 });
 </script>
@@ -50,9 +76,29 @@ RED.nodes.registerType('logistic_regression', {
     </div>
     <div id="load">
         <div class="form-row">
-            <label for="node-input-loadFolder"><i class="fa fa-folder"></i> Model Folder</label>
+            <label for="node-input-loadFolder"><i class="fa fa-folder"></i> Model folder</label>
             <input type="text" id="node-input-loadFolder" value="">
         </div>
+    </div>
+    <div class="form-row" style="margin-top:30px;">
+        <label for="node-input-propagateMode" style="width:auto;"><i class="fa fa-arrow-right"></i> Propagate Mode</label>
+        <br>
+        <label>&nbsp;</label>
+        <select id="node-input-propagateMode">
+            <option value="always">Always</option>
+            <option value="after" selected>Sequential</option>
+        </select>
+        <div id="propagateAfter" style="padding-left:30px; padding-top:20px;">
+            <label for="node-input-propagateAfter" style="width:auto;">Propagate new model after trained with </label>
+            <input type="number" style="width:70px;" id="node-input-propagateAfter" value="1000" min="1">
+            <label for="node-input-propagateAfter">  data</label>
+        </div>
+        <p style="width:400px; border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9;" id="after-message">
+            Model will be propagated <em>after</em> the training is done with the incoming data if the number of trained data passed the next multiple of the value specified above.
+        </p>
+        <p style="width:400px; border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9;" id="always-message">
+            Model will be propagated <em>after</em> each training is done with the incoming data.
+        </p>
     </div>
 </script>
 

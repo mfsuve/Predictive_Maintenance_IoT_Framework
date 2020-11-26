@@ -11,7 +11,10 @@ module.exports = function(RED) {
 
         node.hideProcessing = true;
 
-        node.config = {};
+        node.config = {
+            propagateMode: parseInt(config.propagateAfter) < 2 ? "always" : config.propagateMode,
+            propagateAfter: parseInt(config.propagateAfter)
+        };
 
         if (config.loadModel)
             node.config.loadFrom = config.loadFolder.trim();
