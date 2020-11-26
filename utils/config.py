@@ -75,6 +75,12 @@ class Config(metaclass=SingletonMeta):
             raise ConfigError("Number of names and classes should be the same in the data configuration file.")
         
         self.class_name_dict = dict(zip(self.classes(), self.names()))
+        self.__is_target_numeric = True
+        for c in self.classes():
+            try:
+                tmp = int(c)
+            except:
+                self.__is_target_numeric = False
         
             
     def transform_label(self, transform):
@@ -119,6 +125,18 @@ class Config(metaclass=SingletonMeta):
             # If the column is not found, then it is categorical (Because I make sure all columns are there when loading)
             # OneHotEncoded min is 0
             return 1
+        
+    def min_y(self, X_encoded=False):
+        if X_encoded and not self.__is_target_numeric:
+            return 0
+        else:
+            return min(self.classes())
+        
+    def max_y(self, X_encoded=False):
+        if X_encoded and not self.__is_target_numeric:
+            return len(self.classes())
+        else:
+            return max(self.classes())
     
     def categories(self, column):
         return self['columns'][column]['categories']
