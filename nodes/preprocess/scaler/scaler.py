@@ -11,6 +11,7 @@ class MinMaxScaler(Data):
     
     def __init__(self, *args):
         super().__init__(*args)
+        self.warn = True
         
     def first_called(self, data):
         self.scaler = MMS()
@@ -45,7 +46,10 @@ class MinMaxScaler(Data):
         # TODO: Might delete this later for performance
         # * Assure that all the values are in [0, 1] (ignoring NaN values)
         _X = X[self.columns]
-        assert (((_X >= 0) & (_X <= 1)) | _X.isna()).all().all()
+        # assert (((_X >= 0) & (_X <= 1)) | _X.isna()).all().all()
+        if (((_X >= 0) & (_X <= 1)) | _X.isna()).all().all() and self.warn:
+            self.warning(f"There are some numeric columns detected having values outside of the range of min and max values of corresponding column.")
+            self.warn = False
         
         self.send_next_node((X, y))
         self.done()
