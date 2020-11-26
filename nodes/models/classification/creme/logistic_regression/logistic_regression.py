@@ -1,6 +1,5 @@
 from utils.utils import myprint as print
-from creme import linear_model
-from creme import optim
+from river import linear_model
 from nodes.models.classification.creme.creme_model import CremeModel
 
 class LogisticRegression(CremeModel):
