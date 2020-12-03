@@ -24,12 +24,10 @@ class StoreDataset(Node):
     
     
     def first_called(self, data, path, numrows):
-        print('Store | init', 'numrows', numrows)
         self.X = pd.DataFrame(index=range(numrows), columns=Config().columns() + ['target'])
         
 
     def append(self, X, numrows):
-        print('Store | append', 'X', X)
         next_index = self.index + X.shape[0]
         if next_index > numrows:
             remaining_size = numrows - self.index
@@ -57,7 +55,6 @@ class StoreDataset(Node):
     def save_and_reset(self, numrows, path):
         self.index = 0
         next_path = next(path)
-        print('Store | save and reset', 'path:', next_path)
         self.X.to_csv(next_path, header=True, index=False)
         self.send_nodered(next_path)
         self.done()
@@ -71,16 +68,8 @@ class StoreDataset(Node):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be data coming from a data node but got from a '{data.type.name.lower()}' node")
         
-        # TODO: Data combine node
-        
         path = self.get_path(path)
         
         full = self.append(combine_data(*data.get()).to_numpy(), numrows)
-        print('Store | 1. full', full)
         while full:
             full = self.save_and_reset(numrows, path)
-            print('Store | 2. full', full)
-
-        # self.done()
-    
-    
