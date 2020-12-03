@@ -1,6 +1,4 @@
 import pandas as pd
-import sys
-import json
 import numpy as np
 
 from utils.config import Config
@@ -15,9 +13,19 @@ class BalanceData(Data):
     
     def __init__(self, *args):
         super().__init__(*args)
-        module, sampling_type = self.node_config['sampling_type'].split()
-        self.sampler = imblearn.__getattribute__(module).__getattribute__(sampling_type)()
+        _, sampling_type = self.node_config['sampling_type'].split()
         self.status(sampling_type)
+        
+        
+    def first_called(self, data, sampling_type):
+        module, sampling_type = sampling_type.split()
+        config = Config()
+        X, y = data.get()
+        if sampling_type == 'SMOTENC':
+            cat_cols = [i for i, col in enumerate(X.columns) if config.is_categoric(col)]
+            self.sampler = imblearn.__getattribute__(module).__getattribute__(sampling_type)(cat_cols)
+        else:
+            self.sampler = imblearn.__getattribute__(module).__getattribute__(sampling_type)()
         
     
     def function(self, data, sampling_type):
