@@ -40,3 +40,4 @@ class BalanceData(Data):
         print(f"Class sizes before balancing:", sorted(list(Counter(y).items())), f"Class sizes after balancing:", sorted(list(Counter(y_res).items())))
         
         self.send_next_node((X_res, y_res))
+        self.done()

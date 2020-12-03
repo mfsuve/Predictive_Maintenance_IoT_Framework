@@ -82,14 +82,12 @@ class DeepGenerativeReplay(Model):
             self.X[self.size:self.size+input_size] = X_in
             self.y[self.size:self.size+input_size] = y_in
             self.size += input_size
-        print(f'DGR | input size: {input_size}', f'DGR | size: {self.size}', f'DGR | full: {self.size >= self.task_size}', f'DGR | task size: {self.task_size}')
         self.status(f'{self.size}/{self.task_size} | trained {self.task}')
         return self.size >= self.task_size
                 
     
     # * Call only when full
     def reset_data(self):
-        print(f'DGR | reset_data()')
         # * copying previous model and generator
         self.prev_model = copy.deepcopy(self.model).eval()
         self.prev_generator = copy.deepcopy(self.generator).eval()
@@ -105,7 +103,6 @@ class DeepGenerativeReplay(Model):
             
     def train(self, epochs, batchSize):
         self.task += 1
-        print(f'task: {self.task}')
         # Training mode
         self.model.train()
         self.generator.train()
@@ -120,14 +117,11 @@ class DeepGenerativeReplay(Model):
         loss_values = []
         acc_values = []
         
-        print(f'DGR | Number of 1 class: {(self.y == 1).sum()}', f'DGR | Number of 0 class: {(self.y == 0).sum()}')
         print(f'epochs: {epochs}', f'batch size: {batchSize}')
         for epoch in range(1, epochs + 1): # ? I added this
             total_correct, total_loss = 0, 0
-            print(f'{epoch:>5} Epoch')
             for batch, (x, y) in enumerate(data_loader, 1):
                 x, y = x.to(device), y.to(device, dtype=torch.int64)
-                print(f'{batch:>9} Batch')
                 if self.prev_generator is not None:
                     gen_x = self.prev_generator.sample(batchSize)
                     gen_scores = self.prev_model(gen_x)
@@ -145,15 +139,11 @@ class DeepGenerativeReplay(Model):
             loss_values.append(total_loss)
             acc_values.append(total_correct)
         
-        # TODO: train_count might not be necessary
+        # ? train_count might not be necessary
         self.send_nodered(None, {'loss': loss_values, 'accuracy': acc_values, 'train_count': self.task})
         self.send_next_node((self, False))
+        self.done()
         
-        with open('Loss_Hydraulic_Systems.txt', 'a') as file:
-            for i in loss_values:
-                file.write(f'{i}\n')
-            file.write(f'TASK {self.task} msg #1: {(self.y == 1).sum()} | #0: {(self.y == 0).sum()}\n')
-
 
     def predict(self, X):
         self.model.eval()
@@ -206,9 +196,6 @@ class DeepGenerativeReplay(Model):
             # Loading old model if it is asked
             if loadFrom is not None:
                 self.load(loadFrom)
-                print(f'DGR | Successfully loaded from {loadFrom}')
-            else:
-                print(f'DGR | Not loading from any model')
         else:   
             X_in, y_in = data
             if y_in is None:

@@ -37,16 +37,9 @@ class MinMaxScaler(Data):
         
         X[self.columns] = self.scaler.transform(X[self.columns])
         
-        # print('Scaled min:', X.min())
-        # print('Scaled max:', X.max())
-        
-        # print('almost_le(0, X):', almost_le(0, X).all())
-        # print('almost_le(X, 1):', almost_le(X, 1).all())
-        
         # TODO: Might delete this later for performance
         # * Assure that all the values are in [0, 1] (ignoring NaN values)
         _X = X[self.columns]
-        # assert (((_X >= 0) & (_X <= 1)) | _X.isna()).all().all()
         if not (((_X >= 0) & (_X <= 1)) | _X.isna()).all().all() and self.warn:
             self.warning(f"There are some numeric columns detected having values outside of the range of min and max values of corresponding column.")
             self.warn = False

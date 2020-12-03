@@ -24,14 +24,12 @@ class ReplayData(Data):
             try:
                 replayed = self.q.popleft()
                 self.send_nodered(replayed)
-                print('ReplayData | Replayed data:', replayed, f'ReplayData | Current Lenght: {len(self.q)}')
+                self.done()
             except IndexError:
                 self.warning('There is no data to be replayed')
-                print('ReplayData | Tried to replay but there is no data', f'ReplayData | Current Lenght: {len(self.q)}')
         else:
             combined = combine_data(*data.get())
             self.q.extend([e[1] for e in combined.iterrows()])
-            print('ReplayData | Stored data', f'ReplayData | Current Lenght: {len(self.q)}')
                 
         self.status(f'data size: {len(self.q)}')
     

@@ -40,17 +40,21 @@ const initProc = (env) => {
                 node = nodes[nodeid];
 
                 if (_data.status) {
-                    // Change Status
-                    node.status(status.TEXT(_data.status));
+                    // Change Status Text
+                    node.status(node.currentStatus.text(_data.status).get());
                 } else if (_data.done) {
                     // Set status as 'DONE'
-                    node.status(status.DONE);
+                    node.status(node.currentStatus.fill('green').get());
+                } else if (_data.processing) {
+                    // Set status as 'PROCESSING'
+                    node.status(node.currentStatus.fill('yellow').get());
                 } else if (_data.none) {
                     // Set status as 'NONE' (clear status)
-                    node.status(status.NONE);
+                    node.status(node.currentStatus.clear());
                 } else if (_data.warning) {
                     // Display warning message
                     node.warn(_data.warning);
+                    node.status(node.currentStatus.fill('blue').get());
                 } else {
                     // Send message to nodered to print it in debug node
                     message = Array(node.wires.length);
@@ -96,7 +100,7 @@ const initProc = (env) => {
                 try {
                     _data = JSON.parse(_data.toString());
                     node = nodes[_data.nodeid];
-                    node.status(status.ERROR)
+                    node.status(node.currentStatus.fill('red').text('error').get())
                     node.error(_data.error);
                 } catch (err) {
                     console.log("In stderr of process | Catched error:");
@@ -125,6 +129,7 @@ module.exports = {
 
         if (node.config === undefined)
             node.config = {};
+        node.currentStatus = new status.Status();
 
         console.log("Saving node with id:");
         console.log("    " + node.id);
@@ -147,9 +152,6 @@ module.exports = {
 
             if (node.onmessage != undefined)
                 node.onmessage(msg);
-
-            if (!node.hideProcessing)
-                node.status(status.PROCESSING);
 
             node.config.id = node.id;
 

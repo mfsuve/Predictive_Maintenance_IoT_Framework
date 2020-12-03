@@ -33,7 +33,6 @@ class Combine(Data):
         
         if len(self.Xs) < numData - 1:
             self.append(X, y)
-            self.status(f'{len(self.Xs)}/{numData}')
         else:
             self.append(X, y)
             if y is None:
@@ -43,5 +42,7 @@ class Combine(Data):
             self.Xs.clear()
             self.ys.clear()
             self.done()
+            
+        self.status(f'{len(self.Xs)}/{numData}')
         
     

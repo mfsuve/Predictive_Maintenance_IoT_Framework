@@ -78,7 +78,6 @@ class SimpleEncoder(BaseEncoder):
     
     def transform(self, X, y):
         cat_cols = self.config.categoric_columns
-        # X[cat_cols] = X[cat_cols].apply(lambda col: self.encoders[col.name].transform(col))
         X[cat_cols] = X[cat_cols].apply(
             lambda col: self.transform_ignore_nan(col, self.config.categories(col.name)[0], self.encoders[col.name])
         )
@@ -100,7 +99,6 @@ class OneHotEncoder(BaseEncoder):
                     self.columns.append(f'{col}_{cat}')
     
     def transform(self, X, y):
-        # X = pd.get_dummies(X, drop_first=True)
         X = pd.get_dummies(X, columns=self.categorical_columns)
         X = X.reindex(columns=self.columns, fill_value=0)
         return X, super().transform(X, y)

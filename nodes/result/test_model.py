@@ -50,6 +50,7 @@ class TestModel(Node):
         if data.type == InputType.MODEL:
             self.model, _ = data.get()
             self.status(f'Model: {self.model.name}')
+            self.done()
             # Resetting all the metrics since a new version of the model has come
             if resetAfterTraining:
                 for metric in self.metrics:
@@ -76,6 +77,7 @@ class TestModel(Node):
             msg['total_tested'] = self.total_tested
 
             self.send_nodered(msg)
+            self.done()
         else:
             self.warning('There is no model to test')
 

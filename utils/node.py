@@ -51,6 +51,7 @@ class Node:
         for data, node_config in iter(self.__input_queue.get, None):
             print(self.name, '** node_config **:', node_config, '** data **:', data)
             try:
+                self.__processing()
                 self.__function(data, **node_config)
                 print(f'{self.name}.function is done!')
             except Exception as e: # In case of an exception
@@ -66,6 +67,10 @@ class Node:
 
     def __error(self, message=''):
         log.error(json.dumps({'nodeid': self.id, 'error': f'{message}'}))
+        
+    
+    def __processing(self):
+        log.info(json.dumps({'nodeid': self.id, 'processing': True}))
     
     
     def done(self):

@@ -8,6 +8,10 @@ import numpy as np
 import pandas as pd
 from copy import deepcopy
 
+
+# TODO: Ses kaydını dinle, orada dediklerini yap
+# TODO: Buraya biraz daha model ekle (river'ın documentation'unundan bak)
+
 class CremeModel(Model):
     
     def __init__(self, *args, model):
@@ -31,7 +35,7 @@ class CremeModel(Model):
         
         acc_values = []
         y_preds = []
-        for i, (_X, _y) in enumerate(stream.iter_pandas(X, y, shuffle=True)):
+        for _X, _y in stream.iter_pandas(X, y, shuffle=True):
             y_pred = self.model.predict_one(_X)
             if y_pred is not None:
                 y_preds.append(y_pred)
@@ -43,6 +47,7 @@ class CremeModel(Model):
         self.send_nodered(None, {'accuracy': acc_values, 'num_data': self.count})
         if propagateMode == 'always' or self.count // propagateAfter >= self.next_propagate:
             self.send_next_node((self, False))
+            self.done()
             self.next_propagate = (self.count // propagateAfter) + 1
         self.status(f'Trained with {self.count} data')
         
