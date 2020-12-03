@@ -131,7 +131,7 @@ class FillMissing(Data):
         y = self.pre_fill_y(y, preFillSelectY)
         y = self.post_fill_y(y, postFillSelectY)
         
-        assert not (X.isna().any().any() or y.isna().any())
+        assert not X.isna().any().any() and (y is None or not y.isna().any())
         
         self.send_next_node((X, y))
         self.done()
@@ -219,6 +219,8 @@ class FillMissing(Data):
     
         
     def post_fill_y(self, y, postFillSelectY):
+        if y is None:
+            return None
         # Filling the remaining missing values using the stats of old data
         if postFillSelectY != 'none':
             if postFillSelectY in ['constant', 'min', 'max']:
