@@ -1,4 +1,8 @@
 import json
+
+from numpy.core import machar
+from numpy.lib.function_base import select
+
 from utils.singleton import SingletonMeta
 from utils.utils import myprint as print
 
@@ -75,12 +79,7 @@ class Config(metaclass=SingletonMeta):
             raise ConfigError("Number of names and classes should be the same in the data configuration file.")
         
         self.class_name_dict = dict(zip(self.classes(), self.names()))
-        self.__is_target_numeric = True
-        for c in self.classes():
-            try:
-                tmp = int(c)
-            except:
-                self.__is_target_numeric = False
+        self.__is_target_numeric = all(not isinstance(c, str) for c in self.classes())
         
             
     def transform_label(self, transform):
@@ -104,9 +103,19 @@ class Config(metaclass=SingletonMeta):
         '''Same from the config file (unchanged)'''
         return not self.is_categoric(column)
     
+    def is_target_numeric(self):
+        '''Returns if target has only non-string values'''
+        return self.__is_target_numeric
+    
+    def is_target_categoric(self):
+        '''Returns if target has any string values'''
+        return not self.is_target_numeric()
+    
     def min(self, column):
+        '''Gives the minimum of the column
+        (Assumes encoded for the categorical columns)'''
         if column in self.categoric_columns:
-            # If column categorical, then it must be SimpleEncoded
+            # If column is categorical, then it must be SimpleEncoded
             return 0
         elif column in self.numeric_columns:
             # If column is numeric take the min of it
@@ -117,8 +126,10 @@ class Config(metaclass=SingletonMeta):
             return 0
         
     def max(self, column):
+        '''Gives the maximum of the column
+        (Assumes encoded for the categorical columns)'''
         if column in self.categoric_columns:
-            # If column categorical, then it must be SimpleEncoded
+            # If column is categorical, then it must be SimpleEncoded
             return len(self.categories(column)) - 1
         elif column in self.numeric_columns:
             # If column is numeric take the min of it
@@ -128,18 +139,22 @@ class Config(metaclass=SingletonMeta):
             # OneHotEncoded max is 1
             return 1
         
-    def min_y(self, X_encoded=False):
-        if X_encoded and not self.__is_target_numeric:
-            return 0
-        else:
+    def min_y(self, encoded=False):
+        if self.is_target_numeric():
             return min(self.classes())
-        
-    def max_y(self, X_encoded=False):
-        if X_encoded and not self.__is_target_numeric:
-            return len(self.classes())
+        elif encoded:
+            return 0 # minimum for simple encoding (I always simple encode target aka. y)
         else:
+            raise ValueError(f"Categorical column can't have minimum value. If your data has categorical targets, you can pass it through an encoding node.")
+        
+    def max_y(self, encoded=False):
+        if self.is_target_numeric():
             return max(self.classes())
-    
+        elif encoded:
+            return len(self.classes()) # maximum for simple encoding (I always simple encode target aka. y)
+        else:
+            raise ValueError(f"Categorical column can't have maximum value. If your data has categorical targets, you can pass it through an encoding node.")
+        
     def categories(self, column):
         return self['columns'][column]['categories']
         

@@ -18,6 +18,7 @@ module.exports = function(RED) {
             removeAllnan: config.removeAllnan,
             removeAllsame: config.removeAllsame,
             hasTarget: config.hasTarget,
+            encoded: config.encoded
         };
         node.onmessage = (msg) => {
             if (node.config.isFile) {

@@ -9,6 +9,8 @@ from utils.utils import myprint as print
 from utils.node import Data, Node
 from utils.io import InputType
 
+# TODO: Add option to select if data was pre-encoded
+
 class LoadDataset(Data):
     
     def load(self, path, hasheader, hasTarget, target_col, column_names):
@@ -70,12 +72,12 @@ class LoadDataset(Data):
         return X.reset_index(drop=True), y
 
 
-    def function(self, data, configPath, isFile, path, col, hasheader, removeAllnan, removeAllsame, hasTarget):
+    def function(self, data, configPath, isFile, path, col, hasheader, removeAllnan, removeAllsame, hasTarget, encoded):
         
         # Setting up Config Singleton class and getting the column names
         column_names = Config(configPath).columns()
         
-        if not path.endswith('.csv'):
+        if not path.strip().endswith('.csv'):
             raise ValueError(f"The file to be loaded needs to be a csv file but got {path}")
         
         if isFile:
@@ -90,15 +92,20 @@ class LoadDataset(Data):
             # Reading the data from strings of data
             if data.type != InputType.NODERED:
                 raise TypeError(f"Input needs to be string coming from node-red while reading from strings of data but got from a '{data.type.name.lower()}' node")
-            X, y = self.load(StringIO(data.get()), hasheader, hasTarget, col, column_names)
+            X, y = self.load(StringIO(data.get()), hasheader, hasTarget, col, column_names) # StringIO is for reading csv from string (data.get() is expected to return string)
             print(f'Loaded dataset from incoming data', f'X.shape is {X.shape}', f'y is None' if y is None else f'y.shape is {y.shape}')
             # Dropping all nan rows and cols, all same cols (in case they were wanted to be dropped)
             X, y = self.drop_unimportant(X, y, False, False)
 
+        X_has_categorical = not all([pd.api.types.is_numeric_dtype(dtype) for dtype in X.dtypes])
+        y_is_categorical = not pd.api.types.is_numeric_dtype(y.dtype)
+        
         if X.empty:
             self.clear_status()
             self.warning('Since loaded data was either empty or consisted of all NaN values, it is not transmitted to the next node.')
+        elif encoded and (X_has_categorical or y_is_categorical):
+            raise ValueError(f"Expected to load encoded data but the {'data' if X_has_categorical else 'target'} has categorical values")
         else:
-            self.send_next_node((X, y))
+            self.send_next_node((X, y, encoded))
             self.done()
     

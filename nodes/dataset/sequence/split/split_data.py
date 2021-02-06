@@ -16,7 +16,7 @@ class Split(Data):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         
-        X, y = data.get()
+        X, y, encoded = data.get()
         num_rows, _ = X.shape
         
         shuffled_indices = np.random.choice(X.index, size=num_rows, replace=False) if shuffle else X.index
@@ -33,6 +33,6 @@ class Split(Data):
             y1 = y.reindex(indices1).reset_index(drop=True)
             y2 = y.reindex(indices2).reset_index(drop=True)
         
-        self.send_next_node((X1, y1), (X2, y2))
+        self.send_next_node((X1, y1, encoded), (X2, y2, encoded))
         self.done()
     

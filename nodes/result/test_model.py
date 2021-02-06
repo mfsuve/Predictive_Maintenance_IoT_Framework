@@ -32,13 +32,15 @@ class TestModel(Node):
         if precision:
             P = RunningPrecision(predictions, names)
             self.metrics.append(P)
+        else:
+            P = None
         if recall:
             R = RunningRecall(predictions, names)
             self.metrics.append(R)
+        else:
+            R = None
         if f1:
-            F = RunningF1(predictions, names,
-                          P if precision else None,
-                          R if recall else None)
+            F = RunningF1(predictions, names, P, R)
             self.metrics.append(F)
     
     
@@ -57,8 +59,9 @@ class TestModel(Node):
                     metric.reset()
                 self.total_tested = 0
                 self.send_nodered({'reset': True}) # To reset the training plots
+                
         elif self.model is not None:
-            X, y = data.get()
+            X, y, encoded = data.get()
             assert isinstance(X, pd.DataFrame) and isinstance(y, pd.Series)
             
             print('Testing model', f'X.shape: {X.shape}', f'y_true.shape: {y.shape if y is not None else "None"}')
@@ -78,6 +81,7 @@ class TestModel(Node):
 
             self.send_nodered(msg)
             self.done()
+            
         else:
             self.warning('There is no model to test')
 

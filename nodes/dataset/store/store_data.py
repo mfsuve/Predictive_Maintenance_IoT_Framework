@@ -70,6 +70,7 @@ class StoreDataset(Node):
         
         path = self.get_path(path)
         
-        full = self.append(combine_data(*data.get()).to_numpy(), numrows)
+        X, y, encoded = data.get()
+        full = self.append(combine_data(X, y).to_numpy(), numrows)
         while full:
             full = self.save_and_reset(numrows, path)

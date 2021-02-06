@@ -20,7 +20,7 @@ class BalanceData(Data):
     def first_called(self, data, sampling_type):
         module, sampling_type = sampling_type.split()
         config = Config()
-        X, y = data.get()
+        X, y, encoded = data.get()
         if sampling_type == 'SMOTENC':
             cat_cols = [i for i, col in enumerate(X.columns) if config.is_categoric(col)]
             self.sampler = imblearn.__getattribute__(module).__getattribute__(sampling_type)(cat_cols, n_jobs=-1)
@@ -33,14 +33,14 @@ class BalanceData(Data):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         
-        X, y = data.get()
+        X, y, encoded = data.get()
         try:
             X_res, y_res = self.sampler.fit_resample(X, y)
         except ValueError as e:
-            raise ValueError(f"Can't use {sampling_type} with categorical values. You can either select SMOTENC or use encoder node prior to this node.")
+            raise ValueError(f"Can't use {sampling_type} with categorical values. You can either select SMOTENC or use an encoder node before this node.")
         
         print(f"type(X_res): {type(X_res)}", f"type(y_res): {type(y_res)}", f"X.columns:", X.columns)
         print(f"Class sizes before balancing:", sorted(list(Counter(y).items())), f"Class sizes after balancing:", sorted(list(Counter(y_res).items())))
         
-        self.send_next_node((X_res, y_res))
+        self.send_next_node((X_res, y_res, encoded))
         self.done()

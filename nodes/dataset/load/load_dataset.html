@@ -8,6 +8,7 @@ RED.nodes.registerType('load dataset', {
         method: {value:"file"},
         hasheader: {value:true},
         hasTarget: {value:true},
+        encoded: {value:false},
         // csv file options
         foldername: {value:""},
         filename: {value:"data.csv"},
@@ -114,6 +115,11 @@ RED.nodes.registerType('load dataset', {
         <label>&nbsp;</label>
         <input type="checkbox" id="node-input-hasheader" style="width:20px; vertical-align:baseline; margin-right:5px;" checked>
         <label for="node-input-hasheader" style="width:300px;"> Has header</label>
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-encoded" style="width:20px; vertical-align:baseline; margin-right:5px;">
+        <label for="node-input-encoded" style="width:300px;"> Encoded</label>
     </div>
     <div id="csv_settings">
         <hr align="middle"/>

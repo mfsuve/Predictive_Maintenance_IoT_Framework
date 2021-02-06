@@ -30,7 +30,7 @@ class CremeModel(Model):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         
-        X, y = data.get()
+        X, y, encoded = data.get()
         assert isinstance(X, pd.DataFrame) and isinstance(y, pd.Series)
         
         acc_values = []

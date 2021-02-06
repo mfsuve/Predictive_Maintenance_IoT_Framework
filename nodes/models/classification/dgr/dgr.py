@@ -35,7 +35,7 @@ class DeepGenerativeReplay(Model):
         self.task_size = taskSize
         num_classes = Config().num_classes
                 
-        X_in, y_in = data
+        X_in, y_in, encoded = data
         # Getting num_feature from X_in since it might have been onehot encoded
         num_features = X_in.shape[1]
         
@@ -197,7 +197,7 @@ class DeepGenerativeReplay(Model):
             if loadFrom is not None:
                 self.load(loadFrom)
         else:   
-            X_in, y_in = data
+            X_in, y_in, encoded = data
             if y_in is None:
                 raise ValueError("Input data needs to have target values for training")
             assert isinstance(X_in, pd.DataFrame), "DGR | X always needs to be a DataFrame!"

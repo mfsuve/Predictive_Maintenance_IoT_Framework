@@ -28,7 +28,8 @@ class ReplayData(Data):
             except IndexError:
                 self.warning('There is no data to be replayed')
         else:
-            combined = combine_data(*data.get())
+            X, y, encoded = data.get()
+            combined = combine_data(X, y)
             self.q.extend([e[1] for e in combined.iterrows()])
                 
         self.status(f'data size: {len(self.q)}')

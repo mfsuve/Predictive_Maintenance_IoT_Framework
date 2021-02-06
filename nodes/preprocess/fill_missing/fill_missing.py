@@ -26,21 +26,14 @@ class FillMissing(Data):
         self.preFillConstantX = pd.Series()
         self.postFillConstantX = pd.Series()
         config = Config()
-        X, y = data.get() # TODO: push current, then add this the bool encoded (X, y, encoded)
-        pre_encoded = False
+        X, y, encoded = data.get()
+            
         for col in X.columns:
-            
-            # If column name is not in columns -> it was OneHot Encoded changing the column name
-            # Or if column (was categoric and not OneHot Encoded) but (the current content is numeric) -> it was Simple Encoded
-            pre_encoded = col not in config.columns() \
-                          or (config.is_categoric(col) and pd.api.types.is_numeric_dtype(X[col].dtype)) \
-                          or pre_encoded # To make sure once it is True, it will always be True
-            
             # This is the initial value for postFill. Because in postFill, I calculate the fill value from previous data.
             # It was just 0 but for non-encoded categorial variable, it was not ideal.
             self.valX[col] = config.categories(col)[0] if config.is_categoric(col) else config.min(col)
-            # if constant, min or max is selected
-            if config.is_numeric(col):
+            # if constant, min or max is selected (because they all will fill with a constant)
+            if encoded or config.is_numeric(col):
                 # * config.is_numeric(col), this is if col is defined numeric in the config
                 # * But this fails when a column is defined as categorical but then SimpleEncoded (needs to enter the if but doesn't)
                 # * I can simply use if dtype is numeric but categorical columns can have categories of [1, 2, 3, ...] (numeric values but categoric column)
@@ -71,53 +64,34 @@ class FillMissing(Data):
                         # postFillSelectX in ['mean', 'median'] is because they won't be calculated for categorical values
                         self.warning(f"There are some non-encoded categorical columns in the data. For those columns, the first category will be used for the second fill.")
                     warn = False
-        
-        # # TODO: Delete this, this is just for to see if pre_encoded variable has the correct value
-        # self.warning(f"self.preFillConstantX is:\n{self.preFillConstantX}")
-        # self.warning(f"pre_encoded: {pre_encoded}")
 
         if y is not None:
-            if pre_encoded:
-                self.valy = config.min_y(X_encoded=True)
+            
+            if encoded or config.is_target_numeric():
+                self.valy = config.min_y(encoded=encoded)
                 if preFillSelectY == 'min':
-                    self.preFillConstantY = config.min_y(X_encoded=True)
+                    self.preFillConstantY = config.min_y(encoded=encoded)
                 if preFillSelectY == 'max':
-                    self.preFillConstantY = config.max_y(X_encoded=True)
+                    self.preFillConstantY = config.max_y(encoded=encoded)
                 else:
                     self.preFillConstantY = preFillConstantY
                     
                 if postFillSelectY == 'min':
-                    self.postFillConstantY = config.min_y(X_encoded=True)
+                    self.postFillConstantY = config.min_y(encoded=encoded)
                 if postFillSelectY == 'max':
-                    self.postFillConstantY = config.max_y(X_encoded=True)
+                    self.postFillConstantY = config.max_y(encoded=encoded)
                 else:
                     self.postFillConstantY = postFillConstantY
             else:
-                if pd.api.types.is_numeric_dtype(y.dtype):
-                    self.valy = config.min_y(X_encoded=False)
-                    if preFillSelectY == 'min':
-                        self.preFillConstantY = config.min_y(X_encoded=False)
-                    if preFillSelectY == 'max':
-                        self.preFillConstantY = config.max_y(X_encoded=False)
-                    else:
-                        self.preFillConstantY = preFillConstantY
-                        
-                    if postFillSelectY == 'min':
-                        self.postFillConstantY = config.min_y(X_encoded=False)
-                    if postFillSelectY == 'max':
-                        self.postFillConstantY = config.max_y(X_encoded=False)
-                    else:
-                        self.postFillConstantY = postFillConstantY
-                else:
-                    self.valy = config.classes()[0]
-                    self.preFillConstantY = config.classes()[0]
-                    self.postFillConstantY = config.classes()[0]
-                    if preFillSelectY in ['constant', 'min', 'max']:
-                        self.warning(f"The target data is categorical and was not encoded, therefore the first class will be used for the first fill.")
-                    elif preFillSelectY not in ['most', 'nearest'] and postFillSelectY in ['constant', 'min', 'max', 'mean', 'median']:
-                        # postFillSelectX in ['constant', 'min', 'max'] is because they need to be numbers
-                        # postFillSelectX in ['mean', 'median'] is because they won't be calculated for categorical values
-                        self.warning(f"The target data is categorical and was not encoded, therefore the first class will be used for the second fill.")
+                self.valy = config.classes()[0]
+                self.preFillConstantY = config.classes()[0]
+                self.postFillConstantY = config.classes()[0]
+                if preFillSelectY in ['constant', 'min', 'max']:
+                    self.warning(f"The target data is categorical and was not encoded, therefore the first class will be used for the first fill.")
+                elif preFillSelectY not in ['most', 'nearest'] and postFillSelectY in ['constant', 'min', 'max', 'mean', 'median']:
+                    # postFillSelectX in ['constant', 'min', 'max'] is because they need to be numbers
+                    # postFillSelectX in ['mean', 'median'] is because they won't be calculated for categorical values
+                    self.warning(f"The target data is categorical and was not encoded, therefore the first class will be used for the second fill.")
         else:
             self.warning(f"Target is None, therefore it can't be filled.")
         
@@ -127,7 +101,7 @@ class FillMissing(Data):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         
-        X, y = data.get()
+        X, y, encoded = data.get()
         
         X = self.pre_fill_X(X, preFillSelectX)      # * Fill X using only itself (not previous data)
         X = self.post_fill_X(X, postFillSelectX)    # * Then try to fill X using the previous data
@@ -137,7 +111,7 @@ class FillMissing(Data):
         
         assert not X.isna().any().any() and (y is None or not y.isna().any())
         
-        self.send_next_node((X, y))
+        self.send_next_node((X, y, encoded))
         self.done()
 
 

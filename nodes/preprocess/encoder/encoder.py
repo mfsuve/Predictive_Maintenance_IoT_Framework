@@ -17,19 +17,26 @@ class Encoder(Data):
     def __init__(self, *args):
         super().__init__(*args)
         self.encoder = None
+        self.warn = True
 
 
     def function(self, data, encode):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
-        X, y = data.get()
+        X, y, encoded = data.get()
         
         # Encoding
         if self.encoder is None:
             self.encoder = SimpleEncoder().fit(X) if encode == 'S' else OneHotEncoder().fit(X)
-        X, y = self.encoder.transform(X, y)
+    
+        if encoded:
+            if self.warn:
+                self.warning(f"Data is encoded before, skipping!")
+                self.warn = False
+        else:
+            X, y = self.encoder.transform(X, y)
         
-        self.send_next_node((X, y))
+        self.send_next_node((X, y, True))
         self.done()
 
     
