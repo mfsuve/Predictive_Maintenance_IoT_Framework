@@ -47,9 +47,9 @@ class BaseEncoder(metaclass=ABCMeta):
         return self
     
     # Ignoring nan
-    def transform_ignore_nan(self, col:pd.Series, val, enc:LE):
+    def transform_ignore_nan(self, col:pd.Series, temp_val, enc:LE):
         nan_indices = col.isna()
-        col[nan_indices] = val
+        col[nan_indices] = temp_val # Temporary value to bypass the exception
         col = enc.transform(col).astype(float)
         col[nan_indices] = np.nan
         return col

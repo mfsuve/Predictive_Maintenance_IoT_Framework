@@ -94,12 +94,14 @@ class Config(metaclass=SingletonMeta):
         return list(self['columns'].keys())
     
     def is_categoric(self, column):
+        '''Same from the config file (unchanged)'''
         try:
             return self['columns'][column]['type'] == 'categoric'
         except KeyError:
             return False
         
     def is_numeric(self, column):
+        '''Same from the config file (unchanged)'''
         return not self.is_categoric(column)
     
     def min(self, column):
@@ -111,7 +113,7 @@ class Config(metaclass=SingletonMeta):
             return self['columns'][column]['min']
         else:
             # If the column is not found, then it is categorical (Because I make sure all columns are there when loading)
-            # OneHotEncoded max is 1
+            # OneHotEncoded min is 0
             return 0
         
     def max(self, column):
@@ -123,7 +125,7 @@ class Config(metaclass=SingletonMeta):
             return self['columns'][column]['max']
         else:
             # If the column is not found, then it is categorical (Because I make sure all columns are there when loading)
-            # OneHotEncoded min is 0
+            # OneHotEncoded max is 1
             return 1
         
     def min_y(self, X_encoded=False):

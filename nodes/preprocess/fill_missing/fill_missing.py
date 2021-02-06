@@ -26,7 +26,7 @@ class FillMissing(Data):
         self.preFillConstantX = pd.Series()
         self.postFillConstantX = pd.Series()
         config = Config()
-        X, y = data.get()
+        X, y = data.get() # TODO: push current, then add this the bool encoded (X, y, encoded)
         pre_encoded = False
         for col in X.columns:
             
@@ -41,7 +41,11 @@ class FillMissing(Data):
             self.valX[col] = config.categories(col)[0] if config.is_categoric(col) else config.min(col)
             # if constant, min or max is selected
             if config.is_numeric(col):
-                
+                # * config.is_numeric(col), this is if col is defined numeric in the config
+                # * But this fails when a column is defined as categorical but then SimpleEncoded (needs to enter the if but doesn't)
+                # * I can simply use if dtype is numeric but categorical columns can have categories of [1, 2, 3, ...] (numeric values but categoric column)
+                # * Then it shouldn't enter the if
+                # Define the values that can be constant (like min, max which are coming from the config and constant)
                 if preFillSelectX == 'min':
                     self.preFillConstantX[col] = config.min(col)
                 elif preFillSelectX == 'max':
@@ -125,11 +129,11 @@ class FillMissing(Data):
         
         X, y = data.get()
         
-        X = self.pre_fill_X(X, preFillSelectX)
-        X = self.post_fill_X(X, postFillSelectX)
+        X = self.pre_fill_X(X, preFillSelectX)      # * Fill X using only itself (not previous data)
+        X = self.post_fill_X(X, postFillSelectX)    # * Then try to fill X using the previous data
         
-        y = self.pre_fill_y(y, preFillSelectY)
-        y = self.post_fill_y(y, postFillSelectY)
+        y = self.pre_fill_y(y, preFillSelectY)      # * Fill y using only itself (not previous data)
+        y = self.post_fill_y(y, postFillSelectY)    # * Then try to fill y using the previous data
         
         assert not X.isna().any().any() and (y is None or not y.isna().any())
         

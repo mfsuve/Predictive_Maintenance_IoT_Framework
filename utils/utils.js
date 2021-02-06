@@ -114,8 +114,8 @@ const initProc = (env) => {
 
 // send config as json to python process
 const python = (config) => {
-    console.log("config:");
-    console.log(config);
+    // console.log("config:");
+    // console.log(config);
     proc.stdin.write(JSON.stringify(config) + '\n');
 };
 
@@ -135,7 +135,7 @@ module.exports = {
         console.log("    " + node.id);
         nodes[node.id] = node;
 
-        console.log(node);
+        // console.log(node);
         // Node creationon python
         python({
             id: node.id,
@@ -147,8 +147,8 @@ module.exports = {
 
         // handle input
         node.on('input', (msg) => {
-            console.log("Input msg:");
-            console.log(msg);
+            // console.log("Input msg:");
+            // console.log(msg);
 
             if (node.onmessage != undefined)
                 node.onmessage(msg);
@@ -159,8 +159,8 @@ module.exports = {
             node.config.msg = msg.payload;
 
             // Send to python process
-            console.log("node:");
-            console.log(node);
+            // console.log("node:");
+            // console.log(node);
             python(node.config);
         });
 
