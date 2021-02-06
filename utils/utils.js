@@ -123,13 +123,13 @@ module.exports = {
     //initialize node
     run: (RED, node, config) => {
         RED.nodes.createNode(node, config);
-        node.status(status.NONE);
 
         initProc('pdm');
 
         if (node.config === undefined)
             node.config = {};
         node.currentStatus = new status.Status();
+        node.status(node.currentStatus.clear());
 
         console.log("Saving node with id:");
         console.log("    " + node.id);
@@ -166,7 +166,7 @@ module.exports = {
 
         node.on('close', (done) => {
             console.log("Called close for node " + node.id);
-            node.status(status.NONE);
+            node.status(node.currentStatus.clear());
             delete nodes[node.id];
             if (proc != null) {
                 proc.stdin.write('\n'); // this gives python process a json exception so that it will terminate

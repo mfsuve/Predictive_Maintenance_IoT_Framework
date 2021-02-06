@@ -49,7 +49,9 @@ module.exports = {
         };
 
         this.clear = () => {
-            this.fill(undefined).shape(undefined).text(undefined);
+            delete this._fill;
+            delete this._shape;
+            delete this._text;
             return {};
         };
     }
