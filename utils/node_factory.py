@@ -12,6 +12,7 @@ with open('imported.txt', 'w') as file:
     
 class NodeFactory:
     nodes = None
+    node_instances = {}
     @classmethod
     def __init(cls, topcls):
         for C in topcls.__subclasses__():
@@ -26,4 +27,9 @@ class NodeFactory:
             cls.nodes = {}
             # Add all classes with no subclasses (e.g. all node classes corresponding to NodeRed nodes) into nodes dictionary
             cls.__init(Node)
-        return cls.nodes[name](*args)
+        nodeid = args[0]
+        if nodeid in cls.node_instances:
+            return cls.node_instances[nodeid]
+        node = cls.nodes[name](*args)
+        cls.node_instances[nodeid] = node
+        return node
