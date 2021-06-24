@@ -9,7 +9,9 @@ RED.nodes.registerType('test model', {
         recall: {value:false},
         f1: {value:false},
         resetAfterTraining: {value:false},
-        ignoreNanTarget: {value:true}
+        ignoreNanTarget: {value:true},
+        saveMetrics: {value:false},
+        metricSaveFile: {value:""}
     },
     inputs:1,
     outputs:1,
@@ -19,6 +21,22 @@ RED.nodes.registerType('test model', {
     },
     labelStyle: function() {
         return this.name ? "node_label_italic" : "";
+    },
+    oneditprepare: function() {
+        if (this.saveMetrics) {
+            $("#filename").show();
+        } else {
+            $("#filename").hide();
+        }
+        $("#node-input-saveMetrics").on("change", function() {
+            var v = $("#node-input-saveMetrics").prop('checked');
+            if (v) {
+                $("#filename").show(200);
+                $("#node-input-metricSaveFile").focus();
+            } else {
+                $("#filename").hide(200);
+            }
+        });
     }
 });
 </script>
@@ -38,7 +56,7 @@ RED.nodes.registerType('test model', {
     <div class="form-row">
         <div style="margin-left:100px; margin-bottom:5px;">
             <input type="checkbox" id="node-input-ignoreNanTarget" style="width:20px; margin: 4px 4px 2px 0px; vertical-align:top;" checked>
-            <label for="node-input-ignoreNanTarget" style="width:300px;">Ignore data points without class</label>
+            <label for="node-input-ignoreNanTarget" style="width:300px;">If there is any data point with labels, ignore the ones without</label>
         </div>
     </div>
     <hr align="middle"/>
@@ -60,6 +78,15 @@ RED.nodes.registerType('test model', {
             <input type="checkbox" id="node-input-f1" style="width:20px; margin: 0px 4px 2px 0px;">
             <label for="node-input-f1">F1 Score</label>
         </div>
+    </div>
+    <div class="form-row">
+        <label style="width:96px;">&nbsp;</label>
+        <input type="checkbox" id="node-input-saveMetrics" style="width:20px; margin: 0px;">
+        <label for="node-input-saveMetrics" style="width:220px;"> <i class="fa fa-file"></i> Save metrics to a file</label>
+    </div>
+    <div class="form-row" id="filename">
+        <label>&nbsp;</label>
+        <input type="text" id="node-input-metricSaveFile" placeholder="Folder Name">
     </div>
 </script>
 

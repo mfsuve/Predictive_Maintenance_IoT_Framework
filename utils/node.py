@@ -4,6 +4,7 @@ from abc import ABCMeta, abstractmethod
 from traceback import format_exc
 from queue import Queue
 import pickle
+from typing import Dict
 
 from utils.utils import myprint as print, threaded, MyJSONEncoder
 from utils.save_load_utils import get_path_to_model, add_prefix, get_file_to_load
@@ -17,7 +18,7 @@ log = logging.getLogger('nodered')
 # ** İlerde her node'u bir Process yapabilirsin
 class Node:
     
-    def __init__(self, id, node_config):
+    def __init__(self, id, node_config:Dict):
         self.id = id
         self.node_config = node_config
         self.type = InputType.NODERED

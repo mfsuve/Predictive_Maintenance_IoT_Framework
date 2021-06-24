@@ -20,6 +20,9 @@ module.exports = function(RED) {
             ignoreNanTarget: config.ignoreNanTarget
         };
 
+        if (config.saveMetrics)
+            node.config.metricSaveFile = config.metricSaveFile.trim();
+
         utils.run(RED, node, config);
 
     }

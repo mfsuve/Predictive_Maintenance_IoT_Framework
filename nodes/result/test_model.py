@@ -1,5 +1,5 @@
 import pandas as pd
-import sys
+import os
 import json
 import numpy as np
 np.seterr(all='raise')
@@ -19,12 +19,11 @@ class TestModel(Node):
         super().__init__(*args, **kwargs)
         self.status('Model: None')
         self.total_tested = 0
-        
-        
+        self.metric_save_file = self.node_config.get('metricSaveFile', None)        
         self.metric_values_to_plot = defaultdict(list)
         
     
-    def first_called(self, data, accuracy, precision, recall, f1, resetAfterTraining, ignoreNanTarget):
+    def first_called(self, data, accuracy, precision, recall, f1, *args, **kwargs):
         self.config = Config()
         self.model:Model = None
         predictions = self.config.predictions()
@@ -58,7 +57,7 @@ class TestModel(Node):
         
     
     
-    def function(self, data:Input, accuracy, precision, recall, f1, resetAfterTraining, ignoreNanTarget):
+    def function(self, data:Input, accuracy, precision, recall, f1, resetAfterTraining, ignoreNanTarget, *args, **kwargs):
         
         if data.type != InputType.DATA and data.type != InputType.MODEL:
             raise ValueError(f"Input needs to be a 'data' or a 'model' but got '{data.type.name.lower()}'")
@@ -81,29 +80,10 @@ class TestModel(Node):
             if ignoreNanTarget:
                 X, y = self.clear_from_nan_target(X, y)
             elif y.isna().any():
-                raise ValueError(f'There is data point with missing class. Please either remove them or choose "Ignore data points without class" option.')
+                raise ValueError(f'There is data point with missing class. Please either remove them or choose "If there is any data point with labels, ignore the ones without" option.')
             
             print('Testing model', f'X.shape: {X.shape}', f'y_true.shape: {y.shape if y is not None else "None"}')
             y_pred = self.model.predict(X)
-            
-            # TODO: Aşağıdaki gibi bir hata geldi neden olduğunu anla
-            # TODO: Sonrasında da değişiklikleri push'la
-            
-            # KeyError(nan)
-            # Traceback (most recent call last):
-            # File "C:\Users\mus-k\Desktop\Üniversite\Tez\Node Red\nodes2\utils\node.py", line 55, in __run
-            #     self.__function(data, **node_config)
-            # File "C:\Users\mus-k\Desktop\Üniversite\Tez\Node Red\nodes2\nodes\result\test_model.py", line 75, in function
-            #     msg['ground_truth'] = self.config.convert_to_names(y)
-            # File "C:\Users\mus-k\Desktop\Üniversite\Tez\Node Red\nodes2\utils\config.py", line 192, in convert_to_names
-            #     return [self.class_name_dict[label] for label in labels]
-            # File "C:\Users\mus-k\Desktop\Üniversite\Tez\Node Red\nodes2\utils\config.py", line 192, in <listcomp>
-            #     return [self.class_name_dict[label] for label in labels]
-            # KeyError: nan
-            
-            # print(f"Test Model | y_pred has nan: {np.isnan(y_pred).any()}")
-            # print(f"Test Model | y has nan: {np.isnan(y).any()}")
-            
             
             msg = {'predictions': self.config.convert_to_names(y_pred),
                    'classes': self.config.names(),
@@ -122,9 +102,11 @@ class TestModel(Node):
                         self.metric_values_to_plot[metric.name].append(dict(score, total_tested=self.total_tested))
                     else:
                         self.metric_values_to_plot[metric.name].append(dict(accuracy=score, total_tested=self.total_tested))
-            
-            with open('D:/Tez/EXPERIMENTS/Turbofan/Results with only balance smoteen/GNB/results.pkl', 'wb') as file:
-                pickle.dump(self.metric_values_to_plot, file)
+                if self.metric_save_file is not None:
+                    filename = os.path.join(self.metric_save_file, self.model.name, 'results.pkl')
+                    os.makedirs(os.path.dirname(filename), exist_ok=True)
+                    with open(filename, 'wb') as file:
+                        pickle.dump(self.metric_values_to_plot, file)
 
             msg['total_tested'] = self.total_tested
 
