@@ -89,7 +89,8 @@ class LoadDataset(Data):
     def function(self, data, configPath, isFile, path, col, hasheader, removeAllnan, removeAllsame, hasTarget, encoded):
         
         # Setting up Config Singleton class and getting the column names
-        column_names = Config(configPath).columns()
+        config = Config(configPath)
+        column_names = config.columns()
         
         if isFile:
             if not path.strip().endswith('.csv'):
@@ -120,6 +121,6 @@ class LoadDataset(Data):
         elif encoded and (X_has_categorical or y_is_categorical):
             raise ValueError(f"Expected to load encoded data but the {'data' if X_has_categorical else 'target'} has categorical values")
         else:
-            self.send_next_node((X, y, encoded))
+            self.send_next_node((X, y, encoded, config))
             self.done()
     

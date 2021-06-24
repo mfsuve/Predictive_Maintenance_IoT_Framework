@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 from utils.config import Config
 from utils.utils import myprint as print
 from utils.node import Model
-from utils.io import InputType
+from utils.io import Input, InputType
 
 
 class LightGBMClassifier(Model):
@@ -51,11 +51,11 @@ class LightGBMClassifier(Model):
         return (max / min) >= (500 / (x + 100) + 3) # Created using the function on the bottom https://www.desmos.com/calculator/lkpcwzhzxf?lang=tr
             
     
-    def first_called(self, data, task_size, max_depth, num_leaves, num_iterations, learning_rate, load_from=None):
+    def first_called(self, data:Input, task_size, max_depth, num_leaves, num_iterations, learning_rate, load_from=None):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
-        config = Config()
-        X, y, encoded = data.get()
+        config:Config
+        X, y, encoded, config = data.get()
         self.params = {
             'objective': 'binary' if config.num_classes <= 2 else 'multiclass',
             'num_class': 1 if config.num_classes <= 2 else config.num_classes,
@@ -172,12 +172,12 @@ class LightGBMClassifier(Model):
         return False
     
     
-    def function(self, data, task_size, max_depth, num_leaves, num_iterations, learning_rate, load_from=None):
+    def function(self, data:Input, task_size, max_depth, num_leaves, num_iterations, learning_rate, load_from=None):
         
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         
-        X, y, encoded = data.get()
+        X, y, encoded, _ = data.get()
         if y is None:
             raise ValueError(f"Target values need to be set before training")
         

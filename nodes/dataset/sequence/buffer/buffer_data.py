@@ -48,7 +48,7 @@ class Buffer(Data):
         X:pd.DataFrame
         y:pd.Series
         encoded:bool
-        X, y, encoded = data.get()
+        X, y, encoded, config = data.get()
         
         if self.warn_encoded and not self.has_encoded and encoded:
             self.warning(f"Buffering encoded and non-encoded data, will treat them as they were encoded. But it is advised to buffer either all encoded or all non-encoded data.")
@@ -63,9 +63,9 @@ class Buffer(Data):
         self.append(X, y)
         for X_to_send, y_to_send in self.get_data_to_send(maxData):
             if y_to_send.isna().all():
-                self.send_next_node((X_to_send, None, self.has_encoded))
+                self.send_next_node((X_to_send, None, self.has_encoded, config))
             else:
-                self.send_next_node((X_to_send, y_to_send, self.has_encoded))
+                self.send_next_node((X_to_send, y_to_send, self.has_encoded, config))
             
         self.status(f'{self.size}/{maxData}')
         

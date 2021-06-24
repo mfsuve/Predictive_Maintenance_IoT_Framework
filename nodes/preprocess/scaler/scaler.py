@@ -16,8 +16,8 @@ class MinMaxScaler(Data):
         
     def first_called(self, data:Input):
         self.scaler = MMS()
-        config = Config()
-        X, _, encoded = data.get()
+        config:Config
+        X, _, encoded, config = data.get()
         ranges = pd.DataFrame()
         warn = True
         for col in X.columns:
@@ -36,7 +36,7 @@ class MinMaxScaler(Data):
         X:pd.DataFrame
         y:pd.Series
         encoded:bool
-        X, y, encoded = data.get()
+        X, y, encoded, config = data.get()
         
         # print(f"MinMaxScaler | self.columns", self.columns)
         
@@ -58,7 +58,7 @@ class MinMaxScaler(Data):
                 You may have either defined those ranges incorrectly or filled missing values with a constant outside of ranges in the config file.")
             self.warn = False
         
-        self.send_next_node((X, y, encoded))
+        self.send_next_node((X, y, encoded, config))
         self.done()
 
 

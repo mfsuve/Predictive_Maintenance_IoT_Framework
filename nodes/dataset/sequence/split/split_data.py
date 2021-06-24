@@ -19,7 +19,7 @@ class Split(Data):
         X:pd.DataFrame
         y:pd.Series
         encoded:bool
-        X, y, encoded = data.get()
+        X, y, encoded, config = data.get()
         num_rows, _ = X.shape
         
         indices = np.random.choice(X.index, size=num_rows, replace=False) if shuffle else X.index
@@ -36,6 +36,6 @@ class Split(Data):
             y1 = y.reindex(indices1).reset_index(drop=True)
             y2 = y.reindex(indices2).reset_index(drop=True)
             
-        self.send_next_node(None if X1.empty else (X1, y1, encoded), None if X2.empty else (X2, y2, encoded))
+        self.send_next_node(None if X1.empty else (X1, y1, encoded, config), None if X2.empty else (X2, y2, encoded, config))
         self.done()
     

@@ -30,7 +30,8 @@ class SingletonMeta(type):
             # lock block, a thread that might have been waiting for the lock
             # release may then enter this section. But since the Singleton field
             # is already initialized, the thread won't create a new object.
-            if cls not in cls._instances:
+            configPath = args[0] # = configPath
+            if configPath not in cls._instances:
                 instance = super().__call__(*args, **kwargs)
-                cls._instances[cls] = instance
-        return cls._instances[cls]
+                cls._instances[configPath] = instance
+        return cls._instances[configPath]

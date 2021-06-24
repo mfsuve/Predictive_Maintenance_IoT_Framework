@@ -23,11 +23,12 @@ class TestModel(Node):
         self.metric_values_to_plot = defaultdict(list)
         
     
-    def first_called(self, data, accuracy, precision, recall, f1, *args, **kwargs):
-        self.config = Config()
+    def first_called(self, data:Input, accuracy, precision, recall, f1, *args, **kwargs):
+        config:Config
+        _, _, _, config = data.get()
         self.model:Model = None
-        predictions = self.config.predictions()
-        names = self.config.names()
+        predictions = config.predictions()
+        names = config.names()
         self.metrics = []
         if accuracy:
             A = RunningAccuracy()
@@ -74,7 +75,8 @@ class TestModel(Node):
                 self.send_nodered({'reset': True}) # To reset the training plots
                 
         elif self.model is not None:
-            X, y, encoded = data.get()
+            config:Config
+            X, y, encoded, config = data.get()
             assert isinstance(X, pd.DataFrame) and (y is None or isinstance(y, pd.Series))
             
             if ignoreNanTarget:
@@ -85,12 +87,12 @@ class TestModel(Node):
             print('Testing model', f'X.shape: {X.shape}', f'y_true.shape: {y.shape if y is not None else "None"}')
             y_pred = self.model.predict(X)
             
-            msg = {'predictions': self.config.convert_to_names(y_pred),
-                   'classes': self.config.names(),
+            msg = {'predictions': config.convert_to_names(y_pred),
+                   'classes': config.names(),
                    'pred_label': y_pred}
             
             if y is not None:
-                msg['ground_truth'] = self.config.convert_to_names(y)
+                msg['ground_truth'] = config.convert_to_names(y)
                 self.total_tested += y.size
                 # print(f"Test Model | metric names")
                 for metric in self.metrics:

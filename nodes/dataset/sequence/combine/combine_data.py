@@ -31,7 +31,7 @@ class Combine(Data):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         
-        X, y, encoded = data.get()
+        X, y, encoded, config = data.get()
         
         if self.warn and not self.has_encoded and encoded:
             self.warning(f"Combining encoded and non-encoded data, will treat them as they were encoded. But it is advised to combine either all encoded or all non-encoded data.")
@@ -45,9 +45,9 @@ class Combine(Data):
             Xs = pd.concat(self.Xs, ignore_index=True)
             ys = pd.concat(self.ys, ignore_index=True)
             if ys.isna().all():
-                self.send_next_node((Xs, None, self.has_encoded))
+                self.send_next_node((Xs, None, self.has_encoded, config))
             else:
-                self.send_next_node((Xs, ys, self.has_encoded))
+                self.send_next_node((Xs, ys, self.has_encoded, config))
             self.reset()
             self.done()
             

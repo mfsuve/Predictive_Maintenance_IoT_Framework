@@ -23,8 +23,10 @@ class StoreDataset(Node):
         self.path = None
     
     
-    def first_called(self, data, path, numrows):
-        self.X = pd.DataFrame(index=range(numrows), columns=Config().columns() + ['target'])
+    def first_called(self, data:Input, path, numrows):
+        config:Config
+        _, _, _, config = data.get()
+        self.X = pd.DataFrame(index=range(numrows), columns=config.columns() + ['target'])
         
 
     def append(self, X, numrows):
@@ -70,7 +72,7 @@ class StoreDataset(Node):
         
         path_generator = self.get_path_generator(path)
         
-        X, y, _ = data.get()
+        X, y, _, _ = data.get()
         full = self.append(combine_data(X, y).to_numpy(), numrows)
         while full:
             full = self.save_and_reset(numrows, path_generator)

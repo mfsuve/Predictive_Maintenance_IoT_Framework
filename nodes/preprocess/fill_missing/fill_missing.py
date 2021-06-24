@@ -25,8 +25,8 @@ class FillMissing(Data):
         self.valX = pd.Series()
         self.preFillConstantX = pd.Series()
         self.postFillConstantX = pd.Series()
-        config = Config()
-        X, y, encoded = data.get()
+        config:Config
+        X, y, encoded, config = data.get()
             
         for col in X.columns:
             # This is the initial value for postFill. Because in postFill, I calculate the fill value from previous data.
@@ -98,7 +98,7 @@ class FillMissing(Data):
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         
         X:pd.DataFrame
-        X, y, encoded = data.get()
+        X, y, encoded, config = data.get()
         
         all_nan_col = X.columns[X.isna().all()]
         print(f"Fill Missing | before X:", X[all_nan_col])
@@ -114,7 +114,7 @@ class FillMissing(Data):
         all_nan_col = X.columns[X.isna().all()]
         print(f"Fill Missing | after X:", X[all_nan_col])
         
-        self.send_next_node((X, y, encoded))
+        self.send_next_node((X, y, encoded, config))
         self.done()
 
 
