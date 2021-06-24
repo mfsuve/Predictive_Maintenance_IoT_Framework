@@ -16,7 +16,8 @@ module.exports = function(RED) {
             precision: config.precision,
             recall: config.recall,
             f1: config.f1,
-            resetAfterTraining: config.resetAfterTraining
+            resetAfterTraining: config.resetAfterTraining,
+            ignoreNanTarget: config.ignoreNanTarget
         };
 
         utils.run(RED, node, config);

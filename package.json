@@ -29,11 +29,14 @@
             "balance data": "nodes/preprocess/imbalanced/balance_data.js",
             "split data": "nodes/dataset/sequence/split/split_data.js",
             "combine data": "nodes/dataset/sequence/combine/combine_data.js",
+            "buffer data": "nodes/dataset/sequence/buffer/buffer_data.js",
             "save model": "nodes/models/io/save/save.js",
             "test model": "nodes/result/test_model.js",
             "dgr": "nodes/models/classification/dgr/dgr.js",
             "logistic_regression": "nodes/models/classification/creme/logistic_regression/logistic_regression.js",
-            "random_forest": "nodes/models/classification/creme/random_forest/random_forest.js"
+            "random_forest": "nodes/models/classification/creme/random_forest/random_forest.js",
+            "gaussian_nb": "nodes/models/classification/creme/gaussian_nb/gaussian_nb.js",
+            "lgbm": "nodes/models/classification/lgbm/lgbm.js"
         }
     }
 }

@@ -1,5 +1,5 @@
 <script type="text/javascript">
-RED.nodes.registerType('random_forest', {
+RED.nodes.registerType('gaussian_nb', {
     category: 'ML Model',
     color: '#DAC4B4',
     defaults: {
@@ -16,7 +16,7 @@ RED.nodes.registerType('random_forest', {
     outputLabels: ["Model", "Train Results"],
     icon: "font-awesome/fa-level-up",
     label: function() {
-        return this.name || "Random Forest Classifier";
+        return this.name || "Gaussian Naive Bayes";
     },
     labelStyle: function() {
         return this.name ? "node_label_italic" : "";
@@ -63,7 +63,7 @@ RED.nodes.registerType('random_forest', {
 </script>
 
 
-<script type="text/x-red" data-template-name="random_forest">
+<script type="text/x-red" data-template-name="gaussian_nb">
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
@@ -76,7 +76,7 @@ RED.nodes.registerType('random_forest', {
     </div>
     <div id="load">
         <div class="form-row">
-            <label for="node-input-loadFolder"><i class="fa fa-folder"></i> Model Folder</label>
+            <label for="node-input-loadFolder"><i class="fa fa-folder"></i> Model folder</label>
             <input type="text" id="node-input-loadFolder" value="">
         </div>
     </div>
@@ -103,7 +103,7 @@ RED.nodes.registerType('random_forest', {
 </script>
 
 
-<script type="text/x-red" data-help-name="random_forest">
+<script type="text/x-red" data-help-name="gaussian_nb">
     <p>Loads the dataset from a csv file.</p>
 
     <h3>Inputs</h3>

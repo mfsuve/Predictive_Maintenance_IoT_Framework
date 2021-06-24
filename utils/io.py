@@ -10,7 +10,7 @@ class InputType(str, enum.Enum):
 
 
 class Input:
-    def __init__(self, _data, _type=InputType.NODERED):
+    def __init__(self, _data, _type:InputType=InputType.NODERED):
         self.__data = _data
         self.type = _type
         

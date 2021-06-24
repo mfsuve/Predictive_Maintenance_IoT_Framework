@@ -6,7 +6,8 @@ RED.nodes.registerType('replay data', {
         name: {value:""}
     },
     inputs:1,
-    outputs:1,
+    outputs:2,
+    outputLabels: ["To Flexsim", "Data Out"],
     icon: "font-awesome/fa-repeat",
     label: function() {
         return this.name || 'Replay Data';

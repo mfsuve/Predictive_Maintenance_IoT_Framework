@@ -1,3 +1,5 @@
+from typing import Dict
+from utils.node import Node
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -17,7 +19,7 @@ from utils.io import Input
 # * * info    -> output for node in node-red
 # *              (should contain 'nodeid' to indicate which node has this output)
 
-nodes = {}
+nodes:Dict[str, Node] = {}
 wires_dict = {}
 
 
@@ -33,7 +35,7 @@ def init(config):
 
 @after(init)
 @threaded
-def call_node(config):
+def call_node(config:Dict):
     nodeid = str(config.pop('id')).strip()
     msg = str(config.pop('msg')).strip()
     nodes[nodeid].input(Input(msg), config)
@@ -56,7 +58,7 @@ if __name__ == '__main__':
     
     while True:
         try:
-            config = json.loads(input())
+            config:Dict = json.loads(input())
             if 'create' in config:
                 create_node(config)
             else:

@@ -7,7 +7,7 @@ from abc import ABCMeta, abstractmethod
 from utils.utils import myprint as print
 from utils.node import Data
 from utils.config import Config
-from utils.io import InputType
+from utils.io import Input, InputType
 
 from sklearn.preprocessing import LabelEncoder as LE
 from collections import defaultdict
@@ -20,7 +20,7 @@ class Encoder(Data):
         self.warn = True
 
 
-    def function(self, data, encode):
+    def function(self, data:Input, encode):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         X, y, encoded = data.get()
@@ -55,9 +55,17 @@ class BaseEncoder(metaclass=ABCMeta):
     
     # Ignoring nan
     def transform_ignore_nan(self, col:pd.Series, temp_val, enc:LE):
+        # print(f"Encoder | col.name: {col.name}")
         nan_indices = col.isna()
+        print(f"Encoder | nan_indices:", nan_indices)
         col[nan_indices] = temp_val # Temporary value to bypass the exception
-        col = enc.transform(col).astype(float)
+        print(f"Encoder | temp_val: {temp_val}")
+        print(f"Encoder | col:", col)
+        try:
+            col = enc.transform(col).astype(float)
+        except ValueError:
+            print(f"Encoder | col.name: {col.name}")
+            raise
         col[nan_indices] = np.nan
         return col
     
@@ -65,7 +73,10 @@ class BaseEncoder(metaclass=ABCMeta):
     def transform(self, X, y):
         if not self.fitted:
             raise ValueError("Encoders need to be fitted before transform")
-        return pd.Series(self.transform_ignore_nan(y, y.iloc[0], self.class_encoder))
+        if y is None:
+            return None
+        else:
+            return pd.Series(self.transform_ignore_nan(y, self.config.classes()[0], self.class_encoder))
     
     def fit_transform(self, X, y):
         return self.fit(X, y).transform(X, y)
@@ -80,10 +91,14 @@ class SimpleEncoder(BaseEncoder):
     def fit(self, X):
         # * I am getting categorical columns from the config file
         cat_cols = self.config.categoric_columns
-        X[cat_cols].apply(lambda col: self.encoders[col.name].fit(self.config.categories(col.name)))
+        print(f"Encoder | Categories:")
+        for col in cat_cols:
+            self.encoders[col].fit(self.config.categories(col))
+            print(f"Encoder | col: {col}", self.config.categories(col))
+        # X[cat_cols].apply(lambda col: self.encoders[col.name].fit(self.config.categories(col.name)))
         return super().fit(X)
     
-    def transform(self, X, y):
+    def transform(self, X:pd.DataFrame, y:pd.Series):
         cat_cols = self.config.categoric_columns
         X[cat_cols] = X[cat_cols].apply(
             lambda col: self.transform_ignore_nan(col, self.config.categories(col.name)[0], self.encoders[col.name])

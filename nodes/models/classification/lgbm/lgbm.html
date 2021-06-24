@@ -1,27 +1,53 @@
 <script type="text/javascript">
-RED.nodes.registerType('random_forest', {
+RED.nodes.registerType('lgbm', {
     category: 'ML Model',
     color: '#DAC4B4',
     defaults: {
         name: {value:""},
         loadModel: {value:false},
         loadFolder: {value:""},
-        propagateMode: {value:"after"},
-        propagateAfter: {value:1000, validate:function(v) {
-            return RED.validators.number()(v) && v > 0;
-        }}
+        task_size: {value:1000, required:true, validate:function(v) {
+            return RED.validators.number()(v) && v >= 10;
+        }},
+        max_depth: {value:5, validate:function(v) {
+            return RED.validators.number()(v) && v >= 1;
+        }},
+        unlimited_depth: {value:false, required:true},
+        num_leaves: {value:32, required:true, validate:function(v) {
+            return RED.validators.number()(v) && v >= 2 && v <= 131072;
+        }},
+        num_iterations: {value:100, required:true, validate:function(v) {
+            return RED.validators.number()(v) && v >= 1;
+        }},
+        learning_rate: {value:0.001, required:true, validate:function(v) {
+            return v > 0;
+        }},
     },
     inputs:1,
     outputs:2,
     outputLabels: ["Model", "Train Results"],
-    icon: "font-awesome/fa-level-up",
+    icon: "font-awesome/fa-fire",
     label: function() {
-        return this.name || "Random Forest Classifier";
+        return this.name.trim() || "LightGBM Classifier";
     },
     labelStyle: function() {
-        return this.name ? "node_label_italic" : "";
+        return this.name.trim ? "node_label_italic" : "";
     },
     oneditprepare: function() {
+        if (this.unlimited_depth) {
+            $("#max_depth").hide();
+        } else {
+            $("#max_depth").show();
+        }
+        $("#node-input-unlimited_depth").on("change", function() {
+            unlimited_depth = $("#node-input-unlimited_depth").prop('checked');
+            if (unlimited_depth) {
+                $("#max_depth").hide(200);
+            } else {
+                $("#max_depth").show(200).focus();
+            }
+        });
+        
         // Loading options
         if (this.loadModel) {
             $("#load").show();
@@ -36,39 +62,17 @@ RED.nodes.registerType('random_forest', {
                 $("#load").hide(200);
             }
         });
-
-        if (this.propagateMode == "after") {
-            $("#propagateAfter").show();
-            $("#after-message").show();
-            $("#always-message").hide();
-        } else {
-            $("#propagateAfter").hide();
-            $("#always-message").show();
-            $("#after-message").hide();
-        }
-        $("#node-input-propagateMode").on("change", function() {
-            var v = $("#node-input-propagateMode").val();
-            if (v == "after") {
-                $("#propagateAfter").show(200);
-                $("#after-message").show(200);
-                $("#always-message").hide(200);
-            } else {
-                $("#propagateAfter").hide(200);
-                $("#always-message").show(200);
-                $("#after-message").hide(200);
-            }
-        });
     }
 });
 </script>
 
 
-<script type="text/x-red" data-template-name="random_forest">
+<script type="text/x-red" data-template-name="lgbm">
+
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-
     <div class="form-row" style="height:34px;">
         <label>&nbsp;</label>
         <input type="checkbox" id="node-input-loadModel" style="width:20px; vertical-align:baseline; margin-right:5px;">
@@ -80,30 +84,46 @@ RED.nodes.registerType('random_forest', {
             <input type="text" id="node-input-loadFolder" value="">
         </div>
     </div>
-    <div class="form-row" style="margin-top:30px;">
-        <label for="node-input-propagateMode" style="width:auto;"><i class="fa fa-arrow-right"></i> Propagate Mode</label>
-        <br>
-        <label>&nbsp;</label>
-        <select id="node-input-propagateMode">
-            <option value="always">Always</option>
-            <option value="after" selected>Sequential</option>
-        </select>
-        <div id="propagateAfter" style="padding-left:30px; padding-top:20px;">
-            <label for="node-input-propagateAfter" style="width:auto;">Propagate new model after trained with </label>
-            <input type="number" style="width:70px;" id="node-input-propagateAfter" value="1000" min="1">
-            <label for="node-input-propagateAfter">  data</label>
-        </div>
-        <p style="width:400px; border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9;" id="after-message">
-            Model will be propagated <em>after</em> the training is done with the incoming data if the number of trained data passed the next multiple of the value specified above.
-        </p>
-        <p style="width:400px; border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9;" id="always-message">
-            Model will be propagated <em>after</em> each training is done with the incoming data.
-        </p>
+
+    <hr align="middle"/>
+    <div class="form-row">
+        <span style="width:100%; font-size:120%; margin-bottom:20px;"><b>Train Options</b></span>
     </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <label for="node-input-task_size" style="width:350px;">Maximum accumulated data size before training</br>
+        <input type="number" id="node-input-task_size" value="1000" style="width:80px; margin-top:10px;" min="10">
+    </div>
+    <div class="form-row" id="max_depth">
+        <label>&nbsp;</label>
+        <label for="node-input-max_depth" style="width:350px;">Maximum depth</br>
+        <input type="number" id="node-input-max_depth" value="5" style="width:80px; margin-top:10px;" min="1">
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input style="width:20px; margin:0px;" type="checkbox" id="node-input-unlimited_depth">
+        <label style="width:auto;" for="node-input-unlimited_depth"> Unlimited depth</label>
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <label for="node-input-num_leaves" style="width:350px;">Maximum number of leaves in one tree</br>
+        <input type="number" id="node-input-num_leaves" value="32" style="width:80px; margin-top:10px;" min="2" max="131072">
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <label for="node-input-num_iterations" style="width:350px;">Number of boosting iterations</br>
+        <input type="number" id="node-input-num_iterations" value="100" style="width:80px; margin-top:10px;" min="1">
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <label for="node-input-learning_rate" style="width:350px;">Learning rate</br>
+        <input type="number" id="node-input-learning_rate" value="0.001" style="width:80px; margin-top:10px;" step=".00001">
+    </div>
+
 </script>
 
 
-<script type="text/x-red" data-help-name="random_forest">
+<script type="text/x-red" data-help-name="lgbm">
     <p>Loads the dataset from a csv file.</p>
 
     <h3>Inputs</h3>

@@ -1,26 +1,38 @@
 import pandas as pd
-import sys
-import json
 import numpy as np
 from io import StringIO
 
 from utils.config import Config
-from utils.utils import myprint as print
-from utils.node import Data, Node
+from utils.utils import myprint as print, combine_data
+from utils.node import Data
 from utils.io import InputType
-
-# TODO: Add option to select if data was pre-encoded
 
 class LoadDataset(Data):
     
+    def __init__(self, *args):
+        super().__init__(*args)
+        def strip(s):
+            if isinstance(s, str):
+                return s.strip()
+            return s
+        self.strip = strip
+            
+    
     def load(self, path, hasheader, hasTarget, target_col, column_names):
-        # * Add more na_values when encountered
-        if not path.endswith('.csv'):
-            path += '.csv'
         try:
-            X = pd.read_csv(path, header=0 if hasheader else None, na_values=['na', '?'], skipinitialspace=True, encoding='utf-8')
+            X:pd.DataFrame = pd.read_csv(path,
+                                         header=0 if hasheader else None,
+                                         na_values=['na', '?'], # * Add more na_values when encountered
+                                         skipinitialspace=True,
+                                         encoding='utf-8')
+            nan_indices = X.isna()
+            X = X.apply(lambda s: s.apply(self.strip))
+            X[nan_indices] = np.nan
+            
         except FileNotFoundError:
             raise FileNotFoundError(f"No such file or directory: '{path}'")
+        except pd.errors.EmptyDataError:
+            raise ValueError(f"Couldn't read from string. Input needs to contain features separated by commas.")
 
         if hasTarget:
             y = X.iloc[:, target_col]
@@ -29,8 +41,7 @@ class LoadDataset(Data):
                 y = None
         else:
             y = None
-        
-
+            
         # Assuring that the columns are the same with the configuration file
         if hasheader:
             # Assuring that they contain the same column names (no more, no less) regardless of the ordering
@@ -56,7 +67,10 @@ class LoadDataset(Data):
             y = y[not_nan_indices]
             
         # remove duplicated rows
-        non_duplicate_indices = ~X.duplicated()
+        if y is not None:
+            non_duplicate_indices = ~combine_data(X, y).duplicated()
+        else:
+            non_duplicate_indices = ~X.duplicated()
         X = X[non_duplicate_indices]
         if y is not None:
             y = y[non_duplicate_indices]
@@ -77,16 +91,16 @@ class LoadDataset(Data):
         # Setting up Config Singleton class and getting the column names
         column_names = Config(configPath).columns()
         
-        if not path.strip().endswith('.csv'):
-            raise ValueError(f"The file to be loaded needs to be a csv file but got {path}")
-        
         if isFile:
+            if not path.strip().endswith('.csv'):
+                raise ValueError(f"The file to be loaded needs to be a csv file but got {path}")
             # Reading the data from file
             X, y = self.load(path, hasheader, hasTarget, col, column_names)
             print(f'Loaded dataset from {path}', f'X.shape is {X.shape}', f'y is None' if y is None else f'y.shape is {y.shape}')
 
             # Dropping all nan rows and cols, all same cols (in case they were wanted to be dropped)
             X, y = self.drop_unimportant(X, y, removeAllnan, removeAllsame)
+            print(f'After drop_unimportant', f'X.shape is {X.shape}', f'y is None' if y is None else f'y.shape is {y.shape}')
 
         else:
             # Reading the data from strings of data
@@ -98,7 +112,7 @@ class LoadDataset(Data):
             X, y = self.drop_unimportant(X, y, False, False)
 
         X_has_categorical = not all([pd.api.types.is_numeric_dtype(dtype) for dtype in X.dtypes])
-        y_is_categorical = not pd.api.types.is_numeric_dtype(y.dtype)
+        y_is_categorical = y is not None and not pd.api.types.is_numeric_dtype(y.dtype)
         
         if X.empty:
             self.clear_status()

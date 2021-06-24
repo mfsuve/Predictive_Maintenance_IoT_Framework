@@ -103,6 +103,12 @@ class Config(metaclass=SingletonMeta):
         '''Same from the config file (unchanged)'''
         return not self.is_categoric(column)
     
+    def is_all_numeric(self):
+        return len(self.categoric_columns) == 0
+    
+    def is_all_categoric(self):
+        return len(self.numeric_columns) == 0
+    
     def is_target_numeric(self):
         '''Returns if target has only non-string values'''
         return self.__is_target_numeric

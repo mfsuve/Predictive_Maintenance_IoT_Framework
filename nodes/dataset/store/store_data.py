@@ -8,7 +8,7 @@ from itertools import count
 from utils.config import Config
 from utils.utils import myprint as print, combine_data
 from utils.node import Node
-from utils.io import InputType
+from utils.io import Input, InputType
 from utils.save_load_utils import add_prefix
 
 from utils.utils import after
@@ -42,7 +42,7 @@ class StoreDataset(Node):
         return self.index >= numrows
         
     
-    def get_path(self, path):
+    def get_path_generator(self, path):
         dirname, filename = os.path.split(path)
         base, ext = os.path.splitext(filename)
         if ext != '' and ext != '.csv':
@@ -52,10 +52,10 @@ class StoreDataset(Node):
             yield add_prefix(filename, path=dirname)
 
 
-    def save_and_reset(self, numrows, path):
+    def save_and_reset(self, numrows, path_generator):
         self.index = 0
-        next_path = next(path)
-        self.X.to_csv(next_path, header=True, index=False)
+        next_path = next(path_generator)
+        self.X.to_csv(next_path, header=True, index=False, encoding='utf8')
         self.send_nodered(next_path)
         self.done()
         if self.remainder is not None:
@@ -63,14 +63,14 @@ class StoreDataset(Node):
         return False
     
     
-    def function(self, data, path, numrows):
+    def function(self, data:Input, path, numrows):
         
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be data coming from a data node but got from a '{data.type.name.lower()}' node")
         
-        path = self.get_path(path)
+        path_generator = self.get_path_generator(path)
         
-        X, y, encoded = data.get()
+        X, y, _ = data.get()
         full = self.append(combine_data(X, y).to_numpy(), numrows)
         while full:
-            full = self.save_and_reset(numrows, path)
+            full = self.save_and_reset(numrows, path_generator)

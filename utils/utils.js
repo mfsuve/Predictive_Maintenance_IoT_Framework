@@ -2,7 +2,7 @@
  * I took this code from this repository:
  * https://github.com/GabrieleMaurina/node-red-contrib-machine-learning
  * and I expanded on it.
- */
+ **/
 
 const status = require('./status.js');
 const { spawn } = require('child_process');
@@ -14,7 +14,7 @@ var nodes = {};
 // initialize child process
 const initProc = (env) => {
     if (proc == null) {
-        proc = spawn(`conda activate ${env} && python "${__dirname}/../main.py"`, {
+        proc = spawn(`conda activate ${env} && python -W ignore "${__dirname}/../main.py"`, {
             stdio: 'pipe',
             shell: true
         });
@@ -93,6 +93,9 @@ const initProc = (env) => {
                     console.log("stderr in catch");
                     console.log("Error is:\n", err);
                     console.log(_data.toString());
+                    console.log("------");
+                    console.log("Full Error:");
+                    console.log(data.toString());
                 }
                 console.log("============================");
                 console.log("\n\n");

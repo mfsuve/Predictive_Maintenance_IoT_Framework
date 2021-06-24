@@ -5,12 +5,13 @@ import numpy as np
 np.seterr(all='raise')
 
 from utils.utils import myprint as print
-from utils.node import Node
+from utils.node import Model, Node
 from utils.config import Config
-from utils.io import InputType
+from utils.io import Input, InputType
 
 # from sklearn import metrics
 from collections import defaultdict
+import pickle
 
 class TestModel(Node):
     
@@ -19,10 +20,13 @@ class TestModel(Node):
         self.status('Model: None')
         self.total_tested = 0
         
+        
+        self.metric_values_to_plot = defaultdict(list)
+        
     
-    def first_called(self, data, accuracy, precision, recall, f1, resetAfterTraining):
+    def first_called(self, data, accuracy, precision, recall, f1, resetAfterTraining, ignoreNanTarget):
         self.config = Config()
-        self.model = None
+        self.model:Model = None
         predictions = self.config.predictions()
         names = self.config.names()
         self.metrics = []
@@ -42,9 +46,19 @@ class TestModel(Node):
         if f1:
             F = RunningF1(predictions, names, P, R)
             self.metrics.append(F)
+            
+    
+    def clear_from_nan_target(self, X:pd.DataFrame, y:pd.Series):
+        if y is None:
+            return X, y
+        target_not_nan = y.notna()
+        if not target_not_nan.any():
+            return X, None
+        return X[target_not_nan], y[target_not_nan]
+        
     
     
-    def function(self, data, accuracy, precision, recall, f1, resetAfterTraining):
+    def function(self, data:Input, accuracy, precision, recall, f1, resetAfterTraining, ignoreNanTarget):
         
         if data.type != InputType.DATA and data.type != InputType.MODEL:
             raise ValueError(f"Input needs to be a 'data' or a 'model' but got '{data.type.name.lower()}'")
@@ -62,10 +76,34 @@ class TestModel(Node):
                 
         elif self.model is not None:
             X, y, encoded = data.get()
-            assert isinstance(X, pd.DataFrame) and isinstance(y, pd.Series)
+            assert isinstance(X, pd.DataFrame) and (y is None or isinstance(y, pd.Series))
+            
+            if ignoreNanTarget:
+                X, y = self.clear_from_nan_target(X, y)
+            elif y.isna().any():
+                raise ValueError(f'There is data point with missing class. Please either remove them or choose "Ignore data points without class" option.')
             
             print('Testing model', f'X.shape: {X.shape}', f'y_true.shape: {y.shape if y is not None else "None"}')
             y_pred = self.model.predict(X)
+            
+            # TODO: Aşağıdaki gibi bir hata geldi neden olduğunu anla
+            # TODO: Sonrasında da değişiklikleri push'la
+            
+            # KeyError(nan)
+            # Traceback (most recent call last):
+            # File "C:\Users\mus-k\Desktop\Üniversite\Tez\Node Red\nodes2\utils\node.py", line 55, in __run
+            #     self.__function(data, **node_config)
+            # File "C:\Users\mus-k\Desktop\Üniversite\Tez\Node Red\nodes2\nodes\result\test_model.py", line 75, in function
+            #     msg['ground_truth'] = self.config.convert_to_names(y)
+            # File "C:\Users\mus-k\Desktop\Üniversite\Tez\Node Red\nodes2\utils\config.py", line 192, in convert_to_names
+            #     return [self.class_name_dict[label] for label in labels]
+            # File "C:\Users\mus-k\Desktop\Üniversite\Tez\Node Red\nodes2\utils\config.py", line 192, in <listcomp>
+            #     return [self.class_name_dict[label] for label in labels]
+            # KeyError: nan
+            
+            # print(f"Test Model | y_pred has nan: {np.isnan(y_pred).any()}")
+            # print(f"Test Model | y has nan: {np.isnan(y).any()}")
+            
             
             msg = {'predictions': self.config.convert_to_names(y_pred),
                    'classes': self.config.names(),
@@ -74,11 +112,23 @@ class TestModel(Node):
             if y is not None:
                 msg['ground_truth'] = self.config.convert_to_names(y)
                 self.total_tested += y.size
+                # print(f"Test Model | metric names")
                 for metric in self.metrics:
-                    msg[metric.name] = metric.formatted_score(y, y_pred)
+                    # print('Test Model | ', type(metric), metric.name)
+                    # msg[metric.name] = metric.formatted_score(y, y_pred)
+                    score = metric.formatted_score(y, y_pred)
+                    msg[metric.name] = score
+                    if isinstance(score, dict):
+                        self.metric_values_to_plot[metric.name].append(dict(score, total_tested=self.total_tested))
+                    else:
+                        self.metric_values_to_plot[metric.name].append(dict(accuracy=score, total_tested=self.total_tested))
+            
+            with open('D:/Tez/EXPERIMENTS/Turbofan/Results with only balance smoteen/GNB/results.pkl', 'wb') as file:
+                pickle.dump(self.metric_values_to_plot, file)
 
             msg['total_tested'] = self.total_tested
 
+            print('Test Model | msg:', msg)
             self.send_nodered(msg)
             self.done()
             
@@ -122,9 +172,10 @@ class RunningPrecision:
         if y is not None:
             self.results = []
             for label in self.labels:
-                pred_idx = y_pred == label
-                self.results.append(self.metrics[label].score(y[pred_idx], y_pred[pred_idx]))
+                idx = y_pred == label
+                self.results.append(self.metrics[label].score(y[idx], y_pred[idx]))
             self.results = np.array(self.results)
+        # print(f"Precision | results:, ", self.results)
         return self.results
     
     def reset(self):
@@ -149,9 +200,10 @@ class RunningRecall:
         if y is not None:
             self.results = []
             for label in self.labels:
-                pred_idx = y == label
-                self.results.append(self.metrics[label].score(y[pred_idx], y_pred[pred_idx]))
+                idx = y == label
+                self.results.append(self.metrics[label].score(y[idx], y_pred[idx]))
             self.results = np.array(self.results)
+        # print(f"Recall | results:, ", self.results)
         return self.results
     
     def reset(self):
@@ -194,3 +246,14 @@ class RunningF1:
         
     def formatted_score(self, y, y_pred):
         return dict(zip(self.names, self.score(y, y_pred)))
+    
+    
+if __name__ == '__main__':
+    y       = np.array([1, 1, 1, 1, 0, 0, 1])
+    y_pred  = np.array([1, 0, 1, 0, 1, 0, 1])
+
+    p = RunningPrecision(labels=[0, 1], names=['0', '1'])
+    r = RunningRecall(labels=[0, 1], names=['0', '1'])
+    
+    print(p.score(y, y_pred))
+    print(r.score(y, y_pred))

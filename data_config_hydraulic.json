@@ -1,5 +1,5 @@
 {
-    "sensors": {
+    "columns": {
         "CE": {
             "type": "numeric",
             "min": 17.0,

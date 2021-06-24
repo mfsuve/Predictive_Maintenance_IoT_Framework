@@ -85,14 +85,20 @@ class Node:
         log.info(json.dumps({'nodeid': self.id, 'none': True}))
     
     
-    def warning(self, *warnings, sep='\n'):
+    def warning(self, *warnings, sep:str='\n'):
         log.info(json.dumps({'nodeid': self.id, 'warning': sep.join(warnings)}))
         
     
     def send_next_node(self, *outputs):
-        for nodes_on_out, output in zip(self.next_nodes, outputs):
-            for next_node in nodes_on_out:
-                next_node.input(Input(output, self.type))
+        for i, nodes_on_out in enumerate(self.next_nodes):
+            next_node:Node
+            try:
+                output = outputs[i]
+            except IndexError:
+                output = None
+            if output is not None:
+                for next_node in nodes_on_out:
+                    next_node.input(Input(output, self.type))
         
     
     def send_nodered(self, *outputs):

@@ -1,18 +1,22 @@
+import threading
 from utils.utils import myprint as print
 from utils.node import Model
 from river import metrics
 from river import stream
-from utils.io import InputType
+from utils.io import Input, InputType
 from utils.config import Config
 import numpy as np
 import pandas as pd
 from copy import deepcopy
 
 
-# TODO: Ses kaydını dinle, orada dediklerini yap
-# TODO: Buraya biraz daha model ekle (river'ın documentation'unundan bak)
+# TODO: Modellere parametre verilebilmesini sağla
+# TODO: Model parametrelerinin disk'ten model load edildiğinde de tutmasını kontrol et
+# TODO: Tutmuyorsa da override edilecek de (force=False, check={var_name, description} şeklinde kullanabilirsin load ve save node'unda)
 
 class CremeModel(Model):
+    
+    lock = threading.Lock()
     
     def __init__(self, *args, model):
         super().__init__(*args)
@@ -26,36 +30,39 @@ class CremeModel(Model):
         self.status(f'Trained with {self.count} data')
         self.next_propagate = 1
         
-    def function(self, data, propagateMode, propagateAfter, loadFrom=None):
+    def function(self, data:Input, propagateMode, propagateAfter, loadFrom=None):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         
-        X, y, encoded = data.get()
+        X, y, _ = data.get()
         assert isinstance(X, pd.DataFrame) and isinstance(y, pd.Series)
         
-        acc_values = []
-        y_preds = []
-        for _X, _y in stream.iter_pandas(X, y, shuffle=True):
-            y_pred = self.model.predict_one(_X)
-            if y_pred is not None:
-                y_preds.append(y_pred)
-            acc_values.append(self.metric.update(_y, y_pred).get())
-            self.model.learn_one(_X, _y)
+        if X.empty:
+            print(f"Empty data in {self.name}")
+            return
+        
+        with CremeModel.lock:
+            acc_values = []
+            for _X, _y in stream.iter_pandas(X, y, shuffle=True):
+                y_pred = self.model.predict_one(_X)
+                acc_values.append(self.metric.update(_y, y_pred).get())
+                self.model.learn_one(_X, _y)
             
         self.count += X.shape[0]
         
-        self.send_nodered(None, {'accuracy': acc_values, 'num_data': self.count})
+        self.send_nodered(None, {'accuracy': acc_values, 'train_title': f"Trained with {self.count} data"})
         if propagateMode == 'always' or self.count // propagateAfter >= self.next_propagate:
             self.send_next_node((self, False))
             self.done()
             self.next_propagate = (self.count // propagateAfter) + 1
         self.status(f'Trained with {self.count} data')
         
-    def predict(self, X):
-        y_pred = np.array([
-            self.model.predict_one(_X)
-            for _X, _ in stream.iter_pandas(X, shuffle=True)
-        ])
+    def predict(self, X:pd.DataFrame):
+        with CremeModel.lock:
+            y_pred = np.array([
+                self.model.predict_one(_X)
+                for _X, _ in stream.iter_pandas(X.copy())
+            ])
         return y_pred
     
     def save(self, folder, prefix, obj=None):
