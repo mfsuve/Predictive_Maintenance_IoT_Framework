@@ -18,19 +18,21 @@ class CremeModel(Model):
     
     lock = threading.Lock()
     
-    def __init__(self, *args, model):
+    def __init__(self, *args):
         super().__init__(*args)
-        # TODO: Model loading'i test et
-        if 'loadFrom' in self.node_config:
-            self.load(self.node_config['loadFrom'])
-        else:
-            self.model = model
         self.metric = metrics.Accuracy()
         self.count = 0
         self.status(f'Trained with {self.count} data')
         self.next_propagate = 1
         
-    def function(self, data:Input, propagateMode, propagateAfter, loadFrom=None):
+    def set_model(self, model):
+        # TODO: Model loading'i test et
+        if 'loadFrom' in self.node_config:
+            self.load(self.node_config['loadFrom'])
+        else:
+            self.model = model
+        
+    def function(self, data:Input, propagateMode, propagateAfter, *args, **kwargs):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be a data coming from a data node but got '{data.type.name.lower()}'")
         

@@ -13,7 +13,8 @@ module.exports = function(RED) {
 
         node.config = {
             propagateMode: parseInt(config.propagateAfter) < 2 ? "always" : config.propagateMode,
-            propagateAfter: parseInt(config.propagateAfter)
+            propagateAfter: parseInt(config.propagateAfter),
+            multiclass: config.multiclass
         };
 
         if (config.loadModel)

@@ -9,7 +9,9 @@ RED.nodes.registerType('logistic_regression', {
         propagateMode: {value:"after"},
         propagateAfter: {value:1000, validate:function(v) {
             return RED.validators.number()(v) && v > 0;
-        }}
+        }},
+        // LR Params
+        multiclass: {value:"ovo", required:true}
     },
     inputs:1,
     outputs:2,
@@ -99,6 +101,16 @@ RED.nodes.registerType('logistic_regression', {
         <p style="width:400px; border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9;" id="always-message">
             Model will be propagated <em>after</em> each training is done with the incoming data.
         </p>
+    </div>
+    <hr align="middle"/>
+    <div class="form-row">
+        <label for="node-input-multiclass" style="width:auto;"><i class="fa fa-angle-double-right"></i> Multiclass strategy </label>
+        <br>
+        <label>&nbsp;</label>
+        <select id="node-input-multiclass" style="width:160px;">
+            <option value="ovo" selected>OneVsOne</option>
+            <option value="ovr">OneVsRest</option>
+        </select>
     </div>
 </script>
 

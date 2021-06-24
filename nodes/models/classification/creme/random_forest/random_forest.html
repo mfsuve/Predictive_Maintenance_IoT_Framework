@@ -9,7 +9,19 @@ RED.nodes.registerType('random_forest', {
         propagateMode: {value:"after"},
         propagateAfter: {value:1000, validate:function(v) {
             return RED.validators.number()(v) && v > 0;
-        }}
+        }},
+        // ARF Params
+        maxFeaturesMethod: {value:"sqrt"},
+        maxFeaturesValue: {value:10, validate:function(v) {
+            return v > 0;
+        }},
+        numModels: {value:10, validate:function(v) {
+            return RED.validators.number()(v) && v > 0;
+        }},
+        maxDepth: {value:16, validate:function(v) {
+            return RED.validators.number()(v) && v >= 1;
+        }},
+        unlimitedDepth: {value:false, required:true}
     },
     inputs:1,
     outputs:2,
@@ -58,6 +70,36 @@ RED.nodes.registerType('random_forest', {
                 $("#after-message").hide(200);
             }
         });
+
+        // max_features Value
+        if (this.maxFeaturesMethod === "value") {
+            $("#node-input-maxFeaturesValue").show();
+        } else {
+            $("#node-input-maxFeaturesValue").hide();
+        }
+        $("#node-input-maxFeaturesMethod").on("change", function() {
+            var v = $("#node-input-maxFeaturesMethod").val();
+            if (v === "value") {
+                $("#node-input-maxFeaturesValue").show(200).focus();
+            } else {
+                $("#node-input-maxFeaturesValue").hide(200);
+            }
+        });
+
+        // max_depth Value
+        if (this.unlimitedDepth) {
+            $("#max_depth").hide();
+        } else {
+            $("#max_depth").show();
+        }
+        $("#node-input-unlimitedDepth").on("change", function() {
+            unlimitedDepth = $("#node-input-unlimitedDepth").prop('checked');
+            if (unlimitedDepth) {
+                $("#max_depth").hide(200);
+            } else {
+                $("#max_depth").show(200).focus();
+            }
+        });
     }
 });
 </script>
@@ -99,6 +141,36 @@ RED.nodes.registerType('random_forest', {
         <p style="width:400px; border:1px solid; border-radius:5px; margin:10px 0px; padding:15px 10px; color:#9f6000; background-color:#fff7d9;" id="always-message">
             Model will be propagated <em>after</em> each training is done with the incoming data.
         </p>
+    </div>
+    <hr align="middle"/>
+    <div class="form-row">
+        <label for="node-input-numModels" style="width:auto;"><i class="fa fa-angle-double-right"></i> Number of trees in the ensemble </label>
+        <br>
+        <label>&nbsp;</label>
+        <input type="number" id="node-input-numModels" value="10" style="width:70px;" min="1">
+    </div>
+    <div class="form-row">
+        <label for="node-input-maxDepth" style="width:auto;"><i class="fa fa-angle-double-right"></i> Maximum depth</label>
+        <div id="max_depth">
+            <label>&nbsp;</label>
+            <input type="number" id="node-input-maxDepth" value="16" style="width:80px; margin-top:10px;" min="1">
+        </div>
+        <br>
+        <label>&nbsp;</label>
+        <input style="width:20px; margin:0px;" type="checkbox" id="node-input-unlimitedDepth">
+        <label style="width:auto;" for="node-input-unlimitedDepth"> Unlimited depth</label>
+    </div>
+    <div class="form-row">
+        <label for="node-input-maxFeaturesMethod" style="width:auto;"><i class="fa fa-angle-double-right"></i> Maximum number of attributes for each node split </label>
+        <br>
+        <label>&nbsp;</label>
+        <select id="node-input-maxFeaturesMethod" style="width:162px;">
+            <option value="sqrt" selected>Square Root</option>
+            <option value="log2">Log2</option>
+            <option value="None">Number of Features</option>
+            <option value="value">Value</option>
+        </select>
+        <input type="number" id="node-input-maxFeaturesValue" value="10" style="width:70px;" min="0" step="any">
     </div>
 </script>
 
