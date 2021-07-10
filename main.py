@@ -43,6 +43,7 @@ def call_node(config:Dict):
 
 # @threaded
 def create_node(args):
+    global wires_dict
     nodeid = args['id']
     wires = args['wires']
     node = args['pynode']

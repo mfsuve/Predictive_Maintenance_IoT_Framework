@@ -44,19 +44,25 @@ class StoreDataset(Node):
         return self.index >= numrows
         
     
-    def get_path_generator(self, path):
+    def get_next_path(self, path):
         dirname, filename = os.path.split(path)
         base, ext = os.path.splitext(filename)
         if ext != '' and ext != '.csv':
             self.warning('Changed extension to `.csv`.')
-        for i in count(1):
+        filename = f'{base}.csv'
+        path = add_prefix(filename, path=dirname)
+        i = 0
+        while os.path.exists(path):
+            i += 1
             filename = f'{base}_{i}.csv'
-            yield add_prefix(filename, path=dirname)
+            path = add_prefix(filename, path=dirname)
+        return path
 
 
-    def save_and_reset(self, numrows, path_generator):
+    def save_and_reset(self, numrows, path):
         self.index = 0
-        next_path = next(path_generator)
+        next_path = self.get_next_path(path)
+        print(f"Store data filename:", next_path)
         self.X.to_csv(next_path, header=True, index=False, encoding='utf8')
         self.send_nodered(next_path)
         self.done()
@@ -70,9 +76,9 @@ class StoreDataset(Node):
         if data.type != InputType.DATA:
             raise TypeError(f"Input needs to be data coming from a data node but got from a '{data.type.name.lower()}' node")
         
-        path_generator = self.get_path_generator(path)
+        # path_generator = self.get_path_generator(path)
         
         X, y, _, _ = data.get()
         full = self.append(combine_data(X, y).to_numpy(), numrows)
         while full:
-            full = self.save_and_reset(numrows, path_generator)
+            full = self.save_and_reset(numrows, path)

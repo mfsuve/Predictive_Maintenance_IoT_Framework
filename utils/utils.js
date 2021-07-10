@@ -39,6 +39,11 @@ const initProc = (env) => {
                 nodeid = _data.nodeid;
                 node = nodes[nodeid];
 
+                if (typeof node === 'undefined') {
+                    console.log("node with nodeid: " + nodeid + " is undefined");
+                    return;
+                }
+
                 if (_data.status) {
                     // Change Status Text
                     node.status(node.currentStatus.text(_data.status).get());

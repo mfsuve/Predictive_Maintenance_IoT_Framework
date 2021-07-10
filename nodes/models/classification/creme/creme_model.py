@@ -46,7 +46,11 @@ class CremeModel(Model):
         with CremeModel.lock:
             acc_values = []
             for _X, _y in stream.iter_pandas(X, y, shuffle=True):
-                y_pred = self.model.predict_one(_X)
+                try:
+                    y_pred = self.model.predict_one(_X)
+                except TypeError:
+                    print(f"{self.name} | TypeError:", '_X', _X, 'X', X)
+                    raise
                 acc_values.append(self.metric.update(_y, y_pred).get())
                 self.model.learn_one(_X, _y)
             

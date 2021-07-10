@@ -20,7 +20,7 @@ def add_prefix(name, prefix=None, path=None):
             name = f'{prefix}{name}'
         else:
             name = f'{prefix}_{name}'
-    if path is None:
+    if path is None or path == '':
         return name
     else:
         return os.path.join(make_sure_folder_exists(path), name)

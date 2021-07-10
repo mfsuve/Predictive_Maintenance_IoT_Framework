@@ -13,6 +13,7 @@ from utils.io import Input, InputType
 from collections import defaultdict
 import pickle
 
+
 class TestModel(Node):
     
     def __init__(self, *args, **kwargs):
@@ -20,16 +21,15 @@ class TestModel(Node):
         self.status('Model: None')
         self.total_tested = 0
         self.metric_save_file = self.node_config.get('metricSaveFile', None)        
-        self.metric_values_to_plot = defaultdict(list)
+        self.metrics_to_save = defaultdict(list)
+        self.initialized = False
+        self.model:Model = None
+        self.metrics = []
         
     
-    def first_called(self, data:Input, accuracy, precision, recall, f1, *args, **kwargs):
-        config:Config
-        _, _, _, config = data.get()
-        self.model:Model = None
+    def initialize(self, config:Config, accuracy:bool, precision:bool, recall:bool, f1:bool):
         predictions = config.predictions()
         names = config.names()
-        self.metrics = []
         if accuracy:
             A = RunningAccuracy()
             self.metrics.append(A)
@@ -47,6 +47,8 @@ class TestModel(Node):
             F = RunningF1(predictions, names, P, R)
             self.metrics.append(F)
             
+        self.initialized = True
+            
     
     def clear_from_nan_target(self, X:pd.DataFrame, y:pd.Series):
         if y is None:
@@ -56,7 +58,6 @@ class TestModel(Node):
             return X, None
         return X[target_not_nan], y[target_not_nan]
         
-    
     
     def function(self, data:Input, accuracy, precision, recall, f1, resetAfterTraining, ignoreNanTarget, *args, **kwargs):
         
@@ -78,6 +79,9 @@ class TestModel(Node):
             config:Config
             X, y, encoded, config = data.get()
             assert isinstance(X, pd.DataFrame) and (y is None or isinstance(y, pd.Series))
+            
+            if not self.initialized:
+                self.initialize(config, accuracy, precision, recall, f1)
             
             if ignoreNanTarget:
                 X, y = self.clear_from_nan_target(X, y)
@@ -101,14 +105,14 @@ class TestModel(Node):
                     score = metric.formatted_score(y, y_pred)
                     msg[metric.name] = score
                     if isinstance(score, dict):
-                        self.metric_values_to_plot[metric.name].append(dict(score, total_tested=self.total_tested))
+                        self.metrics_to_save[metric.name].append(dict(score, total_tested=self.total_tested))
                     else:
-                        self.metric_values_to_plot[metric.name].append(dict(accuracy=score, total_tested=self.total_tested))
+                        self.metrics_to_save[metric.name].append(dict(accuracy=score, total_tested=self.total_tested))
                 if self.metric_save_file is not None:
                     filename = os.path.join(self.metric_save_file, self.model.name, 'results.pkl')
                     os.makedirs(os.path.dirname(filename), exist_ok=True)
                     with open(filename, 'wb') as file:
-                        pickle.dump(self.metric_values_to_plot, file)
+                        pickle.dump(self.metrics_to_save, file)
 
             msg['total_tested'] = self.total_tested
 
